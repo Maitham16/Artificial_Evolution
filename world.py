@@ -6,7 +6,7 @@ import random
 import numpy as np
 import pygame
 
-from brain import (DEFAULT_MUTATION_RATE, DEFAULT_MUTATION_SCALE, FOOD_SENSOR_MODES,
+from brain import (DEFAULT_MUTATION_RATE, DEFAULT_MUTATION_SCALE, FOOD_SENSOR_MODES, MAX_TURN_RATE,
                    food_inputs_for_control, validate_mutation_parameters)
 from creature import MAX_ENERGY, POPULATION_SIZE, Creature, create_population
 from food import FOOD_COUNT, FOOD_RADIUS, Food
@@ -17,6 +17,8 @@ from reproduction import OffspringBrain, reproduce_brains
 
 
 SIMULATION_STEP = 1.0 / 60.0
+CLUSTER_COUNT = 4
+CLUSTER_SPREAD = 55.0
 
 
 class World:
@@ -40,13 +42,20 @@ class World:
         evolution_enabled: bool = True,
         population_size: int = POPULATION_SIZE,
         food_sensor_mode: str = "intact",
+        fixed_speed: float | None = None,
+        food_distribution: str = "uniform",
     ) -> None:
         if type(food_count) is not int or food_count < 0:
             raise ValueError("Food count must be a non-negative integer.")
         if type(population_size) is not int or population_size < 1:
             raise ValueError("Population size must be a positive integer.")
-        if controller not in ("neural", "random"):
-            raise ValueError("Controller must be 'neural' or 'random'.")
+        if controller not in ("neural", "random", "greedy"):
+            raise ValueError("Controller must be 'neural', 'random', or 'greedy'.")
+        if fixed_speed is not None and (isinstance(fixed_speed, bool)
+                or not math.isfinite(fixed_speed) or fixed_speed <= 0):
+            raise ValueError("Fixed speed must be finite and positive.")
+        if food_distribution not in ("uniform", "clustered"):
+            raise ValueError("Food distribution must be 'uniform' or 'clustered'.")
         validate_mutation_parameters(mutation_rate, mutation_scale)
         if food_sensor_mode not in FOOD_SENSOR_MODES:
             raise ValueError(f"Food sensor mode must be one of {FOOD_SENSOR_MODES}.")
@@ -59,6 +68,8 @@ class World:
         self.mutation_scale = mutation_scale
         self.evolution_enabled = evolution_enabled
         self.food_sensor_mode = food_sensor_mode
+        self.fixed_speed = fixed_speed
+        self.food_distribution = food_distribution
         self.grid_spacing = 40
         self.show_grid = True
         self.show_perception = True
@@ -89,6 +100,8 @@ class World:
             raise ValueError("Every newborn must receive one inherited brain.")
         for index, creature in enumerate(creatures):
             creature.generation = generation
+            if self.fixed_speed is not None:
+                creature.speed = creature.max_speed = self.fixed_speed
             if inherited is not None:
                 inheritance = inherited[index]
                 creature.brain = inheritance.brain
@@ -101,6 +114,12 @@ class World:
         self.selected_creature: Creature | None = creatures[0]
         self._motion_rng = random.Random(f"motion:{self.seed}{suffix}")
         self._food_rng = random.Random(f"food:{self.seed}{suffix}")
+        cluster_rng = random.Random(f"clusters:{self.seed}{suffix}")
+        self.food_cluster_centers = [
+            (cluster_rng.uniform(0.2 * self.width, 0.8 * self.width),
+             cluster_rng.uniform(0.2 * self.height, 0.8 * self.height))
+            for _ in range(CLUSTER_COUNT)
+        ] if self.food_distribution == "clustered" else []
         self.food: list[Food] = []
         self.total_food_eaten = 0
         for _ in range(self.food_count):
@@ -145,10 +164,17 @@ class World:
         """Place a pellet in free space, clear of creatures and existing food."""
         margin = FOOD_RADIUS + 3
         for _ in range(1000):
-            candidate = Food(
-                self._food_rng.uniform(margin, self.width - margin),
-                self._food_rng.uniform(margin, self.height - margin),
-            )
+            if self.food_distribution == "clustered":
+                cx, cy = self._food_rng.choice(self.food_cluster_centers)
+                x, y = self._food_rng.gauss(cx, CLUSTER_SPREAD), self._food_rng.gauss(cy, CLUSTER_SPREAD)
+                if not (margin <= x <= self.width - margin and margin <= y <= self.height - margin):
+                    continue
+                candidate = Food(x, y)
+            else:
+                candidate = Food(
+                    self._food_rng.uniform(margin, self.width - margin),
+                    self._food_rng.uniform(margin, self.height - margin),
+                )
             if any(
                 candidate.overlaps_circle(creature.x, creature.y, creature.radius + 2)
                 for creature in self.creatures
@@ -251,11 +277,18 @@ class World:
                         observation = self.perceive_food(creature, food_positions)
                         food_visible = observation.visible
                         food_direction = observation.direction if food_visible else 0.0
-                        if creature.turn_time_remaining <= 0:
+                        if self.controller == "greedy" and food_visible:
+                            # Aim at the same nearest detected pellet, without instant turns.
+                            turn = food_direction / (MAX_TURN_RATE * SIMULATION_STEP)
+                            creature.apply_controls(turn, 1.0)
+                        elif creature.turn_time_remaining <= 0:
                             creature.turn_rate = self._motion_rng.uniform(
                                 -math.pi / 2, math.pi / 2
                             )
                             creature.turn_time_remaining = self._motion_rng.uniform(0.75, 2.0)
+                    if self.fixed_speed is not None:
+                        # Apply after all controllers, before energy use and movement.
+                        creature.speed = self.fixed_speed
                 previous_age = creature.age
                 creature.update_survival(SIMULATION_STEP)
                 lived = creature.age - previous_age

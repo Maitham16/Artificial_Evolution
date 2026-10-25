@@ -1,0 +1,121 @@
+{
+  "declared_at_utc": "2026-10-25T18:46:32.165628+00:00",
+  "protocol": {
+    "seeds": [
+      1601,
+      1602,
+      1603,
+      1604,
+      1605,
+      1606,
+      1607,
+      1608,
+      1609,
+      1610,
+      1611,
+      1612,
+      1613,
+      1614,
+      1615,
+      1616
+    ],
+    "generations": 10,
+    "repeats_per_environment": 2,
+    "training_configuration": {
+      "arena_size": [
+        1000,
+        600
+      ],
+      "food_distribution": "uniform",
+      "fixed_speed": 60.0,
+      "population_size": 100,
+      "food_count": 150,
+      "mutation_rate": 0.1,
+      "mutation_scale": 0.1,
+      "controller": "neural",
+      "evolution_enabled": true,
+      "food_sensor_mode": "intact"
+    },
+    "environments": {
+      "uniform": {
+        "arena_size": [
+          1000,
+          600
+        ],
+        "food_distribution": "uniform"
+      },
+      "clustered": {
+        "arena_size": [
+          1000,
+          600
+        ],
+        "food_distribution": "clustered"
+      },
+      "wide_clustered": {
+        "arena_size": [
+          1200,
+          500
+        ],
+        "food_distribution": "clustered"
+      }
+    },
+    "conditions": [
+      "evolved",
+      "random",
+      "greedy"
+    ],
+    "food_clusters": {
+      "count": 4,
+      "gaussian_sigma_pixels": 55.0,
+      "centers": "seeded independently per layout, middle 60% of each axis; fixed during the cohort"
+    },
+    "training_reused": false,
+    "planned_training_cohorts": 160,
+    "planned_test_cohorts": 288,
+    "fixed_speed_pixels_per_second": 60.0,
+    "max_turn_radians_per_second": 1.5707963267948966,
+    "energy_cost_per_living_second": 5.0,
+    "greedy_policy": "turn toward nearest pellet within 160px, limited to 90deg/s without overshoot; random steering when none is detected",
+    "analysis_unit": "independent training lineage; test repeats averaged within environment before inference",
+    "primary_family": "nine evolved-minus-random contrasts: fitness, meals, and 60-second survival in three environments; two-sided exact paired sign tests with Holm correction",
+    "intervals": "95% paired percentile bootstrap, 20000 resamples, approximate pointwise intervals",
+    "decision": "higher/lower requires Holm p < 0.05 and a paired mean interval excluding zero in the same direction; fitness wins reported by environment",
+    "greedy_comparisons": "secondary descriptive estimates and pointwise intervals, without confirmatory p-values",
+    "limitations": "one fixed speed, population, mutation setting, generation budget, replenishment rule, and training distribution; no claim about all evolutionary algorithms"
+  },
+  "source_sha256": {
+    "analyze_intelligence.py": "9af679d70c3b2cf1954619e8d0b6b8c5eaf4a17dd6a8569a7925b1c373238096",
+    "brain.py": "8eb3ef2d944bc0b1dd515d95d4133e47ada2aa3eeda2837b18f678ff5b2366eb",
+    "check_environment.py": "da979b86e279eb51ed45360d52f60ab3b6d835b56d51264b91fc58dbae779aca",
+    "compare_creatures.py": "a9268aeb781b2a567239a1d5bc91337919eaef09f8efccd0bb8cb43334b952ea",
+    "creature.py": "945493f168ea7929395b426be47cbc56f9aa825f665001f445ab10467e959f03",
+    "experiment_parameters.py": "3d8173fdbd54f58b4403d7d46dc9baca49d5cecf7f39aa130d8f39f4789d2c81",
+    "experiment_speed.py": "a2ee33d46031a8a0756bfb53df5d6fe38053468e0da4ee5faa608d4a9d50b97c",
+    "food.py": "3a0b95815fb8d090bd5afd4c9985ffcf8674fe6a8f52b37deca4f31f3052af5b",
+    "generation_stats.py": "bcc6c3cd1885d5d7f73abe091d14d847a7dc5db935b3d1b641fce60b6c771ae8",
+    "main.py": "1f82b9f44a21de39d8a2c7a1121ed828998f9440d5ef0aa4db211fc47c983f1f",
+    "perception.py": "b72e5d4c8bd36d9e9f26628860ae4aa3697c944eb7fa3553de96443be5f1a0f1",
+    "plot_comparison.py": "dfa19f33f5a63431b856ae2559e140a864b946e99bb837d142ffeed29860d560",
+    "plot_evolution.py": "ac8894fe07e0028d09a6ac145aba17e152aef02169810da71ee3af567832a0e6",
+    "plot_intelligence.py": "408d226d31ed86e3d45e1c6333c4138cb08a2f8f69de9bb60344579839f0b525",
+    "plot_parameters.py": "fc35f1d759722621bdb69d4f28aa51882d058b888426f305023deddc8880757c",
+    "plot_speed.py": "2d2538cd7669eac7fb469b8df07f26c59ed1c5e9680bd2da28f0a4c6b12fc92c",
+    "reproduction.py": "bf88d4dcd4c50c547abd506e5ec9e2fe6f2a79c9edc5e6280e8cbd47dd4027c5",
+    "selection.py": "9d55b7e649dc4db68f073e1a27940f0d8bf49201b29404c8c0a4847cef68f82d",
+    "simulation.py": "bcb9ab1af805022baed2d966a91b2dfc6d1cf357789a7418c1a9420337346a05",
+    "test_brain.py": "c0717c8a3bc6f9027d8e651eaa5acdab368f67924ba24d0823a1309b60a75a75",
+    "test_comparison.py": "6a7241b81f7fd6a1e974cf7d6dd781dc8e1cd6512b5f0f66cc20e5f063be0bc9",
+    "test_food.py": "2e1032b06e94f0cabe5cae59831276d055037e6aafb8dccc8a933acf8e5b4026",
+    "test_intelligence.py": "d334e66c32f46e77971c8e2c1b52a658c89458ef89048d75503b4862394f3ef9",
+    "test_movement.py": "ccc906a969a5c9a04c549c75c62db100f023698d57fa7cb2f91e85ed0bfe1f17",
+    "test_parameters.py": "c9ab89c5610c5c9c90f15787838df3d528f7298aed5aeb00b019435387ed90c9",
+    "test_perception.py": "6fe393e40eca1f9800a7892b42a9c6513d27ea2873c24b979dad2f58f43a6a1e",
+    "test_plot_evolution.py": "ea4ea5eb2554009bf89893e32c562b4f277a9be6f95bce778f45040f6c2bbf32",
+    "test_reproduction.py": "c6722ef08e0d194a763ceb2ef97b664cd305a8af6a3027af9e348089ad3a75cd",
+    "test_selection.py": "d784cace042eefa92575686aa5b7b13024fc7fc6c17eaeba91f16e94ece9a2fa",
+    "test_simulation.py": "463078567dd8db320d783e561a8b02f40a0fc89a6d0e1e9f20105c36ffb3166d",
+    "test_speed.py": "c217da73d7ef6ef50090a5d37d5c41eb1ce49c71933525375d6f69ce5b268f00",
+    "test_survival.py": "f25cada2155cb7735787586471398940bb14478ad70aa287a759fe5778ca7bac",
+    "world.py": "9f1141dd4f5b95830678287cbdccbdac1452c8050dbcfbd0a032145f463def4a"
+  }
+}

@@ -249,7 +249,7 @@ def draw_interface(
     screen.blit(fonts["title"].render("The evolving world", True, TEXT), (38, 48))
     evaluation = world.get_fitness_evaluation()
     best_score = evaluation.best.fitness if evaluation.best is not None else 0.0
-    controller_name = "NEURAL" if world.controller == "neural" else "RANDOM"
+    controller_name = world.controller.upper()
     controller_label = (
         f"{controller_name} / BEST {best_score:.1f} / MEAN {evaluation.mean_fitness:.1f}"
     )
@@ -257,7 +257,7 @@ def draw_interface(
         brains = "Random brains" if world.generation == 1 else f"Mutate {world.mutation_rate:.0%}"
         controller_note = f"Gen {world.generation} / {brains} / Sight {VISION_RANGE:.0f} px"
     else:
-        controller_note = f"Gen {world.generation} / Random movement baseline"
+        controller_note = f"Gen {world.generation} / {world.controller.title()} movement baseline"
     if simulation is not None:
         generation = str(world.generation)
         if simulation.generation_limit is not None:
@@ -399,6 +399,8 @@ def run(
     mutation_rate: float = DEFAULT_MUTATION_RATE,
     mutation_scale: float = DEFAULT_MUTATION_SCALE,
     food_count: int = FOOD_COUNT,
+    fixed_speed: float | None = None,
+    food_distribution: str = "uniform",
 ) -> int:
     if headless and frames is None and (generations is None or manual):
         raise ValueError("Headless mode needs frames or an automatic generation limit.")
@@ -409,13 +411,14 @@ def run(
         pygame.display.init()
         pygame.font.init()
         world = World(seed=seed, controller=controller, population_size=population_size,
-                      mutation_rate=mutation_rate, mutation_scale=mutation_scale, food_count=food_count)
+                      mutation_rate=mutation_rate, mutation_scale=mutation_scale, food_count=food_count,
+                      fixed_speed=fixed_speed, food_distribution=food_distribution)
         simulation = EvolutionSimulation(world, generation_limit=generations,
                                          speed=speed, auto_advance=not manual)
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption(f"Artificial Evolution | Parameters | {controller.title()}")
+        pygame.display.set_caption(f"Artificial Evolution | Fixed-speed study | {controller.title()}")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),
@@ -503,16 +506,21 @@ def main() -> int:
                         help="standard deviation of Gaussian mutation noise")
     parser.add_argument("--food-count", type=nonnegative_integer, default=FOOD_COUNT,
                         help="maintained food supply; fewer pellets increase scarcity")
+    parser.add_argument("--fixed-speed", type=mutation_scale,
+                        help="positive pixels/second shared by all bodies; overrides neural throttle")
+    parser.add_argument("--food-distribution", choices=("uniform", "clustered"), default="uniform")
     parser.add_argument("--generations", type=positive_integer, help="stop after N complete generations")
     parser.add_argument("--speed", type=int, choices=SPEEDS, default=1, help="simulation speed multiplier")
     parser.add_argument("--manual", action="store_true", help="wait for N between generations")
     parser.add_argument("--report", type=Path, help="save completed-generation observations as JSON")
     parser.add_argument("--plot", type=Path, help="export evolution charts as PNG, SVG, or PDF on exit")
     parser.add_argument(
-        "--controller", choices=("neural", "random"), default="neural",
-        help="use NumPy brains (default) or the original random movement baseline",
+        "--controller", choices=("neural", "random", "greedy"), default="neural",
+        help="use NumPy brains, random steering, or greedy nearest-detected-food steering",
     )
     args = parser.parse_args()
+    if args.fixed_speed is not None and args.fixed_speed <= 0:
+        parser.error("--fixed-speed must be positive")
     if args.headless and args.frames is None and (args.generations is None or args.manual):
         parser.error("--headless requires --frames or automatic --generations")
     return run(
@@ -530,6 +538,8 @@ def main() -> int:
         mutation_rate=args.mutation_rate,
         mutation_scale=args.mutation_scale,
         food_count=args.food_count,
+        fixed_speed=args.fixed_speed,
+        food_distribution=args.food_distribution,
     )
 
 

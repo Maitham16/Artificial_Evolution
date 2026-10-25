@@ -1,0 +1,18 @@
+{
+  "recorded_at_utc": "2026-10-25T18:58:18.421788+00:00",
+  "reason": "Synthetic equal-count averages can differ by about 1e-16 due to binary arithmetic; exact-zero comparison could count these as directional wins.",
+  "change": "Exclude absolute paired differences <= 1e-10 as numerical ties for sign-test counts and p-values only. Effect sizes and bootstrap intervals are unchanged.",
+  "unchanged": "Simulation physics, controllers, training, environments, fitness, seeds, trial budget, primary contrast family, Holm correction, and significance/interval decision thresholds.",
+  "original_protocol_sha256": "2a478ae6a6b7ca7b8347ecfdda0691bb632774309ee5ec48013ebf2030ec0ffc",
+  "status_at_recording": "running",
+  "completed_lineages_at_recording": 0,
+  "changed_sources": [
+    "experiment_speed.py",
+    "test_speed.py"
+  ],
+  "source_sha256_after": {
+    "experiment_speed.py": "e13d159ae99df391753e5d4605dbc0e8e8463e82d7b41c93ddcc4e63745680dd",
+    "test_speed.py": "f82ff746648f8ce9a344f147f26eb8f602c3aa4e112516658122d41863e7ff3f"
+  },
+  "execution": "The running parent loaded the prior analyzer. Recompute analysis from the complete raw report with this correction after every planned trial finishes; preserve the original protocol declaration."
+}

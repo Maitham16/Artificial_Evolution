@@ -3,10 +3,9 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **15 — Analyze emergent intelligence**. Test frozen brains in
-unseen environments with repeated trials, targeted sensor interventions, and
-controlled steering probes. Measure food-guided behavior separately from fitness
-improvements and assess the limits of generalization.
+Current step: **16 — Can evolution beat random movement?** Retrain with identical
+fixed speeds, compare frozen evolved brains against random and greedy steering,
+and test new uniform/clustered food layouts and an unfamiliar arena shape.
 
 ## Run the world
 
@@ -41,6 +40,204 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Compare steering at identical movement speed
+
+The earlier comparison allowed random creatures to cruise at full speed while
+neural creatures chose throttle. It therefore measured a combination of steering,
+speed, and energy cost. Step 16 controls this by retraining from random founders
+with **every creature moving at 60 pixels/second**, overriding neural throttle
+before energy use and movement, including the first tick. Every body also has
+the same 60-pixel/second maximum speed. The original behavior remains the default
+when `--fixed-speed` is omitted.
+
+Try the controls directly:
+
+```sh
+python main.py --seed 42 --controller neural --fixed-speed 60
+python main.py --seed 42 --controller random --fixed-speed 60
+python main.py --seed 42 --controller greedy --fixed-speed 60 --food-distribution clustered
+```
+
+All controllers share the original body generation, sensing radius (160 pixels),
+turning limit (90°/second), boundary reflection, energy formula, and survival
+rules. **Per living second**, energy cost is now exactly `2 + 0.05 × 60 = 5`
+units for every creature. This equalizes commanded speed and per-second movement
+cost, not total lifetime expenditure or lifetime distance: survivors move and
+consume energy for longer. Motion still follows the existing fixed timestep and
+wall reflection rules.
+
+The **greedy reference** turns toward the nearest detected pellet using the
+shortest signed bearing, bounded by the same turning limit. It limits the last
+turn to avoid overshooting the target angle. When no food is detected, it uses
+the existing random steering policy. It has no access to unseen food, future
+pellets, test outcomes, or extra sensory range. The evolved network architecture
+remains 8–8–2; its throttle output is ignored under the speed constraint.
+
+Before modification, all **193 existing tests passed**. The full test transcript
+is saved in `results/step16-baseline-tests.txt`. The baseline manifest
+`results/step16-baseline.json` records the preceding commit and SHA-256 hashes of
+its tracked source and result files. Earlier experiment reports, plots, and model
+archives remain unchanged in place and in Git history. The source changes for
+this step are relative to that preserved commit.
+
+Run the full study:
+
+```sh
+python experiment_speed.py --workers 6 --models-dir .cache/speed-models \
+  --output .cache/speed-comparison.json --protocol-output .cache/speed-protocol.json \
+  --plot .cache/speed-comparison.png
+```
+
+The fixed protocol uses **16 new independent training seeds (1601–1616)**,
+**10 generations**, population 100, food supply 150, mutation probability 0.1,
+mutation scale 0.1, and the existing fitness and selection rules. Training uses
+uniform food in a 1000 × 600 arena throughout. It does not reuse variable-speed
+Step 15 models or tune parameters against test results. All 100 brains from each
+final birth cohort are frozen, without selecting a test winner or generation.
+
+Each lineage faces **two new layouts per environment**:
+
+| Test environment | Geometry | Food distribution | Relationship to training |
+| --- | --- | --- | --- |
+| Uniform | 1000 × 600 | Uniform | New layouts at the trained distribution |
+| Clustered | 1000 × 600 | Four seeded clusters | Unseen food distribution |
+| Wide clustered | 1200 × 500 | Four seeded clusters | Unseen distribution and aspect ratio |
+
+All arenas have equal area and the same maintained food count. For clustered
+food, four centers are drawn independently within the middle 60% of each axis.
+Each spawn chooses a center uniformly and proposes a Gaussian offset with
+55-pixel standard deviation on each axis. Out-of-bounds or overlapping proposals
+are rejected; there is no uniform fallback. Centers remain fixed during a
+cohort and are resampled for the next layout. These parameters are declared in
+the protocol. Clusters can overlap; they are not enforced as four separate
+non-overlapping patches.
+
+Food remains continuously replenished in every condition. Clustered spawning
+changes where replenishment occurs and may reward staying near food patches;
+it does not remove the existing benefit of random exploration in uniform arenas.
+Step 16 does not test depleted finite food supplies or every possible environment.
+
+Test seeds use a separate `step16:test` namespace. For each layout, evolved,
+random, and greedy conditions start in separate worlds with identical bodies,
+food, lifespans, cluster centers, and random streams. Body IDs receive matched
+physical traits across conditions. Initial physical hashes verify matching and
+separation from training. Later food replenishment and random-stream consumption
+can diverge as behavior diverges. This is a comparison of complete populations,
+with within-population competition, rather than isolated creature trials.
+
+No selection, reproduction, mutation, or weight updates occur during testing.
+Genome hashes verify that the complete evolved cohort remains frozen. The same
+brain arrays are also recorded for baseline bodies, whose steering policies do
+not consult them. Numeric model archives use `allow_pickle=False` and validate
+configuration, IDs, array shapes, finite values, and hashes on loading.
+
+There are **160 training cohorts** and **288 test cohorts**, totaling **448**,
+with **96 distinct unseen test layouts**. Repeats are averaged within each
+lineage and environment before inference, keeping the independent sample size
+at **16**, not 96 layouts or 1,600 creatures. Training trajectories and every
+test condition are saved. Progress stays `running` until all planned trials
+finish, and incomplete studies cannot be plotted.
+
+The primary family contains **nine evolved-minus-random contrasts**: fitness,
+meals per creature, and survival to 60 seconds in each of the three environments.
+Two-sided exact paired sign tests exclude ties and use Holm correction across
+all nine. Absolute paired differences within `1e-10` are treated as numerical
+ties for sign-test counts only; raw effect sizes and intervals are retained.
+Difference intervals use 20,000 paired percentile bootstrap resamples,
+with approximate pointwise 95% coverage. A higher/lower decision requires both
+adjusted p < 0.05 and an interval excluding zero in the corresponding direction.
+Fitness wins are reported separately by environment; a claim of beating random
+fitness across all three requires all three fitness contrasts to pass. Greedy
+contrasts are secondary descriptive estimates with pointwise intervals and no
+confirmatory p-values. A nonsignificant difference does not establish equivalence.
+
+`results/step16-protocol.json` records the protocol, UTC declaration time, and
+source hashes before the actual trials started. This is a local record of the
+declared analysis, not an externally registered study. Primary conditions, the
+trial budget, and significance/interval decision thresholds are fixed before
+test analysis.
+
+`results/step16-numerical-ties.json` records one numerical correction during the
+run, before any full lineage finished testing: synthetic equal-count averages
+could differ by about `1e-16` in binary arithmetic. The `1e-10` sign-test tie
+tolerance prevents counting that noise as a win. The note preserves the original
+declaration hash, time, and changed analysis/test source hashes. Training,
+physics, conditions, seeds, primary family, budget, and decision thresholds stay
+unchanged. The final complete raw report is reanalyzed with this correction;
+the running parent had already loaded the earlier analyzer.
+
+Reproduce tests from the saved fixed-speed models:
+
+```sh
+python experiment_speed.py --workers 6 --reuse-models \
+  --models-dir results/step16-models --output .cache/replayed-speed.json
+python plot_speed.py results/step16-speed-comparison.json --output .cache/speed.png
+```
+
+Replaying the same deterministic test seeds checks reproducibility; it does not
+create new independent evidence. `--seeds`, `--generations`, and `--repeats` allow
+other studies, whose settings should be chosen before looking at their outcomes.
+Conclusions concern this fixed speed, training budget, mutation setting, and
+environment family, rather than evolution in general.
+
+### Recorded Step 16 results
+
+All **16 lineages, 448 cohorts, and 96 distinct unseen layouts** completed.
+The final audit verified all 16 model archives, matched/frozen test conditions,
+and separation from every training layout. All 17 earlier result artifacts
+remain unchanged. Stored statistics match fresh recomputation. The documented
+numerical-tie correction changed no sign count, p-value, decision, effect size,
+or confidence interval in these data.
+
+Mean fitness, averaging test repeats within each lineage first:
+
+| Environment | Evolved | Random | Greedy | Evolved − random, 95% CI | Holm p | Decision |
+| --- | ---: | ---: | ---: | --- | ---: | --- |
+| Uniform | 354.97 | 321.69 | 637.40 | +33.28 [20.31, 47.06] | 0.06381 | Inconclusive |
+| Clustered | 340.25 | 197.63 | 1193.75 | +142.62 [109.86, 178.54] | 0.0002747 | Higher |
+| Wide clustered | 361.78 | 202.70 | 1156.48 | +159.08 [115.28, 206.86] | 0.0002747 | Higher |
+
+Feeding and survival means under the same fixed-speed constraint:
+
+| Environment | Evolved meals | Random meals | Greedy meals | Evolved survival | Random survival | Greedy survival |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Uniform | 27.35 | 24.32 | 55.01 | 87.1% | 82.0% | 96.3% |
+| Clustered | 28.36 | 15.47 | 110.57 | 47.6% | 25.0% | 97.2% |
+| Wide clustered | 30.34 | 15.97 | 107.05 | 49.6% | 25.6% | 94.2% |
+
+Meals are per creature; survival means reaching 60 simulated seconds. Fitness
+uses the existing `survival_seconds + 10 × meals` definition. Greedy comparisons
+are descriptive secondary benchmarks.
+
+**The evolved populations beat the existing random controller in both clustered
+environments.** All 16 lineages favored evolution on fitness, meals, and survival
+in each clustered environment. All six contrasts passed the nine-test Holm
+correction, with positive difference intervals. Fitness was approximately
+**72.2% higher** with standard clustered food and **78.5% higher** in the wider
+clustered arena. These are gains over random under the declared conditions.
+
+Uniform-food averages also favored evolution, with fitness and meals higher in
+13 of 16 lineages and survival higher in 12. However, none of the three uniform
+contrasts passed the corrected sign tests. Their positive mean intervals alone
+do not satisfy the declared decision rule. A fitness advantage across all three
+environments is therefore **not demonstrated**.
+
+The greedy controller had substantially higher observed mean fitness, meals,
+and survival in every environment. Evolution has room to improve under this
+budget. The findings benchmark final evolved populations against the specified
+random controller; this step does not add an unselected-neural training arm to
+isolate selection's contribution from the initial policy distribution. Performance
+advantages also do not by themselves establish food understanding or planning.
+
+![Step 16 fixed-speed fitness, meals, and survival comparisons](results/step16-speed-comparison.png)
+
+The exported figure was visually inspected. `results/step16-audit.json` records
+the completeness, model, source, speed, score, denominator, and data-integrity
+checks, along with runtime versions and artifact hashes. The largest difference
+between recorded cohort mean speed and 60 was `3.6e-10` pixels/second, from
+floating-point accumulation. `results/step16-tests.txt` saves the passing
+212-test transcript.
 
 ## Analyze emergent food-guided behavior
 
@@ -875,7 +1072,12 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **193 checks**, including frozen-model round trips, repeated unseen
+Verified: **212 checks**, including fixed speed and per-second energy fairness,
+greedy target selection and bounded turns, successful greedy feeding, clustered
+spawning and replenishment, unchanged default throttle, retraining and model
+reuse, repeated matched held-out worlds, lineage-level inference, Holm correction
+across nine primary comparisons, numerical ties, and plot exports. The 193-test baseline was
+recorded before Step 16 changes. The checks also include frozen-model round trips, repeated unseen
 arenas, truthful observations during sensor interventions, matched conditions,
 lineage-level inference, all four decision gates, reproducible model reuse, and
 PNG/SVG/PDF exports. A controlled food-seeking brain verifies that the movement
@@ -937,6 +1139,8 @@ experiment_parameters.py  Paired mutation/population/food exploration and summar
 plot_parameters.py    Parameter-response curves and paired validation fitness gaps
 analyze_intelligence.py  Frozen models, repeated unseen tests, sensor controls, and steering probes
 plot_intelligence.py  Food-direction benefits and corrected operational evidence
+experiment_speed.py   Fixed-speed retraining, greedy/random controls, and 16-seed held-out study
+plot_speed.py         Paired fitness, meals, and survival comparisons at equal speed
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, inference, independent copies, and mutation
 reproduction.py       Balanced selected-parent reproduction and offspring records
@@ -955,6 +1159,7 @@ test_plot_evolution.py  Checkpoint accounting, plotted values, missing data, and
 test_comparison.py    Matched controls, frozen evaluation, independent pairs, and inference
 test_parameters.py    Configurable populations, controlled sweeps, caching, and validation
 test_intelligence.py  Sensor truth, positive controls, archives, repeated trials, and criteria
+test_speed.py         Speed/energy fairness, greedy guidance, clustered food, and study inference
 results/step11-seed42.json  Observations from one seeded ten-generation run
 results/step12-seed42.json  Repeated seed-42 trajectory with checkpoint survival rates
 results/step12-evolution.png  Exported fitness, survival, and food-consumption figure
@@ -965,6 +1170,15 @@ results/step14-parameters.png  Parameter effects on evolved and random fitness
 results/step15-intelligence.json  Full emergent-behavior protocol, trials, probes, and inference
 results/step15-intelligence.png  Food-guidance effects and generalization evidence
 results/step15-models/  Eight verified frozen founder/evolved model archives
+results/step16-baseline.json  Pre-change commit and source/result hashes
+results/step16-baseline-tests.txt  Original 193-test baseline transcript
+results/step16-tests.txt  Full 212-test verification transcript
+results/step16-audit.json  Completeness, source/model/data hashes, runtime, and recomputation audit
+results/step16-protocol.json  Protocol and source hashes recorded before trials
+results/step16-numerical-ties.json  Pre-result numerical sign-test tie correction
+results/step16-speed-comparison.json  Fixed-speed training, held-out trials, and paired inference
+results/step16-speed-comparison.png  Fitness, meals, and survival in three environments
+results/step16-models/  Sixteen frozen populations retrained at identical speed
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection
