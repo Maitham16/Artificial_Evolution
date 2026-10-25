@@ -1,4 +1,4 @@
-"""Launch Step 3: a Pygame world populated by 100 artificial creatures."""
+"""Launch Step 4: 100 creatures moving and turning inside a Pygame world."""
 
 import argparse
 import math
@@ -9,13 +9,14 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
 import pygame
 
-from world import World
+from world import SIMULATION_STEP, World
 
 
 PADDING = 40
 HEADER_HEIGHT = 108
 FOOTER_HEIGHT = 92
 TARGET_FPS = 60
+MAX_FRAME_SECONDS = 0.25
 BACKGROUND = (10, 18, 24)
 TEXT = (225, 235, 237)
 MUTED = (135, 158, 167)
@@ -41,6 +42,8 @@ def handle_events(world: World) -> bool:
                 world.show_grid = not world.show_grid
             if event.key == pygame.K_r:
                 world.regenerate_population()
+            if event.key == pygame.K_SPACE:
+                world.paused = not world.paused
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             world.select_creature((event.pos[0] - PADDING, event.pos[1] - HEADER_HEIGHT))
     return True
@@ -53,17 +56,22 @@ def draw_interface(
     screen.blit(fonts["small"].render("ARTIFICIAL EVOLUTION", True, ACCENT), (40, 25))
     screen.blit(fonts["title"].render("The virtual world", True, TEXT), (38, 48))
 
-    status = fonts["small"].render(f"{len(world.creatures)} CREATURES", True, ACCENT)
+    activity = "PAUSED" if world.paused else "MOVING"
+    status_color = MUTED if world.paused else ACCENT
+    status = fonts["small"].render(
+        f"{len(world.creatures)} CREATURES / {activity}", True, status_color
+    )
     status_x = screen.get_width() - PADDING - status.get_width()
-    pygame.draw.circle(screen, ACCENT, (status_x - 15, 38), 4)
+    pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 03 / CREATURES", True, MUTED)
+    stage = fonts["small"].render("STEP 04 / MOVEMENT", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
 
     world.draw(screen, (PADDING, HEADER_HEIGHT))
 
     footer_y = HEADER_HEIGHT + world.height + 22
     controls = (
+        f"Space  {'Resume' if world.paused else 'Pause'}     /     "
         f"G  Grid {'on' if world.show_grid else 'off'}     /     "
         "R  New population     /     Click  Inspect     /     Esc  Quit"
     )
@@ -87,7 +95,9 @@ def draw_interface(
             f"Radius {creature.radius} px    Facing {math.degrees(creature.heading):.0f} deg"
         )
     screen.blit(fonts["small"].render(details, True, TEXT), (PADDING, footer_y + 27))
-    seed_label = fonts["small"].render(f"Seed {world.seed}", True, MUTED)
+    seed_label = fonts["small"].render(
+        f"{world.elapsed_time:.1f} s  /  Seed {world.seed}", True, MUTED
+    )
     screen.blit(
         seed_label,
         (screen.get_width() - PADDING - seed_label.get_width(), footer_y + 27),
@@ -126,12 +136,15 @@ def run(
         )
 
         while frames is None or rendered_frames < frames:
+            frame_dt = clock.tick(0 if headless else TARGET_FPS) / 1000.0
             if not handle_events(world):
                 break
+            # Headless runs advance exactly one simulation tick per saved frame.
+            dt = SIMULATION_STEP if headless else min(frame_dt, MAX_FRAME_SECONDS)
+            world.update(dt)
             draw_interface(screen, world, fonts)
             pygame.display.flip()
             rendered_frames += 1
-            clock.tick(TARGET_FPS)
 
         if screenshot is not None and rendered_frames:
             screenshot.parent.mkdir(parents=True, exist_ok=True)

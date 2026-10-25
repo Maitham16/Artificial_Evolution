@@ -3,9 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **3 — Create artificial creatures**. The Pygame application displays
-100 stationary creatures in a 1,000 × 600 pixel habitat. Food, movement, survival
-mechanics, neural networks, and evolution will be implemented in later steps.
+Current step: **4 — Implement movement**. The Pygame application displays 100
+creatures moving and turning in a 1,000 × 600 pixel habitat, with reflective wall
+boundaries. Food, survival mechanics, neural networks, and evolution will be
+implemented in later steps.
 
 ## Run the world
 
@@ -17,6 +18,7 @@ python main.py
 ```
 
 - Press **G** to hide or show the grid.
+- Press **Space** to pause or resume movement.
 - Press **R** to generate a new random population.
 - **Click a creature** to inspect its properties. Click empty space to deselect.
 - Press **Esc**, or close the window, to quit.
@@ -24,8 +26,8 @@ python main.py
 The window runs at up to 60 frames per second. The arena has a visible border and
 a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
-The surrounding header and footer are outside the arena. The border and grid are
-visual guides at this stage.
+The surrounding header and footer are outside the arena. The border marks the
+reflective walls; the grid is a visual guide.
 
 ## Creatures
 
@@ -37,14 +39,32 @@ Each creature has a unique ID within its population and these initial properties
 | Body radius | Random integer from 6 to 9 pixels |
 | Color | Random choice of six pastel colors; appearance only |
 | Facing direction | Random angle around the full circle, shown by the white eye |
-| Speed | Random value from 40 to 80 pixels per second; stored for later use |
+| Speed | Random value from 40 to 80 pixels per second |
 | Energy | 100 for every creature; constant at this step |
 
 The selected creature has a white ring, and its properties appear below the arena.
-The first creature is selected initially. Creatures remain stationary at this
-step: the display does not update position, spend energy, or select for fitness.
+The first creature is selected initially. Pause with **Space** to inspect a
+creature while it holds still. Energy remains constant at this step.
 
-Use a seed to reproduce a population, including all its properties:
+## Movement
+
+Each creature travels forward at its own speed. Its facing direction rotates
+gradually, with a random turn rate between -90 and +90 degrees per second. It
+chooses a new turn rate approximately every 0.75 to 2 seconds. This is temporary
+random steering for the movement stage, separate from future neural decisions.
+
+Creatures bounce off all four walls. Wall contact reflects their direction and
+keeps their full body inside the arena, accounting for body radius and any travel
+remaining after the impact. Corner hits reflect both direction components.
+Creatures move independently and may pass through one another after spawning.
+
+Movement advances in fixed 1/60-second simulation steps, independently of display
+frame rate. The footer shows elapsed simulation time. Long desktop frame stalls
+are capped at 0.25 seconds of catch-up to avoid a large jump. Pausing freezes both
+movement and simulation time. **R** resets time and generates a fresh population,
+preserving the current pause state.
+
+Use a seed to reproduce a population and its movement at the same simulation time:
 
 ```sh
 python main.py --seed 42
@@ -52,30 +72,36 @@ python main.py --seed 42
 
 Without `--seed`, startup chooses a random seed. The active seed is displayed in
 the footer. **R** chooses a new seed and resets the population to 100 creatures.
-Population generation uses its own random-number generator, separate from any
-future experiment randomness.
+Population generation and motion use separate random-number generators.
 
 To render a few frames without opening a window, optionally saving a preview:
 
 ```sh
-python main.py --headless --frames 5 --seed 42 --screenshot .cache/creatures-preview.png
+python main.py --headless --frames 120 --seed 42 --screenshot .cache/movement-preview.png
 ```
 
-Headless mode requires `--frames` so it exits automatically. This verifies the
-rendering loop; it does not exercise the desktop window backend.
+Headless mode requires `--frames` so it exits automatically and advances exactly
+one 1/60-second simulation step per frame, without waiting for real time. The
+command above therefore captures the world after 2 seconds of simulated motion.
 
-Verified: population counts, unique IDs, bounds, property ranges, and absence of
-body overlap across 100 seeds; seeded reproducibility; click inspection and
-deselection; population regeneration; grid and quit controls; and unchanged
-creature state during rendering. Both headless rendering and a native macOS
-Cocoa window completed five-frame runs successfully.
+Run the movement checks with the standard Python test runner:
+
+```sh
+python -m unittest -v test_movement.py
+```
+
+Verified: all 11 movement checks, pause/resume and inspection controls, and
+120-frame headless and native macOS Cocoa runs. The movement checks include wall
+and corner reflections, large travel distances, seeded motion, and matching
+simulation results at 30, 60, and 144 display updates per second.
 
 ## Project structure
 
 ```text
-main.py               Window, controls, creature inspection, and launch options
-world.py              Arena rendering, population management, and selection
-creature.py           Creature properties, drawing, and random population generation
+main.py               Window, controls, simulation timing, and launch options
+world.py              Fixed simulation steps, random steering, arena, and selection
+creature.py           Creature properties, motion, wall reflection, drawing, and spawning
+test_movement.py      Movement, boundary, timing, pause, and reproducibility checks
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection

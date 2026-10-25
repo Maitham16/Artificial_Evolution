@@ -8,6 +8,9 @@ import pygame
 from creature import Creature, create_population
 
 
+SIMULATION_STEP = 1.0 / 60.0
+
+
 class World:
     """A rectangular arena with an initial population of 100 creatures."""
 
@@ -23,6 +26,7 @@ class World:
         self.height = height
         self.grid_spacing = 40
         self.show_grid = True
+        self.paused = False
         self.surface = pygame.Surface((width, height))
         self.regenerate_population(seed)
 
@@ -33,6 +37,30 @@ class World:
         self.seed = seed
         self.creatures = creatures
         self.selected_creature: Creature | None = creatures[0]
+        self._motion_rng = random.Random(f"motion:{seed}")
+        self._accumulator = 0.0
+        self.elapsed_time = 0.0
+
+    def update(self, dt: float) -> None:
+        """Advance independent random steering and movement in fixed time steps."""
+        if not math.isfinite(dt) or dt < 0:
+            raise ValueError("Simulation time must be finite and non-negative.")
+        if self.paused or dt == 0:
+            return
+
+        self._accumulator += dt
+        while self._accumulator + 1e-12 >= SIMULATION_STEP:
+            for creature in self.creatures:
+                if creature.turn_time_remaining <= 0:
+                    creature.turn_rate = self._motion_rng.uniform(
+                        -math.pi / 2, math.pi / 2
+                    )
+                    creature.turn_time_remaining = self._motion_rng.uniform(0.75, 2.0)
+                creature.rotate(creature.turn_rate * SIMULATION_STEP)
+                creature.move(SIMULATION_STEP, self.width, self.height)
+                creature.turn_time_remaining -= SIMULATION_STEP
+            self.elapsed_time += SIMULATION_STEP
+            self._accumulator = max(0.0, self._accumulator - SIMULATION_STEP)
 
     def select_creature(self, position: tuple[int, int]) -> None:
         """Select the nearest creature under a click in arena coordinates."""
