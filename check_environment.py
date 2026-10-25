@@ -46,7 +46,7 @@ def main() -> None:
     if not output.getvalue().startswith(b"\x89PNG\r\n\x1a\n"):
         raise RuntimeError("Matplotlib PNG rendering check failed")
     print(f"Matplotlib {matplotlib.__version__}: PNG rendering OK")
-    print("Environment ready. No simulation has been implemented yet.")
+    print("Environment ready.")
 
 
 if __name__ == "__main__":
