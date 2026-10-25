@@ -3,10 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **12 — Visualize evolution**. Plot mean/best fitness, survival to
-60 seconds, and food consumption across completed generations. Charts appear in
-the world and can be exported with Matplotlib. Comparing evolution against random
-movement across independent experiments remains later work.
+Current step: **13 — Compare evolved vs. random creatures**. Run independent,
+paired experiments and test frozen final-generation brains in fresh arenas.
+Compare fitness, survival, and feeding against random movement and a neural
+control without inheritance or selection.
 
 ## Run the world
 
@@ -41,6 +41,129 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Compare evolved and random creatures
+
+Run the default comparison with four CPU processes:
+
+```sh
+python compare_creatures.py --workers 4 \
+  --output .cache/comparison.json --plot .cache/comparison.png
+```
+
+The default protocol uses **eight independent training seeds** (101, 202, 303,
+404, 505, 606, 707, 808), **ten training generations**, and **100 creatures per
+cohort**. All seeds, generation counts, metrics, and decision rules are fixed
+before running. There are three conditions:
+
+| Condition | Behavior and reproduction |
+| --- | --- |
+| Evolved | Neural control; top-20% selection, inheritance, and the existing mutations |
+| Random | The original random steering and cruising speed; brains are ignored |
+| Unselected NN | The same neural architecture as evolved creatures, with fresh random weights each generation and no inheritance |
+
+`World(evolution_enabled=False)` samples fresh brains when advancing generations;
+the `evolution_enabled` report field records this policy.
+
+Each condition occupies its own 100-creature arena. All conditions start each
+training generation with identical physical traits, positions, and food. Their
+seed streams are matched. Eating and replenishment
+subsequently follow each condition's own behavior, so later food layouts can
+diverge. The two neural conditions begin with identical founder brains. Only
+brains are inherited; body traits are freshly sampled as before.
+
+Each condition runs the same number of complete cohorts under the same lifespan
+bound, arena, food supply, energy costs, and fitness rule. Random steering uses
+the existing fixed cruising speed; neural controllers can also choose throttle.
+The unselected neural control helps separate the effect of evolution from this
+difference in movement capabilities.
+
+After training, **all 100 brains from the final birth cohort** are copied into
+new bodies in a fresh test arena. Its seed is derived from the training seed in
+a separate `step13:held-out` namespace. The test arena has matched starting
+conditions across all three groups. Evaluation uses no selection, reproduction,
+mutation, or weight updates. Genome hashes verify that training and test weights
+stay frozen. No best creature, generation, or seed is chosen using test results.
+
+The default experiment runs **240 training cohorts and 24 test cohorts**. It can
+take several minutes. `--workers` controls parallel CPU processes; the default is
+one. Results are reproducible across worker counts. Explicit seeds and budgets
+can also be supplied, for example:
+
+```sh
+python compare_creatures.py --seeds 11 22 33 44 55 66 77 88 \
+  --generations 10 --workers 4 --output .cache/another-comparison.json
+```
+
+Use at least two distinct seeds and two generations. Choose the budget before
+examining outcomes. Reports include the planned protocol, every training/test
+summary, initial-condition hashes, frozen-genome hashes, and statistical results.
+A progress file is updated after each seed finishes all conditions. Its status
+stays `running` until **all planned seeds** complete; partial experiments are not
+analyzed or plotted.
+
+The independent experimental unit is **one training seed**, yielding eight
+paired observations per contrast in the default experiment. Creatures within a
+cohort share ancestry and competition and are not treated as independent trials.
+The primary outcome is **held-out mean fitness**. Secondary outcomes are survival
+to age 60 seconds, meals per creature, and mean survival age.
+
+For each contrast (evolved minus random, evolved minus unselected NN), the report
+estimates the mean paired difference and a **95% percentile bootstrap interval**
+from 20,000 resamples of whole seed pairs. Pairing follows the method described in
+the [SciPy bootstrap documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html).
+These intervals are pointwise and approximate, especially with eight pairs.
+
+The two fitness contrasts also use an **exact two-sided paired sign test**,
+excluding ties, following [NIST's sign-test description](https://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/signtest.htm).
+It tests directional consistency across runs; the bootstrap interval separately
+describes the average effect. **Holm correction** adjusts the two fitness p-values
+as one family, using the method documented by [R stats](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html).
+The declared decision is `higher` or `lower` only when the adjusted p-value is
+below 0.05 and the mean-difference interval lies entirely on that side of zero.
+Otherwise it is `inconclusive`. Secondary metrics remain descriptive and their
+intervals are not corrected for multiple comparisons. The implementation uses
+NumPy and Python's standard library; SciPy is not an additional dependency.
+
+This is a small pilot with one held-out arena per training seed. An inconclusive
+result does not establish equivalence, and a positive result would apply to this
+world, controller, and training budget. Broader layout coverage and larger
+independent samples would be needed for stronger general claims.
+
+Export a figure from a completed report without repeating the simulation:
+
+```sh
+python plot_comparison.py results/step13-comparison.json \
+  --output .cache/comparison.png
+```
+
+The top panels show each seed's paired held-out fitness, survival, and meals;
+diamonds show means. The bottom panels show paired differences and bootstrap
+intervals. Survival differences use **percentage points**. Positive differences
+favor evolved creatures. PNG, SVG, and PDF exports are supported.
+
+The [recorded pilot report](results/step13-comparison.json) completed all eight
+planned seed trials and all 264 cohorts. Held-out outcomes averaged across seeds:
+
+| Condition | Mean fitness | Reached age 60s | Meals / creature | Mean survival |
+| --- | ---: | ---: | ---: | ---: |
+| Evolved | 297.36 | 78.75% | 22.01 | 77.29 s |
+| Random | 327.18 | 83.00% | 24.72 | 79.97 s |
+| Unselected NN | 138.63 | 44.25% | 7.92 | 59.48 s |
+
+| Held-out fitness contrast | Mean difference | 95% paired bootstrap interval | Holm p | Decision |
+| --- | ---: | --- | ---: | --- |
+| Evolved minus random | -29.83 | [-57.89, -2.03] | 0.2891 | Inconclusive |
+| Evolved minus unselected NN | +158.73 | [130.68, 183.83] | 0.0156 | Higher |
+
+Evolved brains beat the unselected neural control in **8/8** seed pairs, showing
+a measurable improvement for this neural architecture. They beat random movement
+in **2/8** pairs and had lower observed mean fitness. The mean-difference interval
+for that contrast is below zero, but the directional sign test did not meet the
+declared threshold, so its formal decision remains inconclusive. This pilot
+does **not demonstrate an advantage over random movement**.
+
+![Paired held-out outcomes and uncertainty across eight independent seeds](results/step13-comparison.png)
 
 ## Visualize evolution
 
@@ -150,8 +273,8 @@ generation in total time, but only completed generations have statistics records
 
 Facing food is a descriptive orientation measure, not proof of food seeking.
 Food layout, body traits, competition, and chance vary between generations. A
-single seeded trajectory can show changes, but independent runs and the random
-movement comparison are needed to evaluate whether evolution reliably helps.
+single seeded trajectory can show changes. The independent comparison above
+tests whether improvements extend to held-out arenas and control conditions.
 
 The recorded [seed-42 example](results/step12-seed42.json) completed ten
 generations with the default neural controller and mutation settings:
@@ -354,7 +477,7 @@ make the active controller visible.
 The random mode retains the earlier gradual random steering and cruising speed.
 Both modes start with the same physical traits, food, and seeded network
 parameters for a given seed. Both use the same fitness rule. Comparisons across
-independent runs remain later work.
+independent runs are available through `compare_creatures.py`.
 
 ## Survival
 
@@ -460,10 +583,15 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **139 checks**, a ten-generation seeded run with checkpoint survival
-counts, inspection of the exported figure and in-world charts, and a native
-macOS Cocoa rendering check with three short test generations. Every previously
-recorded fitness, feeding, and behavior observation matches Step 11 exactly.
+Verified: **155 checks** and a complete eight-seed, 264-cohort benchmark. The
+saved dataset passed fairness and completeness audits, and its stored analysis
+matches recomputation exactly. Comparison checks cover matched cohorts and fresh test
+arenas, all-population frozen-genome evaluation, reproducible serial/parallel
+results, complete-run requirements, paired resampling, ties, exact sign-test
+probabilities, Holm adjustment, positive/negative/inconclusive decisions, and
+PNG/SVG/PDF exports. The earlier ten-generation visualization and native macOS
+Cocoa checks remain covered by the preceding steps. Every previously recorded
+fitness, feeding, and behavior observation matched Step 11 exactly in Step 12.
 Plot checks cover checkpoint boundaries and the full-population denominator,
 curve values, generation spacing, 0–100% survival limits, missing legacy data,
 empty reports, PNG/SVG/PDF output, and plotting without changing future offspring.
@@ -488,6 +616,8 @@ world.py              One-generation physics, observation, survival, food, and f
 simulation.py         Automatic cycles, speed, generation limits, restart, and reports
 generation_stats.py   Immutable completed-generation behavioral observations
 plot_evolution.py     Matplotlib fitness, checkpoint survival, and food plot exports
+compare_creatures.py  Paired training/test experiments and seed-level statistical analysis
+plot_comparison.py    Held-out comparisons and paired-difference uncertainty plots
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, inference, independent copies, and mutation
 reproduction.py       Balanced selected-parent reproduction and offspring records
@@ -503,9 +633,12 @@ test_selection.py     Scores, ranking, final selection, immutability, and reset 
 test_reproduction.py  Brain inheritance, mutation, lineage, and generation transitions
 test_simulation.py    Automatic cycles, timing, behavioral metrics, controls, and reports
 test_plot_evolution.py  Checkpoint accounting, plotted values, missing data, and export
+test_comparison.py    Matched controls, frozen evaluation, independent pairs, and inference
 results/step11-seed42.json  Observations from one seeded ten-generation run
 results/step12-seed42.json  Repeated seed-42 trajectory with checkpoint survival rates
 results/step12-evolution.png  Exported fitness, survival, and food-consumption figure
+results/step13-comparison.json  Protocol, training/test data, and paired inference
+results/step13-comparison.png  Held-out outcomes and paired difference intervals
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection

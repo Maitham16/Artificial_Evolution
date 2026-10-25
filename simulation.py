@@ -83,6 +83,7 @@ class EvolutionSimulation:
             "format_version": 2,
             "seed": world.seed,
             "controller": world.controller,
+            "evolution_enabled": world.evolution_enabled,
             "population_size": POPULATION_SIZE,
             "food_count": world.food_count,
             "mutation_rate": world.mutation_rate,

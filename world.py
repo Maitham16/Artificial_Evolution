@@ -36,6 +36,7 @@ class World:
         controller: str = "neural",
         mutation_rate: float = DEFAULT_MUTATION_RATE,
         mutation_scale: float = DEFAULT_MUTATION_SCALE,
+        evolution_enabled: bool = True,
     ) -> None:
         if food_count < 0:
             raise ValueError("Food count must be non-negative.")
@@ -48,6 +49,7 @@ class World:
         self.controller = controller
         self.mutation_rate = mutation_rate
         self.mutation_scale = mutation_scale
+        self.evolution_enabled = evolution_enabled
         self.grid_spacing = 40
         self.show_grid = True
         self.show_perception = True
@@ -100,10 +102,13 @@ class World:
         self._food_facing_time = 0.0
 
     def advance_generation(self) -> bool:
-        """Breed the selected completed generation; leave an active run intact."""
+        """Advance a completed generation, breeding or resampling its brains."""
         evaluation = self.final_evaluation
         if self.creatures or evaluation is None or not evaluation.complete or not evaluation.selected_ids:
             return False
+        if not self.evolution_enabled:
+            self._start_generation(self.generation + 1)
+            return True
         records = {creature.creature_id: creature for creature in self.dead_creatures}
         if any(parent_id not in records for parent_id in evaluation.selected_ids):
             raise ValueError("Selected parent records are missing.")
