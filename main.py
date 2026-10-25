@@ -1,6 +1,7 @@
-"""Launch Step 2: the Pygame virtual world."""
+"""Launch Step 3: a Pygame world populated by 100 artificial creatures."""
 
 import argparse
+import math
 import os
 from pathlib import Path
 
@@ -13,7 +14,7 @@ from world import World
 
 PADDING = 40
 HEADER_HEIGHT = 108
-FOOTER_HEIGHT = 72
+FOOTER_HEIGHT = 92
 TARGET_FPS = 60
 BACKGROUND = (10, 18, 24)
 TEXT = (225, 235, 237)
@@ -38,6 +39,10 @@ def handle_events(world: World) -> bool:
                 return False
             if event.key == pygame.K_g:
                 world.show_grid = not world.show_grid
+            if event.key == pygame.K_r:
+                world.regenerate_population()
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            world.select_creature((event.pos[0] - PADDING, event.pos[1] - HEADER_HEIGHT))
     return True
 
 
@@ -48,21 +53,20 @@ def draw_interface(
     screen.blit(fonts["small"].render("ARTIFICIAL EVOLUTION", True, ACCENT), (40, 25))
     screen.blit(fonts["title"].render("The virtual world", True, TEXT), (38, 48))
 
-    status = fonts["small"].render("WORLD READY", True, ACCENT)
+    status = fonts["small"].render(f"{len(world.creatures)} CREATURES", True, ACCENT)
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, ACCENT, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 02 / ENVIRONMENT", True, MUTED)
+    stage = fonts["small"].render("STEP 03 / CREATURES", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
 
     world.draw(screen, (PADDING, HEADER_HEIGHT))
 
-    label = fonts["body"].render("An empty habitat", True, MUTED)
-    center = (PADDING + world.width // 2, HEADER_HEIGHT + world.height // 2)
-    screen.blit(label, label.get_rect(center=center))
-
-    footer_y = HEADER_HEIGHT + world.height + 26
-    controls = f"G  Grid {'on' if world.show_grid else 'off'}     /     Esc  Quit"
+    footer_y = HEADER_HEIGHT + world.height + 22
+    controls = (
+        f"G  Grid {'on' if world.show_grid else 'off'}     /     "
+        "R  New population     /     Click  Inspect     /     Esc  Quit"
+    )
     screen.blit(fonts["small"].render(controls, True, MUTED), (PADDING, footer_y))
     dimensions = fonts["small"].render(
         f"{world.width:,} x {world.height:,} pixels", True, MUTED
@@ -72,9 +76,30 @@ def draw_interface(
         (screen.get_width() - PADDING - dimensions.get_width(), footer_y),
     )
 
+    creature = world.selected_creature
+    if creature is None:
+        details = "Click a creature to inspect its properties."
+    else:
+        details = (
+            f"#{creature.creature_id:03d}    "
+            f"Position ({creature.x:.0f}, {creature.y:.0f})    "
+            f"Energy {creature.energy:.0f}    Speed {creature.speed:.1f} px/s    "
+            f"Radius {creature.radius} px    Facing {math.degrees(creature.heading):.0f} deg"
+        )
+    screen.blit(fonts["small"].render(details, True, TEXT), (PADDING, footer_y + 27))
+    seed_label = fonts["small"].render(f"Seed {world.seed}", True, MUTED)
+    screen.blit(
+        seed_label,
+        (screen.get_width() - PADDING - seed_label.get_width(), footer_y + 27),
+    )
+
 
 def run(
-    *, headless: bool = False, frames: int | None = None, screenshot: Path | None = None
+    *,
+    headless: bool = False,
+    frames: int | None = None,
+    screenshot: Path | None = None,
+    seed: int | None = None,
 ) -> int:
     if headless:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -82,20 +107,20 @@ def run(
     try:
         pygame.display.init()
         pygame.font.init()
-        world = World()
+        world = World(seed=seed)
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption("Artificial Evolution | Virtual World")
+        pygame.display.set_caption("Artificial Evolution | 100 Creatures")
         fonts = {
             "title": pygame.font.Font(None, 38),
-            "body": pygame.font.Font(None, 25),
             "small": pygame.font.Font(None, 20),
         }
         clock = pygame.time.Clock()
         rendered_frames = 0
         print(
             f"World ready: {world.width} x {world.height}; "
+            f"creatures: {len(world.creatures)}; seed: {world.seed}; "
             f"display driver: {pygame.display.get_driver()}",
             flush=True,
         )
@@ -129,10 +154,16 @@ def main() -> int:
     parser.add_argument(
         "--screenshot", type=Path, help="save the final frame as an image on exit"
     )
+    parser.add_argument("--seed", type=int, help="recreate a particular initial population")
     args = parser.parse_args()
     if args.headless and args.frames is None:
         parser.error("--headless requires --frames so the run finishes automatically")
-    return run(headless=args.headless, frames=args.frames, screenshot=args.screenshot)
+    return run(
+        headless=args.headless,
+        frames=args.frames,
+        screenshot=args.screenshot,
+        seed=args.seed,
+    )
 
 
 if __name__ == "__main__":

@@ -3,9 +3,9 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **2 — Create the virtual world**. The Pygame application displays an
-empty 1,000 × 600 pixel habitat. Creatures, food, survival mechanics, neural
-networks, and evolution will be implemented in later steps.
+Current step: **3 — Create artificial creatures**. The Pygame application displays
+100 stationary creatures in a 1,000 × 600 pixel habitat. Food, movement, survival
+mechanics, neural networks, and evolution will be implemented in later steps.
 
 ## Run the world
 
@@ -17,6 +17,8 @@ python main.py
 ```
 
 - Press **G** to hide or show the grid.
+- Press **R** to generate a new random population.
+- **Click a creature** to inspect its properties. Click empty space to deselect.
 - Press **Esc**, or close the window, to quit.
 
 The window runs at up to 60 frames per second. The arena has a visible border and
@@ -25,25 +27,55 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 The surrounding header and footer are outside the arena. The border and grid are
 visual guides at this stage.
 
+## Creatures
+
+Each creature has a unique ID within its population and these initial properties:
+
+| Property | Initial value |
+| --- | --- |
+| Position | Random, fully inside the arena, with space between creatures |
+| Body radius | Random integer from 6 to 9 pixels |
+| Color | Random choice of six pastel colors; appearance only |
+| Facing direction | Random angle around the full circle, shown by the white eye |
+| Speed | Random value from 40 to 80 pixels per second; stored for later use |
+| Energy | 100 for every creature; constant at this step |
+
+The selected creature has a white ring, and its properties appear below the arena.
+The first creature is selected initially. Creatures remain stationary at this
+step: the display does not update position, spend energy, or select for fitness.
+
+Use a seed to reproduce a population, including all its properties:
+
+```sh
+python main.py --seed 42
+```
+
+Without `--seed`, startup chooses a random seed. The active seed is displayed in
+the footer. **R** chooses a new seed and resets the population to 100 creatures.
+Population generation uses its own random-number generator, separate from any
+future experiment randomness.
+
 To render a few frames without opening a window, optionally saving a preview:
 
 ```sh
-python main.py --headless --frames 5 --screenshot .cache/world-preview.png
+python main.py --headless --frames 5 --seed 42 --screenshot .cache/creatures-preview.png
 ```
 
 Headless mode requires `--frames` so it exits automatically. This verifies the
 rendering loop; it does not exercise the desktop window backend.
 
-Verified: a five-frame headless run, visual inspection of the saved preview, grid
-rendering and toggling, Escape, and window-close event handling. Native macOS
-display initialization aborted during sandboxed execution, so opening the actual
-desktop window still needs verification from a normal terminal.
+Verified: population counts, unique IDs, bounds, property ranges, and absence of
+body overlap across 100 seeds; seeded reproducibility; click inspection and
+deselection; population regeneration; grid and quit controls; and unchanged
+creature state during rendering. Both headless rendering and a native macOS
+Cocoa window completed five-frame runs successfully.
 
 ## Project structure
 
 ```text
-main.py               Window, event loop, interface, and launch options
-world.py              Arena dimensions, background, border, and grid
+main.py               Window, controls, creature inspection, and launch options
+world.py              Arena rendering, population management, and selection
+creature.py           Creature properties, drawing, and random population generation
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection
