@@ -37,15 +37,19 @@ class World:
         mutation_rate: float = DEFAULT_MUTATION_RATE,
         mutation_scale: float = DEFAULT_MUTATION_SCALE,
         evolution_enabled: bool = True,
+        population_size: int = POPULATION_SIZE,
     ) -> None:
-        if food_count < 0:
-            raise ValueError("Food count must be non-negative.")
+        if type(food_count) is not int or food_count < 0:
+            raise ValueError("Food count must be a non-negative integer.")
+        if type(population_size) is not int or population_size < 1:
+            raise ValueError("Population size must be a positive integer.")
         if controller not in ("neural", "random"):
             raise ValueError("Controller must be 'neural' or 'random'.")
         validate_mutation_parameters(mutation_rate, mutation_scale)
         self.width = width
         self.height = height
         self.food_count = food_count
+        self.population_size = population_size
         self.controller = controller
         self.mutation_rate = mutation_rate
         self.mutation_scale = mutation_scale
@@ -73,7 +77,9 @@ class World:
         """Create newborn bodies and a fresh environment for one generation."""
         suffix = "" if generation == 1 else f":generation:{generation}"
         population_seed = self.seed if generation == 1 else f"population:{self.seed}{suffix}"
-        creatures = create_population(self.width, self.height, random.Random(population_seed))
+        creatures = create_population(
+            self.width, self.height, random.Random(population_seed), self.population_size,
+        )
         if inherited is not None and len(inherited) != len(creatures):
             raise ValueError("Every newborn must receive one inherited brain.")
         for index, creature in enumerate(creatures):
@@ -118,7 +124,7 @@ class World:
             f"mutation:{self.seed}:generation:{next_generation}"
         ).getrandbits(128)
         offspring = reproduce_brains(
-            parents, np.random.default_rng(mutation_seed), offspring_count=POPULATION_SIZE,
+            parents, np.random.default_rng(mutation_seed), offspring_count=self.population_size,
             mutation_rate=self.mutation_rate, mutation_scale=self.mutation_scale,
         )
         self._start_generation(next_generation, offspring)

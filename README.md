@@ -3,10 +3,9 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **13 — Compare evolved vs. random creatures**. Run independent,
-paired experiments and test frozen final-generation brains in fresh arenas.
-Compare fitness, survival, and feeding against random movement and a neural
-control without inheritance or selection.
+Current step: **14 — Experiment with evolutionary parameters**. Configure
+mutation, population size, and food scarcity, then explore their effects using
+independent training seeds and fresh validation arenas with matched random controls.
 
 ## Run the world
 
@@ -41,6 +40,143 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Experiment with parameters
+
+Choose a world configuration directly:
+
+```sh
+python main.py --seed 42 --population 50 --mutation-rate 0.3 --food-count 75
+```
+
+- `--population`: positive integer; the same number of newborns is created at
+  every generation and restart. Default **100**.
+- `--mutation-rate`: independent probability from 0 to 1 for each weight or bias.
+  Default **0.1**. A rate of zero still uses fitness selection and inheritance;
+  it explores the founders' existing genomes without adding mutations.
+- `--mutation-scale`: finite non-negative standard deviation of Gaussian noise.
+  Default **0.1**. The recorded sweep holds this fixed.
+- `--food-count`: non-negative maintained pellet supply. Default **150**.
+  The study uses **75 scarce**, **150 standard**, and **225 rich** pellets to
+  change environmental difficulty while keeping other survival rules fixed.
+
+The header shows the configured birth population and mutation probability.
+Selection retains the top 20%, rounding up, and reproduction creates exactly the
+configured population. Scores and survival rates use the actual cohort size.
+Space, N, R, generation limits, reports, and plot exports work with custom settings.
+
+Run the exploratory parameter study:
+
+```sh
+python experiment_parameters.py --workers 4 \
+  --output .cache/parameters.json --plot .cache/parameters.png
+```
+
+The fixed standard is mutation **10%**, population **100**, and food **150**.
+The default **seven-setting** design changes one factor from this standard:
+
+| Factor | Tested values | Other factors |
+| --- | --- | --- |
+| Mutation probability | 0%, 10%, 30% | Population 100, food 150 |
+| Population | 50, 100, 150 | Mutation 10%, food 150 |
+| Food supply | 75, 150, 225 | Mutation 10%, population 100 |
+
+The standard is shared across the three comparisons. Four new seeds
+(**901–904**) each train for **five generations**, including the founders and
+four reproduction cycles, at every setting. All final-cohort brains are copied
+into fresh bodies in a separate `step14:validation` seed namespace. No weights
+change during validation. Within each setting, evolved and random-moving
+creatures start with identical bodies and food. Mutation and food variants at
+the same population size share their founder brains. Mutation variants also
+share all generation-start layouts.
+
+The random controller does not learn, so it needs one validation episode per
+seed/population/food combination. These exact baseline outcomes are reused across
+mutation settings, without increasing the independent sample count. The default
+study therefore runs **188 unique cohorts**: 140 training, 28 evolved validation,
+and 20 random validation cohorts. CPU workers change execution speed; physics
+always advances in fixed 1/60-second ticks.
+
+Population experiments keep the **arena and maintained pellet count fixed**.
+Food is replenished as before. Changing population changes density, food per creature, the founder sample,
+and the number of training lives. At five generations, a population of 50 uses
+250 training lives per seed, while 150 uses 750. These results describe the total
+effect of changing population in this world, rather than isolating a pure benefit
+from genetic diversity or equal computation budgets. Matched random controls
+provide ecological context for the evolved results.
+
+The report contains fitness, survival to age 60 seconds, food consumption, and
+mean survival age. Each setting has seed-paired summaries for:
+
+- Evolved minus its matched random controller.
+- Evolved performance minus evolved performance at the standard setting.
+- The change in the evolved-minus-random gap relative to the standard.
+
+Intervals are **95% pointwise percentile bootstrap intervals**, resampling four
+independent seed pairs, with 20,000 resamples. They are approximate and are not
+corrected across settings or metrics. There are **no significance decisions or
+confirmed winners** in this exploratory sweep. Using validation results to choose
+parameters would require new independent confirmation runs before making a
+general improvement claim. Step 14 uses its own seeds, five-generation budget,
+standard, and baselines; the earlier Step 13 benchmark remains a separate study.
+
+This one-factor-at-a-time design measures effects conditional on the standard.
+It cannot estimate interactions or identify a global optimum; see
+[NIST's explanation of the OFAT limitation](https://www.itl.nist.gov/div898/handbook/pri/section2/pri212.htm).
+The interactive world accepts combined changes, while the sweep keeps each
+variation to one factor so the reported design remains explicit.
+
+You can supply other levels and seeds before running, for example:
+
+```sh
+python experiment_parameters.py --seeds 11 22 33 44 --generations 5 \
+  --mutation-rates 0 0.05 0.1 0.3 --populations 50 100 150 \
+  --food-counts 75 150 225 --workers 4 --output .cache/custom-sweep.json
+```
+
+The standard is always included. Reports save the planned protocol and raw
+training/validation summaries, matching and genome hashes, cached controls, and
+paired estimates. Progress reports remain `running` until all planned settings
+and seeds are complete. Incomplete studies cannot be plotted.
+
+Regenerate a figure from the saved data:
+
+```sh
+python plot_parameters.py results/step14-parameters.json \
+  --output .cache/parameters.png
+```
+
+Top panels show evolved and random validation fitness, with individual seed
+outcomes and mean curves. Bottom panels show evolved-minus-random fitness with
+paired intervals. PNG, SVG, and PDF exports are supported.
+
+The [recorded four-seed pilot](results/step14-parameters.json) completed all
+**188 unique cohorts**. Its validation fitness means were:
+
+| Variation from standard | Evolved | Random | Evolved minus random |
+| --- | ---: | ---: | ---: |
+| Standard: 10% mutation, population 100, food 150 | 273.06 | 317.37 | -44.31 |
+| Mutation 0% (selection and inheritance only) | 286.01 | 317.37 | -31.36 |
+| Mutation 30% | 278.50 | 317.37 | -38.88 |
+| Population 50 | 260.16 | 330.86 | -70.70 |
+| Population 150 | 267.79 | 313.51 | -45.72 |
+| Food 75 (scarce) | 99.94 | 105.73 | -5.78 |
+| Food 225 (rich) | 431.82 | 479.54 | -47.72 |
+
+Zero mutation had the highest observed fitness among the three mutation rates,
+12.95 points above standard; the pointwise paired interval was [1.46, 24.43].
+The 30% rate was 5.44 points above standard with interval [-15.35, 25.53]. This
+short pilot does not establish an optimal rate. Population changes to 50 and 150
+had intervals crossing zero for their evolved-fitness changes from standard.
+
+Food supply produced the largest observed fitness shifts in these tested ranges.
+Moving from 75 to 225 pellets increased evolved survival to age 60 seconds from
+**17.5% to 96.5%**, and mean meals from **5.32 to 34.55**. Random movement also
+benefited from richer food. Every tested setting still had a negative average
+evolved-minus-random fitness gap, so this sweep did not find a setting with a
+positive mean advantage over that baseline.
+
+![Mutation, population, and food-scarcity effects with paired uncertainty](results/step14-parameters.png)
 
 ## Compare evolved and random creatures
 
@@ -372,8 +508,9 @@ before the next population is born. Automatic cycling breeds on the next tick;
 manual mode waits for **N**, which also works while viewing the leaderboard.
 Pressing **N** during a living generation has no effect.
 
-Each of the usual **20 selected parents produces five offspring**, rebuilding the
-population to **100**. Birth slots are shuffled to avoid associating parent rank
+With the default population, **20 selected parents produce five offspring each**,
+rebuilding the population to **100**. Other sizes use the same rounded-up 20%
+selection rule and balance offspring across parents. Birth slots are shuffled to avoid associating parent rank
 with particular body positions. Each offspring receives an independent copy of
 one parent's complete network: all **90 weights and biases**. Reproduction is
 asexual, without crossover or gradient training.
@@ -508,13 +645,13 @@ The header shows living creatures, hungry creatures, total deaths, and the
 starvation/old-age breakdown. An extinct population shows final fitness and
 selection results in manual mode or after reaching a generation target. Automatic
 cycling breeds offspring; **N** does so manually. **R** starts again with random
-founders. Each new population has 100 living creatures with zero scores and
+founders. Each new population has its configured number of living creatures with zero scores and
 deaths. Pause freezes the full simulation,
 including hunger, lifespan, and earned fitness.
 
 ## Food and eating
 
-The arena starts with 150 green diamond-shaped pellets, each with a collision
+By default, the arena starts with 150 green diamond-shaped pellets, each with a collision
 radius of 3 pixels and an energy value of 20. Food spawns fully inside the arena,
 clear of creatures and other pellets.
 
@@ -526,7 +663,7 @@ creature ID. Each pellet awards energy only once. A full or dead creature leaves
 the food available.
 
 After all contacts are resolved, eaten pellets are replaced at random free
-positions, maintaining 150 available meals. Replacements start clear of creatures
+positions, maintaining the configured supply (150 by default). Replacements start clear of creatures
 and are eligible for eating on subsequent steps. The header shows available food
 and total meals eaten; selecting a creature shows its individual meal count.
 
@@ -559,7 +696,7 @@ python main.py --seed 42
 ```
 
 Without `--seed`, startup chooses a random seed. The active seed is displayed in
-the footer. **R** chooses a new seed and resets the population to 100 creatures.
+the footer. **R** chooses a new seed and resets the configured birth population.
 Initial physical traits, food, and random steering keep separate seed streams.
 Brains are sampled with a NumPy generator after physical traits are created.
 The seed recreates their parameters as well as the initial world. Food availability
@@ -583,7 +720,19 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **155 checks** and a complete eight-seed, 264-cohort benchmark. The
+Verified: **172 checks**, including population sizes 1, 7, 50, and 150 across
+generation changes and restart; configured survival denominators; parameter CLI
+validation; matched/frozen validation; random-control reuse; reproducible sweeps;
+and exploratory paired summaries and exports. A native macOS run verified custom
+parameters, and a full default seed-42 generation exactly reproduced every
+recorded Step 12 observation.
+
+The Step 14 dataset contains all 188 planned unique cohorts; population counts,
+survival denominators, frozen validation, cached controls, score components,
+and completeness were audited. Its stored summaries match fresh recomputation
+exactly, and its exported parameter plots were visually inspected.
+
+Step 13 also recorded a complete eight-seed, 264-cohort benchmark. The
 saved dataset passed fairness and completeness audits, and its stored analysis
 matches recomputation exactly. Comparison checks cover matched cohorts and fresh test
 arenas, all-population frozen-genome evaluation, reproducible serial/parallel
@@ -618,6 +767,8 @@ generation_stats.py   Immutable completed-generation behavioral observations
 plot_evolution.py     Matplotlib fitness, checkpoint survival, and food plot exports
 compare_creatures.py  Paired training/test experiments and seed-level statistical analysis
 plot_comparison.py    Held-out comparisons and paired-difference uncertainty plots
+experiment_parameters.py  Paired mutation/population/food exploration and summaries
+plot_parameters.py    Parameter-response curves and paired validation fitness gaps
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, inference, independent copies, and mutation
 reproduction.py       Balanced selected-parent reproduction and offspring records
@@ -634,11 +785,14 @@ test_reproduction.py  Brain inheritance, mutation, lineage, and generation trans
 test_simulation.py    Automatic cycles, timing, behavioral metrics, controls, and reports
 test_plot_evolution.py  Checkpoint accounting, plotted values, missing data, and export
 test_comparison.py    Matched controls, frozen evaluation, independent pairs, and inference
+test_parameters.py    Configurable populations, controlled sweeps, caching, and validation
 results/step11-seed42.json  Observations from one seeded ten-generation run
 results/step12-seed42.json  Repeated seed-42 trajectory with checkpoint survival rates
 results/step12-evolution.png  Exported fitness, survival, and food-consumption figure
 results/step13-comparison.json  Protocol, training/test data, and paired inference
 results/step13-comparison.png  Held-out outcomes and paired difference intervals
+results/step14-parameters.json  Exploratory protocol, raw data, and paired estimates
+results/step14-parameters.png  Parameter effects on evolved and random fitness
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection

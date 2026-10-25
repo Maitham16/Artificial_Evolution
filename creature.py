@@ -196,13 +196,17 @@ def _reflect_axis(
     return lower + phase, False
 
 
-def create_population(width: int, height: int, rng: random.Random) -> list[Creature]:
-    """Place 100 creatures inside the arena, leaving space between their bodies."""
+def create_population(
+    width: int, height: int, rng: random.Random, population_size: int = POPULATION_SIZE,
+) -> list[Creature]:
+    """Place the requested population inside the arena with space between bodies."""
+    if type(population_size) is not int or population_size < 1:
+        raise ValueError("Population size must be a positive integer.")
     if min(width, height) < 35:
         raise ValueError("The arena is too small for the creatures.")
 
     creatures = []
-    for creature_id in range(1, POPULATION_SIZE + 1):
+    for creature_id in range(1, population_size + 1):
         radius = rng.randint(6, 9)
         margin = radius + 8
         for _ in range(1000):
@@ -214,7 +218,7 @@ def create_population(width: int, height: int, rng: random.Random) -> list[Creat
             ):
                 break
         else:
-            raise ValueError("The arena is too crowded to place 100 creatures.")
+            raise ValueError(f"The arena is too crowded to place {population_size} creatures.")
 
         creatures.append(
             Creature(

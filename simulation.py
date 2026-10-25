@@ -3,7 +3,6 @@
 from dataclasses import asdict
 import math
 
-from creature import POPULATION_SIZE
 from world import SIMULATION_STEP, World
 
 
@@ -84,7 +83,7 @@ class EvolutionSimulation:
             "seed": world.seed,
             "controller": world.controller,
             "evolution_enabled": world.evolution_enabled,
-            "population_size": POPULATION_SIZE,
+            "population_size": world.population_size,
             "food_count": world.food_count,
             "mutation_rate": world.mutation_rate,
             "mutation_scale": world.mutation_scale,

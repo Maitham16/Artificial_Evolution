@@ -1,4 +1,4 @@
-"""Launch Step 12: visualize fitness, survival, and feeding across generations."""
+"""Launch Step 14: explore mutation, population size, and food scarcity."""
 
 import argparse
 import json
@@ -10,7 +10,9 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
 import pygame
 
-from creature import MAX_ENERGY
+from brain import DEFAULT_MUTATION_RATE, DEFAULT_MUTATION_SCALE
+from creature import MAX_ENERGY, POPULATION_SIZE
+from food import FOOD_COUNT
 from generation_stats import SURVIVAL_CHECKPOINT_SECONDS
 from perception import VISION_RANGE
 from selection import FitnessEvaluation
@@ -33,6 +35,27 @@ def positive_integer(value: str) -> int:
     number = int(value)
     if number < 1:
         raise argparse.ArgumentTypeError("must be at least 1")
+    return number
+
+
+def nonnegative_integer(value: str) -> int:
+    number = int(value)
+    if number < 0:
+        raise argparse.ArgumentTypeError("must be non-negative")
+    return number
+
+
+def mutation_probability(value: str) -> float:
+    number = float(value)
+    if not math.isfinite(number) or not 0 <= number <= 1:
+        raise argparse.ArgumentTypeError("must be a finite probability from 0 to 1")
+    return number
+
+
+def mutation_scale(value: str) -> float:
+    number = float(value)
+    if not math.isfinite(number) or number < 0:
+        raise argparse.ArgumentTypeError("must be finite and non-negative")
     return number
 
 
@@ -240,7 +263,7 @@ def draw_interface(
         if simulation.generation_limit is not None:
             generation += f"/{simulation.generation_limit}"
         mode = "Done" if simulation.finished else "Auto" if simulation.auto_advance else "Manual"
-        controller_note = f"Gen {generation} / {mode} / {simulation.speed}x / Sight {VISION_RANGE:.0f} px"
+        controller_note = f"Gen {generation} / {mode} / {simulation.speed}x / N {world.population_size} / Mut {world.mutation_rate * 100:g}%"
     screen.blit(fonts["small"].render(controller_label, True, ACCENT), (400, 31))
     screen.blit(fonts["small"].render(controller_note, True, MUTED), (400, 55))
 
@@ -256,7 +279,7 @@ def draw_interface(
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 12 / EVOLUTION PLOTS", True, MUTED)
+    stage = fonts["small"].render("STEP 14 / PARAMETERS", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
         f"FOOD {len(world.food)}  /  EATEN {world.total_food_eaten}",
@@ -372,6 +395,10 @@ def run(
     manual: bool = False,
     report: Path | None = None,
     plot: Path | None = None,
+    population_size: int = POPULATION_SIZE,
+    mutation_rate: float = DEFAULT_MUTATION_RATE,
+    mutation_scale: float = DEFAULT_MUTATION_SCALE,
+    food_count: int = FOOD_COUNT,
 ) -> int:
     if headless and frames is None and (generations is None or manual):
         raise ValueError("Headless mode needs frames or an automatic generation limit.")
@@ -381,13 +408,14 @@ def run(
     try:
         pygame.display.init()
         pygame.font.init()
-        world = World(seed=seed, controller=controller)
+        world = World(seed=seed, controller=controller, population_size=population_size,
+                      mutation_rate=mutation_rate, mutation_scale=mutation_scale, food_count=food_count)
         simulation = EvolutionSimulation(world, generation_limit=generations,
                                          speed=speed, auto_advance=not manual)
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption(f"Artificial Evolution | Evolution plots | {controller.title()}")
+        pygame.display.set_caption(f"Artificial Evolution | Parameters | {controller.title()}")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),
@@ -400,6 +428,7 @@ def run(
             f"creatures: {len(world.creatures)}; seed: {world.seed}; "
             f"food: {len(world.food)}; "
             f"controller: {world.controller}; "
+            f"mutation: {world.mutation_rate:g}; "
             f"speed: {simulation.speed}x; generations: {generations or 'unlimited'}; "
             f"display driver: {pygame.display.get_driver()}",
             flush=True,
@@ -466,6 +495,14 @@ def main() -> int:
         "--screenshot", type=Path, help="save the final frame as an image on exit"
     )
     parser.add_argument("--seed", type=int, help="recreate a particular initial population")
+    parser.add_argument("--population", type=positive_integer, default=POPULATION_SIZE,
+                        help="creatures born in each generation")
+    parser.add_argument("--mutation-rate", type=mutation_probability, default=DEFAULT_MUTATION_RATE,
+                        help="independent mutation probability per weight or bias")
+    parser.add_argument("--mutation-scale", type=mutation_scale, default=DEFAULT_MUTATION_SCALE,
+                        help="standard deviation of Gaussian mutation noise")
+    parser.add_argument("--food-count", type=nonnegative_integer, default=FOOD_COUNT,
+                        help="maintained food supply; fewer pellets increase scarcity")
     parser.add_argument("--generations", type=positive_integer, help="stop after N complete generations")
     parser.add_argument("--speed", type=int, choices=SPEEDS, default=1, help="simulation speed multiplier")
     parser.add_argument("--manual", action="store_true", help="wait for N between generations")
@@ -489,6 +526,10 @@ def main() -> int:
         manual=args.manual,
         report=args.report,
         plot=args.plot,
+        population_size=args.population,
+        mutation_rate=args.mutation_rate,
+        mutation_scale=args.mutation_scale,
+        food_count=args.food_count,
     )
 
 
