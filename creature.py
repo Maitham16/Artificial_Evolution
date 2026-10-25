@@ -1,11 +1,13 @@
 """Creature state, survival, movement, drawing, and population generation."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import math
 import random
 
+import numpy as np
 import pygame
 
+from brain import MAX_TURN_RATE, NeuralNetwork
 from food import Food
 
 
@@ -41,6 +43,20 @@ class Creature:
     age: float = 0.0
     lifespan: float = 90.0
     death_cause: str | None = None
+    max_speed: float = field(init=False)
+    brain: NeuralNetwork | None = field(default=None, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        self.max_speed = abs(self.speed)
+
+    def apply_controls(self, turn: float, throttle: float) -> None:
+        """Apply a signed turn and a forward throttle fraction to living bodies."""
+        if not self.alive:
+            return
+        if not math.isfinite(turn) or not math.isfinite(throttle):
+            raise ValueError("Movement controls must be finite.")
+        self.turn_rate = max(-1.0, min(1.0, turn)) * MAX_TURN_RATE
+        self.speed = max(0.0, min(1.0, throttle)) * self.max_speed
 
     @property
     def alive(self) -> bool:
@@ -205,4 +221,8 @@ def create_population(width: int, height: int, rng: random.Random) -> list[Creat
     # Assign lifespan after placement to preserve the existing seeded positions.
     for creature in creatures:
         creature.lifespan = rng.uniform(60.0, 120.0)
+    # Brains are initialized after physical traits and use their own NumPy stream.
+    brain_rng = np.random.default_rng(rng.getrandbits(128))
+    for creature in creatures:
+        creature.brain = NeuralNetwork(brain_rng)
     return creatures

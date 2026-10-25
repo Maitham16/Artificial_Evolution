@@ -144,8 +144,8 @@ class FoodTests(unittest.TestCase):
         self.assertEqual(states[0], states[2])
 
     def test_food_does_not_change_early_random_movement(self) -> None:
-        with_food = World(seed=42)
-        without_food = World(seed=42, food_count=0)
+        with_food = World(seed=42, controller="random")
+        without_food = World(seed=42, food_count=0, controller="random")
         for world in (with_food, without_food):
             world.update(2.0)
         self.assertGreater(with_food.total_food_eaten, 0)

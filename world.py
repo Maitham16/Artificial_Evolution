@@ -3,8 +3,10 @@
 import math
 import random
 
+import numpy as np
 import pygame
 
+from brain import VISION_RANGE
 from creature import MAX_ENERGY, Creature, create_population
 from food import FOOD_COUNT, FOOD_RADIUS, Food
 
@@ -27,12 +29,16 @@ class World:
         *,
         seed: int | None = None,
         food_count: int = FOOD_COUNT,
+        controller: str = "neural",
     ) -> None:
         if food_count < 0:
             raise ValueError("Food count must be non-negative.")
+        if controller not in ("neural", "random"):
+            raise ValueError("Controller must be 'neural' or 'random'.")
         self.width = width
         self.height = height
         self.food_count = food_count
+        self.controller = controller
         self.grid_spacing = 40
         self.show_grid = True
         self.paused = False
@@ -105,6 +111,44 @@ class World:
         for _ in range(self.food_count - len(self.food)):
             self.food.append(self._spawn_food())
 
+    def get_sensory_inputs(
+        self, creature: Creature, food_positions: np.ndarray | None = None
+    ) -> np.ndarray:
+        """Sense local food and radius-aware wall clearance in the body's frame."""
+        if food_positions is None:
+            food_positions = np.array([(food.x, food.y) for food in self.food],
+                                      dtype=np.float64).reshape(-1, 2)
+        cosine, sine = math.cos(creature.heading), math.sin(creature.heading)
+        forward, right, visible = 0.0, 0.0, 0.0
+        if len(food_positions):
+            offsets = food_positions - (creature.x, creature.y)
+            distances_squared = np.sum(offsets * offsets, axis=1)
+            nearest = int(np.argmin(distances_squared))
+            if distances_squared[nearest] <= VISION_RANGE ** 2:
+                dx, dy = offsets[nearest]
+                forward = (cosine * dx + sine * dy) / VISION_RANGE
+                right = (-sine * dx + cosine * dy) / VISION_RANGE
+                visible = 1.0
+
+        directions = ((cosine, sine), (-sine, cosine),
+                      (-cosine, -sine), (sine, -cosine))
+        walls = [self._wall_clearance(creature, dx, dy) for dx, dy in directions]
+        return np.array([forward, right, visible, creature.hunger, *walls],
+                        dtype=np.float64)
+
+    def _wall_clearance(self, creature: Creature, dx: float, dy: float) -> float:
+        """Return a normalized ray distance to the nearest center-position limit."""
+        distances = [VISION_RANGE]
+        if dx > 1e-12:
+            distances.append((self.width - creature.radius - creature.x) / dx)
+        elif dx < -1e-12:
+            distances.append((creature.radius - creature.x) / dx)
+        if dy > 1e-12:
+            distances.append((self.height - creature.radius - creature.y) / dy)
+        elif dy < -1e-12:
+            distances.append((creature.radius - creature.y) / dy)
+        return max(0.0, min(distances)) / VISION_RANGE
+
     def update(self, dt: float) -> None:
         """Advance survival, living creatures' motion, and eating in fixed steps."""
         if not math.isfinite(dt) or dt < 0:
@@ -114,21 +158,30 @@ class World:
 
         self._accumulator += dt
         while self._accumulator + 1e-12 >= SIMULATION_STEP:
+            food_positions = np.array([(food.x, food.y) for food in self.food],
+                                      dtype=np.float64).reshape(-1, 2)
             survivors = []
             for creature in self.creatures:
+                uses_brain = self.controller == "neural" and creature.brain is not None
+                if creature.alive:
+                    if uses_brain:
+                        sensors = self.get_sensory_inputs(creature, food_positions)
+                        turn, throttle = creature.brain.forward(sensors)
+                        creature.apply_controls(float(turn), (float(throttle) + 1.0) / 2.0)
+                    elif creature.turn_time_remaining <= 0:
+                        creature.turn_rate = self._motion_rng.uniform(
+                            -math.pi / 2, math.pi / 2
+                        )
+                        creature.turn_time_remaining = self._motion_rng.uniform(0.75, 2.0)
                 creature.update_survival(SIMULATION_STEP)
                 if not creature.alive:
                     self.dead_creatures.append(creature)
                     continue
                 survivors.append(creature)
-                if creature.turn_time_remaining <= 0:
-                    creature.turn_rate = self._motion_rng.uniform(
-                        -math.pi / 2, math.pi / 2
-                    )
-                    creature.turn_time_remaining = self._motion_rng.uniform(0.75, 2.0)
                 creature.rotate(creature.turn_rate * SIMULATION_STEP)
                 creature.move(SIMULATION_STEP, self.width, self.height)
-                creature.turn_time_remaining -= SIMULATION_STEP
+                if not uses_brain:
+                    creature.turn_time_remaining -= SIMULATION_STEP
             self.creatures = survivors
             if self.selected_creature not in self.creatures:
                 self.selected_creature = None

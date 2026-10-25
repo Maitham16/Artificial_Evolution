@@ -1,4 +1,4 @@
-"""Launch Step 6: creatures use energy, get hungry, age, and die."""
+"""Launch Step 7: untrained NumPy brains control creature movement."""
 
 import argparse
 import math
@@ -56,6 +56,14 @@ def draw_interface(
     screen.fill(BACKGROUND)
     screen.blit(fonts["small"].render("ARTIFICIAL EVOLUTION", True, ACCENT), (40, 25))
     screen.blit(fonts["title"].render("The virtual world", True, TEXT), (38, 48))
+    if world.controller == "neural":
+        controller_label = "NUMPY BRAINS  8 > 8 > 2"
+        controller_note = "Untrained / 90 parameters each"
+    else:
+        controller_label = "RANDOM MOVEMENT"
+        controller_note = "Original baseline controller"
+    screen.blit(fonts["small"].render(controller_label, True, ACCENT), (400, 31))
+    screen.blit(fonts["small"].render(controller_note, True, MUTED), (400, 55))
 
     if not world.creatures:
         activity, status_color = "EXTINCT", (238, 115, 127)
@@ -69,7 +77,7 @@ def draw_interface(
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 06 / SURVIVAL", True, MUTED)
+    stage = fonts["small"].render("STEP 07 / BRAINS", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
         f"FOOD {len(world.food)}  /  EATEN {world.total_food_eaten}",
@@ -132,8 +140,9 @@ def draw_interface(
         )
         traits = (
             f"Position ({creature.x:.0f}, {creature.y:.0f})    "
-            f"Speed {creature.speed:.1f} px/s    "
-            f"Radius {creature.radius} px    Facing {math.degrees(creature.heading):.0f} deg"
+            f"Speed {creature.speed:.1f}/{creature.max_speed:.0f} px/s    "
+            f"Radius {creature.radius} px    Facing {math.degrees(creature.heading):.0f} deg    "
+            f"Turn {math.degrees(creature.turn_rate):+.0f} deg/s"
         )
     screen.blit(fonts["small"].render(details, True, TEXT), (PADDING, footer_y + 24))
     screen.blit(fonts["small"].render(traits, True, MUTED), (PADDING, footer_y + 46))
@@ -152,6 +161,7 @@ def run(
     frames: int | None = None,
     screenshot: Path | None = None,
     seed: int | None = None,
+    controller: str = "neural",
 ) -> int:
     if headless:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -159,11 +169,11 @@ def run(
     try:
         pygame.display.init()
         pygame.font.init()
-        world = World(seed=seed)
+        world = World(seed=seed, controller=controller)
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption("Artificial Evolution | Survival")
+        pygame.display.set_caption(f"Artificial Evolution | {controller.title()} Controller")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),
@@ -174,6 +184,7 @@ def run(
             f"World ready: {world.width} x {world.height}; "
             f"creatures: {len(world.creatures)}; seed: {world.seed}; "
             f"food: {len(world.food)}; "
+            f"controller: {world.controller}; "
             f"display driver: {pygame.display.get_driver()}",
             flush=True,
         )
@@ -211,6 +222,10 @@ def main() -> int:
         "--screenshot", type=Path, help="save the final frame as an image on exit"
     )
     parser.add_argument("--seed", type=int, help="recreate a particular initial population")
+    parser.add_argument(
+        "--controller", choices=("neural", "random"), default="neural",
+        help="use NumPy brains (default) or the original random movement baseline",
+    )
     args = parser.parse_args()
     if args.headless and args.frames is None:
         parser.error("--headless requires --frames so the run finishes automatically")
@@ -219,6 +234,7 @@ def main() -> int:
         frames=args.frames,
         screenshot=args.screenshot,
         seed=args.seed,
+        controller=args.controller,
     )
 
 

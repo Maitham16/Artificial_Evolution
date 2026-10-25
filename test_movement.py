@@ -97,7 +97,7 @@ class WorldMovementTests(unittest.TestCase):
     def test_same_seed_and_simulation_time_match_at_different_frame_rates(self) -> None:
         states = []
         for fps in (30, 60, 144):
-            world = World(seed=42, food_count=0)
+            world = World(seed=42, food_count=0, controller="random")
             for _ in range(fps * 2):
                 world.update(1.0 / fps)
             self.assertAlmostEqual(world.elapsed_time, 2.0)
@@ -106,7 +106,7 @@ class WorldMovementTests(unittest.TestCase):
         self.assertEqual(states[0], states[2])
 
     def test_pause_freezes_motion_and_simulation_clock(self) -> None:
-        world = World(seed=42, food_count=0)
+        world = World(seed=42, food_count=0, controller="random")
         world.update(0.5)
         before = population_state(world)
         before_time = world.elapsed_time
@@ -119,7 +119,7 @@ class WorldMovementTests(unittest.TestCase):
         self.assertNotEqual(population_state(world), before)
 
     def test_long_run_stays_inside_walls_as_energy_depletes(self) -> None:
-        world = World(seed=42, food_count=0)
+        world = World(seed=42, food_count=0, controller="random")
         initial = population_state(world)
         for _ in range(1200):
             world.update(SIMULATION_STEP)
@@ -134,7 +134,7 @@ class WorldMovementTests(unittest.TestCase):
         self.assertTrue(all(creature.death_cause == "starvation" for creature in world.dead_creatures))
 
     def test_regeneration_resets_clock_and_reproduces_steering(self) -> None:
-        world = World(seed=42, food_count=0)
+        world = World(seed=42, food_count=0, controller="random")
         world.update(1.0)
         first_run = population_state(world)
         world.paused = True
