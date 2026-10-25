@@ -3,6 +3,9 @@
 from dataclasses import dataclass
 
 
+SURVIVAL_CHECKPOINT_SECONDS = 60.0
+
+
 @dataclass(frozen=True)
 class GenerationStats:
     generation: int
@@ -15,6 +18,15 @@ class GenerationStats:
     mean_speed: float
     food_visible_seconds: float
     food_facing_seconds: float
+    survival_checkpoint_seconds: float = SURVIVAL_CHECKPOINT_SECONDS
+    survivors_at_checkpoint: int | None = None
+
+    @property
+    def survival_rate(self) -> float | None:
+        """Fraction of the original population that reached the checkpoint age."""
+        if self.survivors_at_checkpoint is None or self.population_size == 0:
+            return None
+        return self.survivors_at_checkpoint / self.population_size
 
     @property
     def food_facing_fraction(self) -> float | None:

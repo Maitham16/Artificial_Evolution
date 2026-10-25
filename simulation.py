@@ -80,7 +80,7 @@ class EvolutionSimulation:
         """Return serializable observations; incomplete generations are excluded."""
         world = self.world
         return {
-            "format_version": 1,
+            "format_version": 2,
             "seed": world.seed,
             "controller": world.controller,
             "population_size": POPULATION_SIZE,
@@ -92,7 +92,8 @@ class EvolutionSimulation:
             "completed_generations": len(world.generation_stats),
             "total_simulated_seconds": self.total_simulated_seconds,
             "generations": [
-                {**asdict(stats), "food_facing_fraction": stats.food_facing_fraction}
+                {**asdict(stats), "food_facing_fraction": stats.food_facing_fraction,
+                 "survival_rate": stats.survival_rate}
                 for stats in world.generation_stats
             ],
         }

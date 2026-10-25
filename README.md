@@ -3,11 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **11 — Simulate multiple generations**. The world automatically
-cycles through survival, selection, reproduction, and mutation. Watch creatures
-at 1x, 5x, or 20x speed and compare completed generations in the history view.
-Comparing evolution against random movement across independent experiments
-remains later work.
+Current step: **12 — Visualize evolution**. Plot mean/best fitness, survival to
+60 seconds, and food consumption across completed generations. Charts appear in
+the world and can be exported with Matplotlib. Comparing evolution against random
+movement across independent experiments remains later work.
 
 ## Run the world
 
@@ -43,6 +42,59 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
 
+## Visualize evolution
+
+Press **T** to see all three generation plots and the latest eight completed
+generations in a table. Fitness shows **mean and best scores**. Food consumption
+shows **mean pellets eaten per creature**, counting the whole starting population.
+Survival shows the **percentage of the starting population that reaches age 60
+simulated seconds**, including creatures that die exactly at that age:
+
+```text
+survival rate = creatures reaching age 60 seconds / starting population
+```
+
+This checkpoint stays fixed across generations. The percentage axis spans
+0–100%; the rate is distinct from mean survival age and the final living count.
+All generations eventually become extinct, but their checkpoint survival rates
+can differ. Survival is measured from actual creature ages and adds no fitness
+bonus or change to selection.
+
+The saved ten-generation seed-42 example includes a standalone figure:
+
+![Fitness, survival rates, and food consumption across generations](results/step12-evolution.png)
+
+Regenerate this figure from its saved observations without running the simulation:
+
+```sh
+python plot_evolution.py results/step12-seed42.json --output .cache/evolution.png
+```
+
+Or collect observations and export a figure from a new run:
+
+```sh
+python main.py --headless --seed 42 --generations 10 --speed 20 \
+  --report .cache/evolution.json --plot .cache/evolution.png
+```
+
+`--plot PATH` exports on exit. PNG, SVG, and PDF are supported, using a headless
+Matplotlib canvas that opens no additional window. The standalone command accepts
+`--output PATH`; without it, output uses the report's name with a `.png` extension.
+Only completed generations are plotted. A run ending before any generation
+completes reports that its plot was skipped; the standalone command rejects an
+empty report.
+
+New JSON reports use **format version 2**, adding `survival_checkpoint_seconds`,
+`survivors_at_checkpoint`, and `survival_rate` to every generation. Existing
+version-1 reports remain plottable for fitness and food consumption; their
+unrecorded survival data is shown as unavailable. Rates are never inferred from
+mean age or replaced with zero. Exported charts use actual generation numbers,
+so gaps in recorded generations retain their spacing.
+
+Each figure describes one run. Lines join recorded observations; they are not
+smoothed fits or averages across independent runs, and contain no uncertainty
+bands.
+
 ## Multiple generations
 
 Automatic cycling is on by default. When a population becomes extinct, its final
@@ -73,8 +125,9 @@ Headless mode exits when the generation target is complete. If `--frames` is als
 given, whichever limit is reached first ends the run. Headless manual mode needs
 `--frames`, because keyboard input cannot advance its generations.
 
-The **T** history panel plots mean/best fitness and mean meals over all completed
-generations, with a table of the latest eight. Incomplete generations are excluded.
+The **T** history panel plots mean/best fitness, survival to 60 seconds, and mean
+meals over all completed generations, with a table of the latest eight.
+Incomplete generations are excluded.
 The table also shows mean survival age, mean commanded speed weighted by actual
 time alive, and the fraction of visible-food time spent facing the nearest pellet
 within **±45 degrees**. This last measure samples heading before movement at each
@@ -100,7 +153,7 @@ Food layout, body traits, competition, and chance vary between generations. A
 single seeded trajectory can show changes, but independent runs and the random
 movement comparison are needed to evaluate whether evolution reliably helps.
 
-The recorded [seed-42 example](results/step11-seed42.json) completed ten
+The recorded [seed-42 example](results/step12-seed42.json) completed ten
 generations with the default neural controller and mutation settings:
 
 | Observation | Generation 1 | Generation 10 |
@@ -108,6 +161,7 @@ generations with the default neural controller and mutation settings:
 | Mean fitness | 148.36 | 297.50 |
 | Mean meals per creature | 8.65 | 21.92 |
 | Mean survival | 61.86 s | 78.30 s |
+| Reached age 60 seconds | 44% | 82% |
 | Mean commanded speed | 30.82 px/s | 52.76 px/s |
 | Facing visible food | 28.30% | 28.06% |
 
@@ -406,9 +460,15 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **124 checks**, a full ten-generation seeded run, JSON observations,
-the rendered generation-history panel, and a 120-frame native macOS Cocoa run
-that automatically reached generation 3. Cycle checks cover exact limits,
+Verified: **139 checks**, a ten-generation seeded run with checkpoint survival
+counts, inspection of the exported figure and in-world charts, and a native
+macOS Cocoa rendering check with three short test generations. Every previously
+recorded fitness, feeding, and behavior observation matches Step 11 exactly.
+Plot checks cover checkpoint boundaries and the full-population denominator,
+curve values, generation spacing, 0–100% survival limits, missing legacy data,
+empty reports, PNG/SVG/PDF output, and plotting without changing future offspring.
+
+Cycle checks cover exact limits,
 time carried across generation boundaries, matching results across frame rates
 and speed settings, pause/manual/restart behavior, actual-time-weighted behavioral
 measurements, keyboard controls, and bounded headless reports.
@@ -427,6 +487,7 @@ main.py               Window, controls, simulation timing, and launch options
 world.py              One-generation physics, observation, survival, food, and fitness
 simulation.py         Automatic cycles, speed, generation limits, restart, and reports
 generation_stats.py   Immutable completed-generation behavioral observations
+plot_evolution.py     Matplotlib fitness, checkpoint survival, and food plot exports
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, inference, independent copies, and mutation
 reproduction.py       Balanced selected-parent reproduction and offspring records
@@ -441,7 +502,10 @@ test_perception.py    Perception geometry, edge cases, brain inputs, and overlay
 test_selection.py     Scores, ranking, final selection, immutability, and reset checks
 test_reproduction.py  Brain inheritance, mutation, lineage, and generation transitions
 test_simulation.py    Automatic cycles, timing, behavioral metrics, controls, and reports
+test_plot_evolution.py  Checkpoint accounting, plotted values, missing data, and export
 results/step11-seed42.json  Observations from one seeded ten-generation run
+results/step12-seed42.json  Repeated seed-42 trajectory with checkpoint survival rates
+results/step12-evolution.png  Exported fitness, survival, and food-consumption figure
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection
@@ -454,7 +518,7 @@ Use Python 3.13 and a local virtual environment. The project uses:
 
 - NumPy for neural networks and sensory calculations.
 - Pygame for the 2D world display.
-- Matplotlib for later experiment charts.
+- Matplotlib for generation charts exported as PNG, SVG, or PDF.
 
 The installed package versions, including their dependencies, are pinned in
 `requirements.txt`. No external AI service or GPU is needed.

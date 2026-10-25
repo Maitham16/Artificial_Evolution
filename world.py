@@ -9,7 +9,7 @@ import pygame
 from brain import DEFAULT_MUTATION_RATE, DEFAULT_MUTATION_SCALE, validate_mutation_parameters
 from creature import MAX_ENERGY, POPULATION_SIZE, Creature, create_population
 from food import FOOD_COUNT, FOOD_RADIUS, Food
-from generation_stats import GenerationStats
+from generation_stats import SURVIVAL_CHECKPOINT_SECONDS, GenerationStats
 from perception import VISION_RANGE, FoodPerception, sense_food
 from selection import FitnessEvaluation, evaluate_population
 from reproduction import OffspringBrain, reproduce_brains
@@ -276,6 +276,10 @@ class World:
                         mean_speed=self._speed_time / self._alive_time if self._alive_time else 0.0,
                         food_visible_seconds=self._food_visible_time,
                         food_facing_seconds=self._food_facing_time,
+                        survivors_at_checkpoint=sum(
+                            entry.survival_seconds >= SURVIVAL_CHECKPOINT_SECONDS
+                            for entry in entries
+                        ),
                     ))
             self.elapsed_time += SIMULATION_STEP
             self._accumulator = max(0.0, self._accumulator - SIMULATION_STEP)

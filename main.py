@@ -1,4 +1,4 @@
-"""Launch Step 11: run evolutionary cycles and observe completed generations."""
+"""Launch Step 12: visualize fitness, survival, and feeding across generations."""
 
 import argparse
 import json
@@ -11,6 +11,7 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 import pygame
 
 from creature import MAX_ENERGY
+from generation_stats import SURVIVAL_CHECKPOINT_SECONDS
 from perception import VISION_RANGE
 from selection import FitnessEvaluation
 from simulation import SPEEDS, EvolutionSimulation
@@ -77,29 +78,38 @@ def handle_events(world: World, simulation: EvolutionSimulation | None = None) -
 
 def draw_trend(
     screen: pygame.Surface, rect: pygame.Rect, title: str,
-    series: list[tuple[list[float], tuple[int, int, int]]],
+    series: list[tuple[list[float | None], tuple[int, int, int]]],
     generations: list[int], font: pygame.font.Font,
+    ceiling: float | None = None,
 ) -> None:
     screen.blit(font.render(title, True, MUTED), (rect.left, rect.top - 22))
-    maximum = max(1.0, max(max(values) for values, _ in series))
+    available = [value for values, _ in series for value in values if value is not None]
+    maximum = ceiling if ceiling is not None else max(1.0, max(available, default=0))
     plot = pygame.Rect(rect.left + 36, rect.top + 5, rect.width - 42, rect.height - 10)
     for fraction in (0.0, 0.5, 1.0):
         y = round(plot.bottom - fraction * plot.height)
         pygame.draw.line(screen, (31, 49, 56), (plot.left, y), (plot.right, y))
     for value, y in ((maximum, plot.top), (0, plot.bottom - 12)):
         screen.blit(font.render(f"{value:.0f}", True, MUTED), (rect.left, y))
-    span = max(1, len(generations) - 1)
+    span = max(1, generations[-1] - generations[0])
     for values, color in series:
-        points = [
-            (round(plot.left + index / span * plot.width),
-             round(plot.bottom - value / maximum * plot.height))
-            for index, value in enumerate(values)
-        ]
-        if len(points) > 1:
-            pygame.draw.lines(screen, color, False, points, 2)
-        if len(points) <= 50:
-            for point in points:
+        segment = []
+        for generation, value in zip(generations, values):
+            if value is None:
+                if len(segment) > 1:
+                    pygame.draw.lines(screen, color, False, segment, 2)
+                segment = []
+                continue
+            point = (round(plot.left + (generation - generations[0]) / span * plot.width),
+                     round(plot.bottom - value / maximum * plot.height))
+            segment.append(point)
+            if len(generations) <= 50:
                 pygame.draw.circle(screen, color, point, 3)
+        if len(segment) > 1:
+            pygame.draw.lines(screen, color, False, segment, 2)
+    if not available:
+        label = font.render("N/A", True, MUTED)
+        screen.blit(label, label.get_rect(center=plot.center))
     screen.blit(font.render(f"G{generations[0]}", True, MUTED), (plot.left, rect.bottom + 5))
     if len(generations) > 1:
         label = font.render(f"G{generations[-1]}", True, MUTED)
@@ -120,28 +130,34 @@ def draw_history_panel(
     stats = world.generation_stats
     if stats:
         generations = [row.generation for row in stats]
-        draw_trend(screen, pygame.Rect(x, y + 110, 400, 140), "Fitness", [
+        draw_trend(screen, pygame.Rect(x, y + 110, 266, 140), "Fitness", [
             ([row.mean_fitness for row in stats], ACCENT),
             ([row.best_fitness for row in stats], (224, 205, 117)),
         ], generations, fonts["small"])
-        draw_trend(screen, pygame.Rect(x + 444, y + 110, 400, 140), "Mean meals per creature", [
+        checkpoint = SURVIVAL_CHECKPOINT_SECONDS
+        draw_trend(screen, pygame.Rect(x + 288, y + 110, 266, 140), f"Reached {checkpoint:g}s (%)", [
+            ([None if row.survival_rate is None else row.survival_rate * 100 for row in stats], (105, 194, 237)),
+        ], generations, fonts["small"], ceiling=100)
+        draw_trend(screen, pygame.Rect(x + 576, y + 110, 268, 140), "Meals per creature", [
             ([row.mean_food_eaten for row in stats], (166, 220, 100)),
         ], generations, fonts["small"])
-        columns = (x, x + 65, x + 180, x + 290, x + 400, x + 520, x + 665)
-        headings = ("GEN", "MEAN FIT", "BEST FIT", "MEALS", "AGE (s)", "SPEED (px/s)", "FACING FOOD")
+        columns = (x, x + 50, x + 155, x + 255, x + 350, x + 450, x + 540, x + 675)
+        headings = ("GEN", "MEAN FIT", "BEST FIT", "MEALS", "SURV 60s", "AGE (s)", "SPEED (px/s)", "FACING FOOD")
         for column, heading in zip(columns, headings):
             screen.blit(fonts["small"].render(heading, True, MUTED), (column, y + 284))
         for index, row in enumerate(stats[-8:]):
             facing = row.food_facing_fraction
+            survival = row.survival_rate
             values = (str(row.generation), f"{row.mean_fitness:.1f}", f"{row.best_fitness:.1f}",
-                      f"{row.mean_food_eaten:.2f}", f"{row.mean_survival_seconds:.1f}",
+                      f"{row.mean_food_eaten:.2f}", "N/A" if survival is None else f"{survival:.0%}",
+                      f"{row.mean_survival_seconds:.1f}",
                       f"{row.mean_speed:.1f}", "N/A" if facing is None else f"{facing:.1%}")
             for column, value in zip(columns, values):
                 screen.blit(fonts["small"].render(value, True, TEXT), (column, y + 310 + index * 20))
     else:
         message = "Complete a generation to see its history. The world keeps running behind this panel."
         screen.blit(fonts["small"].render(message, True, TEXT), (x, y + 160))
-    explanation = "Facing food: nearest visible pellet within +/-45 deg ahead. Descriptive measure; T closes."
+    explanation = f"Survival = share reaching age {SURVIVAL_CHECKPOINT_SECONDS:g}s. Completed generations only; T closes."
     screen.blit(fonts["small"].render(explanation, True, MUTED), (x, panel.bottom - 29))
 
 
@@ -240,7 +256,7 @@ def draw_interface(
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 11 / GENERATIONS", True, MUTED)
+    stage = fonts["small"].render("STEP 12 / EVOLUTION PLOTS", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
         f"FOOD {len(world.food)}  /  EATEN {world.total_food_eaten}",
@@ -355,6 +371,7 @@ def run(
     speed: int = 1,
     manual: bool = False,
     report: Path | None = None,
+    plot: Path | None = None,
 ) -> int:
     if headless and frames is None and (generations is None or manual):
         raise ValueError("Headless mode needs frames or an automatic generation limit.")
@@ -370,7 +387,7 @@ def run(
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption(f"Artificial Evolution | Generations | {controller.title()}")
+        pygame.display.set_caption(f"Artificial Evolution | Evolution plots | {controller.title()}")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),
@@ -424,6 +441,13 @@ def run(
             report.parent.mkdir(parents=True, exist_ok=True)
             report.write_text(json.dumps(simulation.report(), indent=2, allow_nan=False) + "\n")
             print(f"Report saved: {report}")
+        if plot is not None:
+            if world.generation_stats:
+                from plot_evolution import save_evolution_plot
+                save_evolution_plot(simulation.report(), plot)
+                print(f"Evolution plot saved: {plot}")
+            else:
+                print("Plot not saved: no completed generations.")
     finally:
         pygame.quit()
 
@@ -446,6 +470,7 @@ def main() -> int:
     parser.add_argument("--speed", type=int, choices=SPEEDS, default=1, help="simulation speed multiplier")
     parser.add_argument("--manual", action="store_true", help="wait for N between generations")
     parser.add_argument("--report", type=Path, help="save completed-generation observations as JSON")
+    parser.add_argument("--plot", type=Path, help="export evolution charts as PNG, SVG, or PDF on exit")
     parser.add_argument(
         "--controller", choices=("neural", "random"), default="neural",
         help="use NumPy brains (default) or the original random movement baseline",
@@ -463,6 +488,7 @@ def main() -> int:
         speed=args.speed,
         manual=args.manual,
         report=args.report,
+        plot=args.plot,
     )
 
 
