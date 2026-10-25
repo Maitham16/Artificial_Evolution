@@ -3,9 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **16 — Can evolution beat random movement?** Retrain with identical
-fixed speeds, compare frozen evolved brains against random and greedy steering,
-and test new uniform/clustered food layouts and an unfamiliar arena shape.
+Current step: **17 — Investigate what the creatures learned**. Reuse the sixteen
+fixed-speed evolved populations, compare against unselected ancestral brains,
+and intervene on food inputs in new matched environments. Preserve Step 16's
+code, models, results, and conclusions.
 
 ## Run the world
 
@@ -40,6 +41,224 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Investigate learned food guidance and movement
+
+Step 17 adds a new analysis; **Step 16 is preserved**. It reuses every brain in
+the sixteen saved final birth cohorts from seeds 1601–1616, without retraining,
+selection, mutation, tuning, or choosing test winners. Before this step, all
+**212 existing tests passed**. `results/step17-baseline.json` records the preceding
+commit and hashes of all 79 tracked files, including all 41 prior result
+artifacts; `results/step17-baseline-tests.txt` saves that test transcript.
+
+Run the fixed-protocol study:
+
+```sh
+python experiment_strategy.py --workers 6 --output .cache/strategy.json \
+  --unselected-models-dir .cache/unselected-models \
+  --protocol-output .cache/strategy-protocol.json --plot .cache/strategy.png
+```
+
+The source defaults are `results/step16-models` and the published
+`results/step16-speed-comparison.json`. Model-file hashes and complete-cohort
+genome hashes link the new experiment to the original records. All evolved
+weights stay frozen throughout testing.
+
+The **unselected neural baseline** consists of the original random founder
+brains, reconstructed deterministically from each Step 16 training seed using
+unchanged initialization code. The founder world's physical hash must match
+the archived first training layout. This check verifies the starting bodies,
+lifespans, and food; founder weights are regenerated from the deterministic
+initialization, then saved in numeric archives for this study. These brains
+undergo no training, selection, or mutation. The comparison measures the effects
+of the evolved history relative to its initial policy distribution; it does
+not separate selection from mutation or provide a neutral-drift control.
+
+Each lineage faces **one new layout in each of the three Step 16 environment
+families**: uniform food in 1000 × 600, clustered food in 1000 × 600, and clustered
+food in 1200 × 500. The new `step17:test` seed namespace includes lineage,
+environment, and repeat. Every layout must differ from **every** Step 16 training
+and test layout, including those from other lineages. There are **48 unseen
+layouts**, repeated independently across sixteen source lineages per environment.
+The default uses one layout per lineage/environment, rather than the two used
+in Step 16; `--repeats` can specify a different budget for a future declared study.
+
+Each layout runs all seven conditions in separate matched 100-creature worlds:
+
+| Condition | Weights | Direct food inputs |
+| --- | --- | --- |
+| Evolved intact | Saved evolved cohort | Truthful |
+| Evolved mirrored | Same evolved cohort | Food bearing reflected left/right |
+| Evolved hidden | Same evolved cohort | Proximity, bearing, and visibility set to zero |
+| Unselected intact | Original random founders | Truthful |
+| Unselected mirrored | Same founder cohort | Food bearing reflected left/right |
+| Unselected hidden | Same founder cohort | All three food inputs set to zero |
+| Random | Existing random steering | Unused by controller |
+
+All conditions share **60 pixels/second**, **5 energy units per living second**,
+150 maintained pellets, body traits, lifespan limits, initial food, cluster
+centers, and initial random streams within a layout. The same existing turning,
+food replenishment, energy, and death rules apply. The sensor interventions are
+the existing Step 15 implementation: they alter inputs only at the brain-control
+boundary. Food, hunger, walls, collision detection, and recorded observations
+remain physical truth. Later replenishment and random-stream consumption can
+diverge as behavior diverges. Complete cohorts are evaluated, including early
+deaths. The study has **336 test cohorts and zero training cohorts**.
+
+The independent statistical unit is **one source training lineage (n = 16)**.
+Repeats, if requested, are averaged within lineage and environment before
+inference. The **twelve predeclared primary tests** comprise four contrasts in
+each of the three environments:
+
+| Contrast | Outcome | Question |
+| --- | --- | --- |
+| Evolved intact − evolved mirrored | Meals per creature | Does truthful food bearing help the evolved population? |
+| (Evolved intact − mirrored) − (unselected intact − mirrored) | Meals per creature | Did the useful bearing benefit increase beyond the founders' benefit? |
+| Evolved intact − unselected intact | Fitness | Do evolved brains outperform the original neural population? |
+| Evolved hidden − unselected hidden | Fitness | Is an evolved advantage retained when direct food inputs are hidden? |
+
+The second contrast is calculated **within lineage** before paired analysis;
+it is not a difference between two separately pooled significance tests. All
+twelve use two-sided exact paired sign tests with the Step 16 numerical-tie
+tolerance of `1e-10`, and Holm correction across the full family. Intervals use
+20,000 paired percentile bootstrap resamples, with approximate pointwise 95%
+coverage. A higher/lower decision requires adjusted p < 0.05 and an interval
+excluding zero in the same direction. The declared food-guidance attribution
+requires the first three contrasts all higher within an environment. Individual
+test results remain visible when that joint criterion is not met; failure does
+not establish absence or equivalence.
+
+Other performance contrasts, including evolved hidden versus random and
+unselected hidden versus random, are descriptive with pointwise intervals and
+no confirmatory p-values. Fitness, meals, and 60-second survival are saved for
+every condition. These contrasts are not an additive decomposition of the
+previous Step 16 gain.
+
+Two **descriptive diagnostic probes** characterize all frozen evolved and
+founder brains:
+
+- The existing steering probe flips only target side at ±45°/±90°, distances
+  40/80/120, and hunger 25%/75%, with all wall inputs at 1. Its signed gain is
+  `(turn_right − turn_left) / 2`. The separate fraction commanding the correct
+  turn on both sides distinguishes an appropriate shift from a persistent bias.
+- The movement probe supplies no direct food input, open-space wall values,
+  and hunger clamped at 25% or 75%. A feed-forward brain then has a constant
+  turn output. It reports mean absolute turn and the analytic displacement/arc
+  length ratio after 12 seconds: `abs(sinc(angular_speed × 12 / (2π)))` with
+  NumPy's normalized sinc. A straight path has ratio 1; a complete circular
+  orbit has ratio 0. This is a controlled probe, not a natural trajectory,
+  navigation test, or evidence of planning.
+
+Food-channel removal creates an input distribution shift, and hidden creatures
+still receive **indirect feedback from eating through hunger/energy**. A residual
+advantage can reflect turning biases, wall/hunger responses, or other aspects
+of control. It does not identify an exclusive general-movement strategy, and a
+drop does not rule out such strategies. Mirroring also changes closed-loop
+trajectories; its useful-bearing effect demonstrates the value of truthful
+directional information, rather than human-like understanding. Food guidance
+and residual movement benefits can coexist.
+
+`results/step17-protocol.json` records the protocol, UTC declaration time, all
+source hashes, source model hashes, and excluded layouts before testing. This
+is a local declaration, not an externally registered study. Partial reports
+remain `running` and cannot produce a final plot. Unselected archives use
+`allow_pickle=False`; existing matching archives are preserved, and conflicting
+archives or attempts to overwrite source inputs are rejected.
+
+Regenerate the figure:
+
+```sh
+python plot_strategy.py results/step17-strategy.json --output .cache/strategy.png
+```
+
+Re-running the same source models and deterministic test seeds checks
+reproducibility and does not increase the independent sample size. Keep replay
+outputs in a new directory to preserve the published reports.
+
+### Recorded Step 17 results
+
+The complete study evaluated **336 cohorts on 48 new matched layouts**, reusing
+all sixteen evolved populations and evaluating their sixteen unselected founder
+cohorts. No population was retrained. The audit verified all frozen weights,
+founder reconstruction, model archives, probes, source hashes, and stored
+statistics. All **41 previous result artifacts and all previous code files remain
+unchanged**. Only this README is extended among the pre-existing tracked files.
+
+Mean fitness under the seven conditions:
+
+| Condition | Uniform | Clustered | Wide clustered |
+| --- | ---: | ---: | ---: |
+| Evolved intact | 354.12 | 353.24 | 350.80 |
+| Evolved mirrored | 277.65 | 137.83 | 135.37 |
+| Evolved hidden | 258.99 | 222.61 | 237.99 |
+| Unselected intact | 291.21 | 206.14 | 211.04 |
+| Unselected mirrored | 291.26 | 218.01 | 221.72 |
+| Unselected hidden | 293.25 | 207.76 | 213.68 |
+| Random | 323.44 | 211.90 | 196.64 |
+
+The twelve primary tests produced these mean paired differences:
+
+| Environment | Contrast and unit | Difference | 95% paired interval | Holm p | Decision |
+| --- | --- | ---: | --- | ---: | --- |
+| Uniform | Evolved intact − mirrored meals | +6.71 | [4.86, 8.60] | 0.002075 | Higher |
+| Uniform | Bearing benefit above founders, meals | +6.75 | [4.90, 8.71] | 0.0003662 | Higher |
+| Uniform | Intact evolved − founders, fitness | +62.91 | [52.37, 73.27] | 0.0003662 | Higher |
+| Uniform | Hidden evolved − founders, fitness | −34.27 | [−64.54, −6.16] | 0.6303 | Inconclusive |
+| Clustered | Evolved intact − mirrored meals | +19.24 | [14.47, 24.32] | 0.0003662 | Higher |
+| Clustered | Bearing benefit above founders, meals | +20.37 | [15.97, 24.82] | 0.0003662 | Higher |
+| Clustered | Intact evolved − founders, fitness | +147.09 | [103.08, 194.83] | 0.0003662 | Higher |
+| Clustered | Hidden evolved − founders, fitness | +14.85 | [−12.19, 47.42] | 1.0000 | Inconclusive |
+| Wide clustered | Evolved intact − mirrored meals | +19.36 | [14.64, 24.63] | 0.0003662 | Higher |
+| Wide clustered | Bearing benefit above founders, meals | +20.35 | [15.84, 25.48] | 0.0003662 | Higher |
+| Wide clustered | Intact evolved − founders, fitness | +139.77 | [97.15, 187.87] | 0.0003662 | Higher |
+| Wide clustered | Hidden evolved − founders, fitness | +24.31 | [−10.07, 66.96] | 1.0000 | Inconclusive |
+
+**All three food-guidance attribution criteria passed in every environment.**
+Truthful bearing improved evolved feeding in 15 of 16 uniform lineages and all
+16 lineages in each clustered environment. The bearing benefit exceeded the
+founders' benefit in all 16 lineages in every environment. Intact evolved brains
+also exceeded intact founders' fitness in all 16 lineages in every environment.
+These findings support **evolved functional food-directed control** beyond the
+initial neural-policy distribution, under the tested conditions.
+
+The three residual hidden-input comparisons were **inconclusive**. The uniform
+mean interval was negative, but did not meet the predeclared sign-test threshold;
+neither a lower nor a higher effect is confirmed there. Hidden evolved versus
+random and hidden founders versus random remain descriptive comparisons. For
+example, wide-arena hidden evolved fitness exceeded random by +41.35 on average
+with interval [4.10, 85.38], while hidden founders also exceeded random by +17.04
+[4.43, 29.97]. Those secondary intervals do not establish an evolved residual
+advantage over founders or identify its mechanism.
+
+Descriptive probe averages:
+
+| Population | Steering gain | Both-side correct probe pairs | Absolute no-food turn, fraction of limit | Open-space straightness after 12s |
+| --- | ---: | ---: | ---: | ---: |
+| Evolved | 0.13355 | 34.36% | 0.35677 | 0.34451 |
+| Unselected founders | −0.00264 | 4.61% | 0.36846 | 0.35435 |
+
+The steering probes show a larger food-directed response in evolved brains,
+while the simple no-food movement averages are close. Only about one third of
+evolved probe pairs commanded correct turns on both sides, so this is not
+perfect pursuit by every creature. These controlled averages do not exclude
+differences in real hunger- or wall-dependent motion. Hidden-input distribution
+shift and indirect feeding feedback limit any exclusive causal explanation.
+
+The result supports useful evolved food guidance; it does **not demonstrate an
+additional general-movement advantage when direct food channels are hidden**.
+That is not evidence of equivalence or proof that every part of the Step 16 gain
+comes from food guidance. The new uniform primary tests concern sensory benefit
+and the founder comparison; they do not change Step 16's inconclusive uniform
+evolved-versus-random result. The same sixteen source populations are reused,
+so the two studies must not be pooled as 32 independent training lineages.
+
+![Step 17 food-guidance and residual movement analysis](results/step17-strategy.png)
+
+The figure was visually inspected. `results/step17-audit.json` records the
+completeness, preservation, model/probe reproduction, and statistical audits,
+with runtime versions and artifact hashes. `results/step17-tests.txt` saves the
+passing **227-test** transcript. Fitness, meals, and 60-second survival for every
+condition, all secondary intervals, and per-brain probes remain in the JSON report.
 
 ## Compare steering at identical movement speed
 
@@ -1072,7 +1291,13 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **212 checks**, including fixed speed and per-second energy fairness,
+Verified: **227 checks**, including source-model reuse, deterministic founder
+reconstruction, paired sensor interactions, complete factorial conditions,
+cross-lineage layout exclusion, numerical probes, twelve-test correction,
+archive/input preservation, incomplete-report rejection, reproducible parallel
+results, and PNG/SVG/PDF exports. The pre-Step-17 212-test transcript is saved.
+
+The checks also include fixed speed and per-second energy fairness,
 greedy target selection and bounded turns, successful greedy feeding, clustered
 spawning and replenishment, unchanged default throttle, retraining and model
 reuse, repeated matched held-out worlds, lineage-level inference, Holm correction
@@ -1141,6 +1366,8 @@ analyze_intelligence.py  Frozen models, repeated unseen tests, sensor controls, 
 plot_intelligence.py  Food-direction benefits and corrected operational evidence
 experiment_speed.py   Fixed-speed retraining, greedy/random controls, and 16-seed held-out study
 plot_speed.py         Paired fitness, meals, and survival comparisons at equal speed
+experiment_strategy.py  Saved-brain sensor interventions, ancestral controls, and attribution tests
+plot_strategy.py      Food-bearing benefits and residual evolutionary-history comparisons
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, inference, independent copies, and mutation
 reproduction.py       Balanced selected-parent reproduction and offspring records
@@ -1160,6 +1387,7 @@ test_comparison.py    Matched controls, frozen evaluation, independent pairs, an
 test_parameters.py    Configurable populations, controlled sweeps, caching, and validation
 test_intelligence.py  Sensor truth, positive controls, archives, repeated trials, and criteria
 test_speed.py         Speed/energy fairness, greedy guidance, clustered food, and study inference
+test_strategy.py      Source preservation, factorial controls, paired interactions, and probes
 results/step11-seed42.json  Observations from one seeded ten-generation run
 results/step12-seed42.json  Repeated seed-42 trajectory with checkpoint survival rates
 results/step12-evolution.png  Exported fitness, survival, and food-consumption figure
@@ -1179,6 +1407,14 @@ results/step16-numerical-ties.json  Pre-result numerical sign-test tie correctio
 results/step16-speed-comparison.json  Fixed-speed training, held-out trials, and paired inference
 results/step16-speed-comparison.png  Fitness, meals, and survival in three environments
 results/step16-models/  Sixteen frozen populations retrained at identical speed
+results/step17-baseline.json  Hashes of every pre-Step-17 tracked file
+results/step17-baseline-tests.txt  Passing 212-test baseline transcript
+results/step17-tests.txt  Full 227-test verification transcript
+results/step17-audit.json  Prior-file preservation, model/probe reproduction, and analysis audit
+results/step17-protocol.json  Pre-trial source/model hashes, contrasts, and layout exclusions
+results/step17-strategy.json  Complete sensor-intervention trials, probes, and paired analysis
+results/step17-strategy.png  Food-bearing and residual fitness evidence
+results/step17-unselected-models/  Sixteen exact reconstructed ancestral cohorts
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection
