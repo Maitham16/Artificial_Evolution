@@ -6,9 +6,9 @@ import random
 import numpy as np
 import pygame
 
-from brain import VISION_RANGE
 from creature import MAX_ENERGY, Creature, create_population
 from food import FOOD_COUNT, FOOD_RADIUS, Food
+from perception import VISION_RANGE, FoodPerception, sense_food
 
 
 SIMULATION_STEP = 1.0 / 60.0
@@ -41,6 +41,7 @@ class World:
         self.controller = controller
         self.grid_spacing = 40
         self.show_grid = True
+        self.show_perception = True
         self.paused = False
         self.surface = pygame.Surface((width, height))
         self.regenerate_population(seed)
@@ -111,29 +112,25 @@ class World:
         for _ in range(self.food_count - len(self.food)):
             self.food.append(self._spawn_food())
 
-    def get_sensory_inputs(
+    def perceive_food(
         self, creature: Creature, food_positions: np.ndarray | None = None
-    ) -> np.ndarray:
-        """Sense local food and radius-aware wall clearance in the body's frame."""
+    ) -> FoodPerception:
+        """Observe nearby food from the creature's current position and heading."""
         if food_positions is None:
             food_positions = np.array([(food.x, food.y) for food in self.food],
                                       dtype=np.float64).reshape(-1, 2)
-        cosine, sine = math.cos(creature.heading), math.sin(creature.heading)
-        forward, right, visible = 0.0, 0.0, 0.0
-        if len(food_positions):
-            offsets = food_positions - (creature.x, creature.y)
-            distances_squared = np.sum(offsets * offsets, axis=1)
-            nearest = int(np.argmin(distances_squared))
-            if distances_squared[nearest] <= VISION_RANGE ** 2:
-                dx, dy = offsets[nearest]
-                forward = (cosine * dx + sine * dy) / VISION_RANGE
-                right = (-sine * dx + cosine * dy) / VISION_RANGE
-                visible = 1.0
+        return sense_food(creature.x, creature.y, creature.heading, food_positions)
 
+    def get_sensory_inputs(
+        self, creature: Creature, food_positions: np.ndarray | None = None
+    ) -> np.ndarray:
+        """Encode food distance/direction, hunger, and body-relative wall clearance."""
+        food = self.perceive_food(creature, food_positions)
+        cosine, sine = math.cos(creature.heading), math.sin(creature.heading)
         directions = ((cosine, sine), (-sine, cosine),
                       (-cosine, -sine), (sine, -cosine))
         walls = [self._wall_clearance(creature, dx, dy) for dx, dy in directions]
-        return np.array([forward, right, visible, creature.hunger, *walls],
+        return np.array([*food.neural_signals, creature.hunger, *walls],
                         dtype=np.float64)
 
     def _wall_clearance(self, creature: Creature, dx: float, dy: float) -> float:
@@ -215,8 +212,30 @@ class World:
                 color = self.MAJOR_GRID if y % 200 == 0 else self.GRID
                 pygame.draw.line(self.surface, color, (0, y), (self.width - 1, y))
 
+        observation = None
+        if (
+            self.show_perception and self.selected_creature is not None
+            and self.selected_creature.alive
+        ):
+            selected = self.selected_creature
+            observation = self.perceive_food(selected)
+            center = (round(selected.x), round(selected.y))
+            pygame.draw.circle(self.surface, (46, 83, 97), center, round(VISION_RANGE), width=1)
+            forward = (
+                round(selected.x + math.cos(selected.heading) * 28),
+                round(selected.y + math.sin(selected.heading) * 28),
+            )
+            pygame.draw.line(self.surface, (105, 143, 159), center, forward, width=1)
+            if observation.visible:
+                target = tuple(round(value) for value in observation.target_position)
+                pygame.draw.line(self.surface, (115, 158, 82), center, target, width=1)
+
         for food in self.food:
             food.draw(self.surface)
+
+        if observation is not None and observation.visible:
+            target = tuple(round(value) for value in observation.target_position)
+            pygame.draw.circle(self.surface, (192, 235, 137), target, FOOD_RADIUS + 4, width=1)
 
         for creature in self.creatures:
             if creature is not self.selected_creature:

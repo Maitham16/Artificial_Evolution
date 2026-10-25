@@ -4,14 +4,15 @@ import math
 
 import numpy as np
 
+from perception import VISION_RANGE  # Re-export the existing sensing-range constant.
+
 
 INPUT_SIZE = 8
 HIDDEN_SIZE = 8
 OUTPUT_SIZE = 2
-VISION_RANGE = 160.0
 MAX_TURN_RATE = math.pi / 2
 SENSOR_NAMES = (
-    "food_forward", "food_right", "food_visible", "hunger",
+    "food_proximity", "food_direction", "food_visible", "hunger",
     "wall_forward", "wall_right", "wall_back", "wall_left",
 )
 

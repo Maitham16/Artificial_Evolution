@@ -3,10 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **7 — Create artificial brains**. Each of the 100 creatures has an
-individual, untrained NumPy neural network controlling its turn rate and speed.
-The 1,000 × 600 pixel habitat includes food, energy use, hunger, aging, and death.
-Reproduction, mutation, training, and evolution will be implemented in later steps.
+Current step: **8 — Add sensory perception**. Creatures sense nearby food by
+distance and relative direction, feeding proximity and bearing signals into their
+individual NumPy brains. The world includes movement, food, hunger, aging, and
+death. Reproduction, mutation, training, and evolution remain later steps.
 
 ## Run the world
 
@@ -25,6 +25,7 @@ python main.py --controller random --seed 42
 ```
 
 - Press **G** to hide or show the grid.
+- Press **V** to hide or show the selected creature's perception overlay.
 - Press **Space** to pause or resume movement, eating, energy use, and aging.
 - Press **R** to reset creatures, food, energy, ages, deaths, and simulation time.
 - **Click a creature** to inspect its properties. Click empty space to deselect.
@@ -61,6 +62,32 @@ food count, position, current/maximum speed, size, facing direction, and turn ra
 Small energy bars below creatures change from green to amber to red as hunger
 increases.
 
+## Sensory perception
+
+Each creature senses food centers within a **160-pixel radius in all directions**.
+It observes the nearest visible pellet, including its position, Euclidean distance,
+relative bearing, and the total number of nearby pellets. Direction is measured
+from the creature's current heading: 0 degrees is ahead, positive angles are to
+the right, and negative angles are to the left. Bearings wrap into [-180, 180)
+degrees, with directly behind represented as -180 degrees.
+
+Distance becomes a proximity signal, `1 - distance / 160`, so closer food gives a
+stronger signal. Direction becomes `bearing / pi`, in [-1, 1]. A visibility flag
+distinguishes food at the range boundary from an absence of food. With no visible
+food, distance and bearing are absent and all three food signals are zero. Food
+at the creature's center has distance 0 and neutral bearing 0. Equal-distance
+pellets retain their list order when choosing the nearest.
+
+Click a creature to inspect its current reading in the header. The overlay shows
+its sensing radius, a short forward-facing line, and a line to the nearest food,
+which is marked with a ring. **V** controls this visualization; sensing and brain
+decisions continue when it is hidden. The overlay is clipped to the arena.
+
+`World.perceive_food()` returns a read-only observation of the current world.
+Readings are recomputed after food changes, so removed pellets do not remain as
+stale targets. The brain uses the same perception function at the beginning of
+each simulation step; the display shows the current view after movement/eating.
+
 ## Artificial brains
 
 Every creature owns an independent **8-input, 8-hidden, 2-output** feed-forward
@@ -72,16 +99,17 @@ The eight inputs, in order, are:
 
 | Input | Meaning and range |
 | --- | --- |
-| Food forward | Nearest visible food's forward offset in the body's frame, divided by 160; -1 to 1 |
-| Food right | The same food's rightward offset in the body's frame, divided by 160; -1 to 1 |
-| Food visible | 1 when food is within 160 pixels, otherwise 0; absent food offsets are also 0 |
+| Food proximity | `1 - distance / 160`, from 0 at range limit to 1 at the creature's center |
+| Food direction | Relative bearing divided by pi, from -1 to 1 |
+| Food visible | 1 when food is within 160 pixels, otherwise 0; absent food signals are also 0 |
 | Hunger | Energy deficit, from 0 full to 1 empty |
 | Wall forward | Radius-aware forward wall distance, clipped to 160 pixels and divided by 160 |
 | Wall right | The same normalized distance to the right |
 | Wall back | The same normalized distance behind the creature |
 | Wall left | The same normalized distance to the left |
 
-Food can be sensed all around the creature within 160 pixels. A wall input of 0
+The first two channels now encode explicit proximity and bearing, replacing the
+earlier forward/right offsets while retaining the 8–8–2 network. A wall input of 0
 means the body is touching that wall; 1 means at least 160 pixels of clearance in
 that direction. Sensors update in the creature's current orientation.
 
@@ -190,7 +218,7 @@ can now affect both neural decisions and survival.
 To render a few frames without opening a window, optionally saving a preview:
 
 ```sh
-python main.py --headless --frames 120 --seed 42 --screenshot .cache/brains-preview.png
+python main.py --headless --frames 120 --seed 42 --screenshot .cache/perception-preview.png
 ```
 
 Headless mode requires `--frames` so it exits automatically and advances exactly
@@ -200,28 +228,29 @@ command above therefore captures the world after 2 seconds of simulated life.
 Run all checks with the standard Python test runner:
 
 ```sh
-python -m unittest -v test_movement.py test_food.py test_survival.py test_brain.py
+python -m unittest -v test_movement.py test_food.py test_survival.py test_brain.py test_perception.py
 ```
 
-Verified: all 57 checks and 120-frame neural and random headless runs, plus a
-120-frame native macOS Cocoa run. Neural tests cover the forward pass, sensory
-geometry, bounded motor commands, same-step energy costs, independent parameters,
-seeded reset, and fixed parameters during inference. The regression tests retain
-movement, food, survival, and frame-rate reproducibility coverage. A 125-second
-neural lifespan run completed through extinction with unchanged brain parameters.
+Verified: all 73 checks and 120-frame neural and random headless runs, plus a
+120-frame native macOS Cocoa run. Perception tests cover distance, bearing,
+rotation, range boundaries, coincident food, absent food, stale targets, brain
+inputs, and display-only overlay behavior. The regression tests retain neural,
+movement, food, survival, and frame-rate reproducibility coverage.
 
 ## Project structure
 
 ```text
 main.py               Window, controls, simulation timing, and launch options
-world.py              Sensory inputs, controller selection, survival, motion, and food
+world.py              Perception integration/overlay, controllers, survival, and food
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, seeded parameters, and forward inference
+perception.py         Read-only food distance, direction, visibility, and neural signals
 food.py               Food properties, circle collision checks, and drawing
 test_movement.py      Movement, boundary, timing, pause, and reproducibility checks
 test_food.py          Food generation, contact, meal accounting, and reproducibility
 test_survival.py      Energy, hunger, aging, death, extinction, and reset checks
 test_brain.py         Network math, sensors, motor commands, and seeded brain checks
+test_perception.py    Perception geometry, edge cases, brain inputs, and overlay checks
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection
@@ -232,7 +261,7 @@ requirements.txt      Pinned Python dependencies
 
 Use Python 3.13 and a local virtual environment. The project uses:
 
-- NumPy for numerical operations and, later, neural-network weights.
+- NumPy for neural networks and sensory calculations.
 - Pygame for the 2D world display.
 - Matplotlib for later experiment charts.
 

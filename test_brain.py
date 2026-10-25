@@ -81,18 +81,18 @@ class SensoryInputTests(unittest.TestCase):
         self.creature = self.world.creatures[0]
         self.creature.x, self.creature.y, self.creature.heading = 500.0, 300.0, 0.0
 
-    def test_food_offsets_rotate_with_the_creatures_heading(self) -> None:
+    def test_food_distance_and_bearing_rotate_with_the_creatures_heading(self) -> None:
         self.world.food = [Food(580, 300)]
         np.testing.assert_allclose(self.world.get_sensory_inputs(self.creature)[:3],
                                    [0.5, 0.0, 1.0])
         self.creature.heading = math.pi / 2
         np.testing.assert_allclose(self.world.get_sensory_inputs(self.creature)[:3],
-                                   [0.0, -0.5, 1.0], atol=1e-12)
+                                   [0.5, -0.5, 1.0], atol=1e-12)
 
-    def test_nearest_food_is_used_and_food_behind_has_a_negative_forward_offset(self) -> None:
+    def test_nearest_food_is_used_and_food_behind_has_a_wrapped_bearing(self) -> None:
         self.world.food = [Food(580, 300), Food(480, 300)]
         np.testing.assert_allclose(self.world.get_sensory_inputs(self.creature)[:3],
-                                   [-20 / VISION_RANGE, 0.0, 1.0])
+                                   [1.0 - 20 / VISION_RANGE, -1.0, 1.0])
 
     def test_absent_and_out_of_range_food_are_masked(self) -> None:
         for food in ([], [Food(500 + VISION_RANGE + 1, 300)]):

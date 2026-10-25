@@ -1,4 +1,4 @@
-"""Launch Step 7: untrained NumPy brains control creature movement."""
+"""Launch Step 8: creatures perceive nearby food by distance and direction."""
 
 import argparse
 import math
@@ -10,6 +10,7 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 import pygame
 
 from creature import MAX_ENERGY
+from perception import VISION_RANGE
 from world import SIMULATION_STEP, World
 
 
@@ -41,6 +42,8 @@ def handle_events(world: World) -> bool:
                 return False
             if event.key == pygame.K_g:
                 world.show_grid = not world.show_grid
+            if event.key == pygame.K_v:
+                world.show_perception = not world.show_perception
             if event.key == pygame.K_r:
                 world.regenerate_population()
             if event.key == pygame.K_SPACE:
@@ -58,7 +61,7 @@ def draw_interface(
     screen.blit(fonts["title"].render("The virtual world", True, TEXT), (38, 48))
     if world.controller == "neural":
         controller_label = "NUMPY BRAINS  8 > 8 > 2"
-        controller_note = "Untrained / 90 parameters each"
+        controller_note = f"Untrained / 90 parameters / Sight {VISION_RANGE:.0f} px"
     else:
         controller_label = "RANDOM MOVEMENT"
         controller_note = "Original baseline controller"
@@ -77,7 +80,7 @@ def draw_interface(
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 07 / BRAINS", True, MUTED)
+    stage = fonts["small"].render("STEP 08 / PERCEPTION", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
         f"FOOD {len(world.food)}  /  EATEN {world.total_food_eaten}",
@@ -100,6 +103,19 @@ def draw_interface(
         f"(starved {starved}, aged {aged})", True, MUTED,
     )
     screen.blit(survival_label, (PADDING, 81))
+    if world.selected_creature is None:
+        perception_text = "Select a creature to view senses"
+    else:
+        observation = world.perceive_food(world.selected_creature)
+        if observation.visible:
+            perception_text = (
+                f"Food {observation.distance:.1f} px  /  "
+                f"Dir {math.degrees(observation.direction):+.0f} deg  /  "
+                f"Nearby {observation.nearby_count}"
+            )
+        else:
+            perception_text = f"No food within {VISION_RANGE:.0f} px"
+    screen.blit(fonts["small"].render(perception_text, True, MUTED), (400, 81))
 
     world.draw(screen, (PADDING, HEADER_HEIGHT))
     if not world.creatures:
@@ -116,6 +132,7 @@ def draw_interface(
     controls = (
         f"Space  {'Resume' if world.paused else 'Pause'}     /     "
         f"G  Grid {'on' if world.show_grid else 'off'}     /     "
+        f"V  Overlay {'on' if world.show_perception else 'off'}     /     "
         "R  Reset world     /     Click  Inspect     /     Esc  Quit"
     )
     screen.blit(fonts["small"].render(controls, True, MUTED), (PADDING, footer_y))
@@ -173,7 +190,7 @@ def run(
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption(f"Artificial Evolution | {controller.title()} Controller")
+        pygame.display.set_caption(f"Artificial Evolution | Perception | {controller.title()}")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),
