@@ -1,4 +1,4 @@
-"""Creature properties, movement, drawing, and initial population generation."""
+"""Creature state, survival, movement, drawing, and population generation."""
 
 from dataclasses import dataclass
 import math
@@ -10,6 +10,9 @@ from food import Food
 
 
 POPULATION_SIZE = 100
+MAX_ENERGY = 100.0
+BASE_ENERGY_COST = 2.0  # energy per simulated second
+MOVEMENT_ENERGY_COST = 0.05  # energy per pixel travelled
 COLORS = (
     (101, 219, 181),  # mint
     (105, 194, 237),  # blue
@@ -35,14 +38,65 @@ class Creature:
     turn_rate: float = 0.0  # radians per second
     turn_time_remaining: float = 0.0
     food_eaten: int = 0
+    age: float = 0.0
+    lifespan: float = 90.0
+    death_cause: str | None = None
 
-    def eat(self, food: Food) -> None:
+    @property
+    def alive(self) -> bool:
+        return self.death_cause is None and self.energy > 0 and self.age < self.lifespan
+
+    @property
+    def hunger(self) -> float:
+        """Energy deficit, from 0 (full) to 1 (empty)."""
+        return max(0.0, min(1.0, 1.0 - self.energy / MAX_ENERGY))
+
+    @property
+    def hunger_state(self) -> str:
+        if not self.alive:
+            return "Dead"
+        if self.hunger >= 0.8:
+            return "Starving"
+        if self.hunger >= 0.5:
+            return "Hungry"
+        return "Sated"
+
+    @property
+    def energy_cost_per_second(self) -> float:
+        return BASE_ENERGY_COST + MOVEMENT_ENERGY_COST * abs(self.speed)
+
+    def update_survival(self, dt: float) -> None:
+        """Age and consume energy up to the first fatal limit in this interval."""
+        if not math.isfinite(dt) or dt < 0:
+            raise ValueError("Survival time must be finite and non-negative.")
+        if self.death_cause is not None:
+            return
+
+        life_remaining = max(0.0, self.lifespan - self.age)
+        energy_remaining = max(0.0, self.energy) / self.energy_cost_per_second
+        lived = min(dt, life_remaining, energy_remaining)
+        self.age = min(self.lifespan, self.age + lived)
+        self.energy = max(0.0, self.energy - self.energy_cost_per_second * lived)
+        if (
+            life_remaining <= dt and life_remaining <= energy_remaining
+        ) or self.age >= self.lifespan:
+            self.death_cause = "old_age"
+        elif energy_remaining <= dt or self.energy <= 0:
+            self.energy = 0.0
+            self.death_cause = "starvation"
+
+    def eat(self, food: Food) -> bool:
         """Receive a meal after the world resolves ownership of a food collision."""
-        self.energy += food.energy
+        if not self.alive or self.energy >= MAX_ENERGY:
+            return False
+        self.energy = min(MAX_ENERGY, self.energy + food.energy)
         self.food_eaten += 1
+        return True
 
     def rotate(self, angle: float) -> None:
         """Rotate clockwise by an angle in radians, keeping a normalized heading."""
+        if not self.alive:
+            return
         self.heading = (self.heading + angle) % math.tau
 
     def move(self, dt: float, width: int, height: int) -> None:
@@ -51,7 +105,7 @@ class Creature:
             raise ValueError("Movement time must be finite and non-negative.")
         if min(width, height) <= 2 * self.radius:
             raise ValueError("The arena must be wider and taller than the creature.")
-        if dt == 0:
+        if dt == 0 or not self.alive:
             return
 
         dx = math.cos(self.heading) * self.speed * dt
@@ -69,6 +123,8 @@ class Creature:
         self.heading %= math.tau
 
     def draw(self, surface: pygame.Surface, *, selected: bool = False) -> None:
+        if not self.alive:
+            return
         center = (round(self.x), round(self.y))
         halo = tuple(channel // 4 for channel in self.color)
         pygame.draw.circle(surface, halo, center, self.radius + 3)
@@ -83,6 +139,21 @@ class Creature:
         pygame.draw.circle(surface, (238, 247, 245), eye, 2)
         if selected:
             pygame.draw.circle(surface, (229, 241, 242), center, self.radius + 6, width=1)
+
+        bar_color = (101, 219, 181)
+        if self.hunger >= 0.8:
+            bar_color = (238, 115, 127)
+        elif self.hunger >= 0.5:
+            bar_color = (235, 192, 105)
+        bar = pygame.Rect(
+            center[0] - self.radius, center[1] + self.radius + 4,
+            2 * self.radius, 2,
+        )
+        pygame.draw.rect(surface, (40, 53, 59), bar)
+        fill = bar.copy()
+        fill.width = round(bar.width * (1.0 - self.hunger))
+        if fill.width:
+            pygame.draw.rect(surface, bar_color, fill)
 
 
 def _reflect_axis(
@@ -131,4 +202,7 @@ def create_population(width: int, height: int, rng: random.Random) -> list[Creat
                 speed=rng.uniform(40.0, 80.0),
             )
         )
+    # Assign lifespan after placement to preserve the existing seeded positions.
+    for creature in creatures:
+        creature.lifespan = rng.uniform(60.0, 120.0)
     return creatures

@@ -118,7 +118,7 @@ class WorldMovementTests(unittest.TestCase):
         world.update(SIMULATION_STEP)
         self.assertNotEqual(population_state(world), before)
 
-    def test_long_run_stays_inside_walls_with_constant_population_and_energy(self) -> None:
+    def test_long_run_stays_inside_walls_as_energy_depletes(self) -> None:
         world = World(seed=42, food_count=0)
         initial = population_state(world)
         for _ in range(1200):
@@ -128,8 +128,10 @@ class WorldMovementTests(unittest.TestCase):
                 self.assertTrue(creature.radius <= creature.y <= world.height - creature.radius)
                 self.assertTrue(0 <= creature.heading < math.tau)
         self.assertNotEqual(population_state(world), initial)
-        self.assertEqual(len(world.creatures), 100)
-        self.assertTrue(all(creature.energy == 100.0 for creature in world.creatures))
+        self.assertEqual(len(world.creatures) + len(world.dead_creatures), 100)
+        self.assertGreater(len(world.dead_creatures), 0)
+        self.assertTrue(all(0 < creature.energy < 100.0 for creature in world.creatures))
+        self.assertTrue(all(creature.death_cause == "starvation" for creature in world.dead_creatures))
 
     def test_regeneration_resets_clock_and_reproduces_steering(self) -> None:
         world = World(seed=42, food_count=0)

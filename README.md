@@ -3,10 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **5 — Introduce food**. The Pygame application displays 100 moving
-creatures and 150 food pellets in a 1,000 × 600 pixel habitat. Creatures eat on
-contact, gaining energy. Energy consumption, death, neural networks, and evolution
-will be implemented in later steps.
+Current step: **6 — Implement survival mechanics**. The Pygame application starts
+with 100 creatures and 150 food pellets in a 1,000 × 600 pixel habitat. Creatures
+spend energy, become hungry, age, and die from starvation or old age. Neural
+networks, reproduction, and evolution will be implemented in later steps.
 
 ## Run the world
 
@@ -18,8 +18,8 @@ python main.py
 ```
 
 - Press **G** to hide or show the grid.
-- Press **Space** to pause or resume movement and eating.
-- Press **R** to reset creatures, food, energy, counters, and simulation time.
+- Press **Space** to pause or resume movement, eating, energy use, and aging.
+- Press **R** to reset creatures, food, energy, ages, deaths, and simulation time.
 - **Click a creature** to inspect its properties. Click empty space to deselect.
 - Press **Esc**, or close the window, to quit.
 
@@ -40,12 +40,46 @@ Each creature has a unique ID within its population and these initial properties
 | Color | Random choice of six pastel colors; appearance only |
 | Facing direction | Random angle around the full circle, shown by the white eye |
 | Speed | Random value from 40 to 80 pixels per second |
-| Energy | 100 initially; each eaten pellet adds 20 |
+| Energy | 100 initially, capped at 100; food restores up to 20 per pellet |
+| Hunger | Energy deficit from 0% full to 100% empty |
+| Age | 0 simulated seconds initially |
+| Lifespan | Seeded random value from 60 to 120 simulated seconds |
 | Food eaten | 0 initially; incremented once per consumed pellet |
 
 The selected creature has a white ring, and its properties appear below the arena.
 The first creature is selected initially. Pause with **Space** to inspect a
-creature while it holds still. Its energy and food counter update as it eats.
+creature while it holds still. Its inspector shows energy, hunger, age/lifespan,
+food count, position, speed, size, and facing direction. Small energy bars below
+creatures change from green to amber to red as hunger increases.
+
+## Survival
+
+Energy use is charged per simulated second:
+
+```text
+energy cost = 2 + 0.05 * movement speed
+```
+
+With initial speeds of 40–80 pixels per second, creatures spend 4–6 energy units
+per second. A stationary creature still spends 2 units per second. Food restores
+energy up to a capacity of 100. Hunger is `1 - energy / 100`: creatures are hungry
+at 50% deficit and starving at 80% deficit. These states describe their reserves;
+steering stays random.
+
+Age advances with simulated time. Each creature has a seeded lifespan of 60–120
+seconds. Energy exhaustion causes starvation death; reaching lifespan causes
+old-age death, even with energy remaining. If both limits fall inside a step,
+the earlier one determines the cause. Age stops at the moment of death.
+
+Every fixed step applies energy use and aging first, removes fatal creatures,
+then moves and feeds survivors. A creature with positive energy can recover by
+eating; one that has already died cannot move, eat, or revive. Death reduces the
+population. Final creature states remain in `World.dead_creatures` until reset.
+
+The header shows living creatures, hungry creatures, total deaths, and the
+starvation/old-age breakdown. An extinct population shows a reset prompt and
+keeps the controls usable. **R** starts again with 100 living creatures and zero
+deaths. Pause freezes the full simulation, including hunger and lifespan.
 
 ## Food and eating
 
@@ -54,10 +88,11 @@ radius of 3 pixels and an energy value of 20. Food spawns fully inside the arena
 clear of creatures and other pellets.
 
 Each simulation step checks circle contact using both the creature's and the
-pellet's radius. On contact, the creature gains the pellet's energy, its food
-counter increases, and the pellet is removed. If multiple creatures touch one
-pellet in the same step, the nearest center wins; an exact distance tie uses the
-lower creature ID. Each pellet awards energy only once.
+pellet's radius. A living creature with room for energy gains up to 20 on contact.
+Its food counter increases, and the pellet is removed. If multiple creatures touch one
+pellet and can eat, the nearest center wins; an exact distance tie uses the lower
+creature ID. Each pellet awards energy only once. A full or dead creature leaves
+the food available.
 
 After all contacts are resolved, eaten pellets are replaced at random free
 positions, maintaining 150 available meals. Replacements start clear of creatures
@@ -65,8 +100,7 @@ and are eligible for eating on subsequent steps. The header shows available food
 and total meals eaten; selecting a creature shows its individual meal count.
 
 Creatures keep their random steering and eat food they encounter along the way.
-Food affects their energy and counters. Energy can rise above the starting value
-of 100; energy costs and capacity rules belong to later survival steps.
+Meals eaten by creatures that later die remain included in the total meal count.
 
 ## Movement
 
@@ -83,8 +117,8 @@ Creatures move independently and may pass through one another after spawning.
 Movement advances in fixed 1/60-second simulation steps, independently of display
 frame rate. The footer shows elapsed simulation time. Long desktop frame stalls
 are capped at 0.25 seconds of catch-up to avoid a large jump. Pausing freezes
-movement, eating, and simulation time. **R** resets time and generates a fresh
-population and food supply, preserving the current pause state.
+movement, eating, energy use, aging, and simulation time. **R** resets time and
+generates a fresh population and food supply, preserving the current pause state.
 
 Use a seed to reproduce a population and its movement at the same simulation time:
 
@@ -94,39 +128,40 @@ python main.py --seed 42
 
 Without `--seed`, startup chooses a random seed. The active seed is displayed in
 the footer. **R** chooses a new seed and resets the population to 100 creatures.
-Population generation, motion, and food use separate random-number generators,
-so changing food availability does not change creature trajectories.
+Population generation, motion, and food use separate random-number generators.
+Food availability affects survival, while steering stays random at this step.
 
 To render a few frames without opening a window, optionally saving a preview:
 
 ```sh
-python main.py --headless --frames 120 --seed 42 --screenshot .cache/food-preview.png
+python main.py --headless --frames 5400 --seed 42 --screenshot .cache/survival-preview.png
 ```
 
 Headless mode requires `--frames` so it exits automatically and advances exactly
 one 1/60-second simulation step per frame, without waiting for real time. The
-command above therefore captures the world after 2 seconds of simulated motion.
+command above therefore captures the world after 90 seconds of simulated life.
 
-Run the movement and food checks with the standard Python test runner:
+Run the movement, food, and survival checks with the standard Python test runner:
 
 ```sh
-python -m unittest -v test_movement.py test_food.py
+python -m unittest -v test_movement.py test_food.py test_survival.py
 ```
 
-Verified: all 23 movement and food checks, pause/reset and inspection controls,
-and 120-frame headless and native macOS Cocoa runs. Food checks cover collision
-geometry, single meal ownership, energy accounting, spawning, and seeded results
-at 30, 60, and 144 display updates per second.
+Verified: all 39 checks, a 125-second headless lifespan run through extinction,
+and a 120-frame native macOS Cocoa run. Tests cover energy use, hunger, capacity,
+starvation, old age, death removal, food rescue, extinction, reset, and seeded
+results at 30, 60, and 144 display updates per second.
 
 ## Project structure
 
 ```text
 main.py               Window, controls, simulation timing, and launch options
-world.py              Simulation, random steering, food spawning, eating, and selection
-creature.py           Creature properties, motion, wall reflection, drawing, and spawning
+world.py              Survival, death removal, motion, food, eating, and selection
+creature.py           Creature state, energy, hunger, age, motion, drawing, and spawning
 food.py               Food properties, circle collision checks, and drawing
 test_movement.py      Movement, boundary, timing, pause, and reproducibility checks
 test_food.py          Food generation, contact, meal accounting, and reproducibility
+test_survival.py      Energy, hunger, aging, death, extinction, and reset checks
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection

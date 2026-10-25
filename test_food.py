@@ -15,7 +15,7 @@ def still_creature(creature_id: int = 1, **changes: float) -> Creature:
     properties = dict(
         creature_id=creature_id, x=50.0, y=50.0, radius=6,
         color=(101, 219, 181), heading=0.0, speed=0.0,
-        turn_time_remaining=10.0,
+        turn_time_remaining=10.0, energy=50.0,
     )
     properties.update(changes)
     return Creature(**properties)
@@ -63,7 +63,8 @@ class FoodTests(unittest.TestCase):
         world.food = [pellet]
         self.assertFalse(pellet.overlaps_circle(creature.x, creature.y, creature.radius))
         world.update(SIMULATION_STEP)
-        self.assertEqual(creature.energy, 120.0)
+        expected_energy = 50.0 - 6.0 * SIMULATION_STEP + pellet.energy
+        self.assertAlmostEqual(creature.energy, expected_energy)
         self.assertEqual(creature.food_eaten, 1)
         self.assertEqual(world.total_food_eaten, 1)
         self.assertEqual(len(world.food), 1)
@@ -71,7 +72,7 @@ class FoodTests(unittest.TestCase):
         self.assertFalse(world.food[0].overlaps_circle(creature.x, creature.y, creature.radius))
         creature.speed = 0.0
         world.update(SIMULATION_STEP)
-        self.assertEqual(creature.energy, 120.0)
+        self.assertAlmostEqual(creature.energy, expected_energy - 2.0 * SIMULATION_STEP)
         self.assertEqual(world.total_food_eaten, 1)
 
     def test_separated_creature_does_not_eat(self) -> None:
@@ -81,7 +82,7 @@ class FoodTests(unittest.TestCase):
         world.creatures = [creature]
         world.food = [pellet]
         world.update(SIMULATION_STEP)
-        self.assertEqual(creature.energy, 100.0)
+        self.assertAlmostEqual(creature.energy, 50.0 - 2.0 * SIMULATION_STEP)
         self.assertEqual(creature.food_eaten, 0)
         self.assertEqual(world.total_food_eaten, 0)
         self.assertIs(world.food[0], pellet)
@@ -94,7 +95,8 @@ class FoodTests(unittest.TestCase):
         world.food = [Food(50.0, 50.0)]
         world.update(SIMULATION_STEP)
         self.assertEqual((farther.food_eaten, nearer.food_eaten), (0, 1))
-        self.assertEqual((farther.energy, nearer.energy), (100.0, 120.0))
+        self.assertAlmostEqual(farther.energy, 50.0 - 2.0 * SIMULATION_STEP)
+        self.assertAlmostEqual(nearer.energy, 70.0 - 2.0 * SIMULATION_STEP)
         self.assertEqual(world.total_food_eaten, 1)
 
     def test_exact_tie_uses_id_independently_of_list_order(self) -> None:
@@ -113,7 +115,7 @@ class FoodTests(unittest.TestCase):
         world.creatures = [creature]
         world.food = [Food(45.0, 50.0), Food(55.0, 50.0)]
         world.update(SIMULATION_STEP)
-        self.assertEqual(creature.energy, 140.0)
+        self.assertAlmostEqual(creature.energy, 90.0 - 2.0 * SIMULATION_STEP)
         self.assertEqual(creature.food_eaten, 2)
         self.assertEqual(world.total_food_eaten, 2)
         self.assertEqual(len(world.food), 2)
@@ -141,7 +143,7 @@ class FoodTests(unittest.TestCase):
         self.assertEqual(states[0], states[1])
         self.assertEqual(states[0], states[2])
 
-    def test_food_does_not_change_random_movement(self) -> None:
+    def test_food_does_not_change_early_random_movement(self) -> None:
         with_food = World(seed=42)
         without_food = World(seed=42, food_count=0)
         for world in (with_food, without_food):
@@ -157,7 +159,8 @@ class FoodTests(unittest.TestCase):
         eaten = world.total_food_eaten
         self.assertGreater(eaten, 0)
         self.assertEqual(sum(creature.food_eaten for creature in world.creatures), eaten)
-        self.assertEqual(sum(creature.energy for creature in world.creatures), 10000 + 20 * eaten)
+        self.assertTrue(all(0 < creature.energy <= 100 for creature in world.creatures))
+        self.assertTrue(any(creature.energy < 100 for creature in world.creatures))
         self.assertEqual(len(world.food), FOOD_COUNT)
         world.paused = True
         world.regenerate_population(42)

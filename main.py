@@ -1,4 +1,4 @@
-"""Launch Step 5: moving creatures encounter food and eat on contact."""
+"""Launch Step 6: creatures use energy, get hungry, age, and die."""
 
 import argparse
 import math
@@ -9,6 +9,7 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
 import pygame
 
+from creature import MAX_ENERGY
 from world import SIMULATION_STEP, World
 
 
@@ -56,15 +57,19 @@ def draw_interface(
     screen.blit(fonts["small"].render("ARTIFICIAL EVOLUTION", True, ACCENT), (40, 25))
     screen.blit(fonts["title"].render("The virtual world", True, TEXT), (38, 48))
 
-    activity = "PAUSED" if world.paused else "MOVING"
-    status_color = MUTED if world.paused else ACCENT
+    if not world.creatures:
+        activity, status_color = "EXTINCT", (238, 115, 127)
+    elif world.paused:
+        activity, status_color = "PAUSED", MUTED
+    else:
+        activity, status_color = "RUNNING", ACCENT
     status = fonts["small"].render(
-        f"{len(world.creatures)} CREATURES / {activity}", True, status_color
+        f"{len(world.creatures)} ALIVE / {activity}", True, status_color
     )
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 05 / FOOD", True, MUTED)
+    stage = fonts["small"].render("STEP 06 / SURVIVAL", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
         f"FOOD {len(world.food)}  /  EATEN {world.total_food_eaten}",
@@ -77,10 +82,29 @@ def draw_interface(
          (food_x - 15, 92), (food_x - 19, 88)],
     )
     screen.blit(food_label, (food_x, 81))
+    hungry = sum(creature.hunger >= 0.5 for creature in world.creatures)
+    starved = sum(
+        creature.death_cause == "starvation" for creature in world.dead_creatures
+    )
+    aged = len(world.dead_creatures) - starved
+    survival_label = fonts["small"].render(
+        f"HUNGRY {hungry}  /  DEAD {len(world.dead_creatures)} "
+        f"(starved {starved}, aged {aged})", True, MUTED,
+    )
+    screen.blit(survival_label, (PADDING, 81))
 
     world.draw(screen, (PADDING, HEADER_HEIGHT))
+    if not world.creatures:
+        panel = pygame.Rect(0, 0, 440, 96)
+        panel.center = (PADDING + world.width // 2, HEADER_HEIGHT + world.height // 2)
+        pygame.draw.rect(screen, BACKGROUND, panel, border_radius=12)
+        pygame.draw.rect(screen, MUTED, panel, width=1, border_radius=12)
+        title = fonts["title"].render("The population has died out", True, TEXT)
+        hint = fonts["small"].render("Press R to start a new population", True, ACCENT)
+        screen.blit(title, title.get_rect(center=(panel.centerx, panel.centery - 15)))
+        screen.blit(hint, hint.get_rect(center=(panel.centerx, panel.centery + 20)))
 
-    footer_y = HEADER_HEIGHT + world.height + 22
+    footer_y = HEADER_HEIGHT + world.height + 16
     controls = (
         f"Space  {'Resume' if world.paused else 'Pause'}     /     "
         f"G  Grid {'on' if world.show_grid else 'off'}     /     "
@@ -97,22 +121,28 @@ def draw_interface(
 
     creature = world.selected_creature
     if creature is None:
-        details = "Click a creature to inspect its properties."
+        details = "Click a living creature to inspect its survival state."
+        traits = "Energy bars: green = sated, amber = hungry, red = starving"
     else:
         details = (
             f"#{creature.creature_id:03d}    "
+            f"Energy {creature.energy:.1f}/{MAX_ENERGY:.0f}    "
+            f"Hunger {creature.hunger:.0%} ({creature.hunger_state})    "
+            f"Age {creature.age:.1f}/{creature.lifespan:.1f} s    Eaten {creature.food_eaten}"
+        )
+        traits = (
             f"Position ({creature.x:.0f}, {creature.y:.0f})    "
-            f"Energy {creature.energy:.0f}    Eaten {creature.food_eaten}    "
             f"Speed {creature.speed:.1f} px/s    "
             f"Radius {creature.radius} px    Facing {math.degrees(creature.heading):.0f} deg"
         )
-    screen.blit(fonts["small"].render(details, True, TEXT), (PADDING, footer_y + 27))
+    screen.blit(fonts["small"].render(details, True, TEXT), (PADDING, footer_y + 24))
+    screen.blit(fonts["small"].render(traits, True, MUTED), (PADDING, footer_y + 46))
     seed_label = fonts["small"].render(
         f"{world.elapsed_time:.1f} s  /  Seed {world.seed}", True, MUTED
     )
     screen.blit(
         seed_label,
-        (screen.get_width() - PADDING - seed_label.get_width(), footer_y + 27),
+        (screen.get_width() - PADDING - seed_label.get_width(), footer_y + 46),
     )
 
 
@@ -133,7 +163,7 @@ def run(
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption("Artificial Evolution | Creatures and Food")
+        pygame.display.set_caption("Artificial Evolution | Survival")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),

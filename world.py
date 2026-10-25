@@ -5,7 +5,7 @@ import random
 
 import pygame
 
-from creature import Creature, create_population
+from creature import MAX_ENERGY, Creature, create_population
 from food import FOOD_COUNT, FOOD_RADIUS, Food
 
 
@@ -13,7 +13,7 @@ SIMULATION_STEP = 1.0 / 60.0
 
 
 class World:
-    """A rectangular arena with 100 creatures and replenishing food."""
+    """A rectangular arena where creatures move, feed, age, and survive."""
 
     BACKGROUND = (17, 29, 35)
     GRID = (24, 39, 46)
@@ -45,6 +45,7 @@ class World:
         creatures = create_population(self.width, self.height, random.Random(seed))
         self.seed = seed
         self.creatures = creatures
+        self.dead_creatures: list[Creature] = []
         self.selected_creature: Creature | None = creatures[0]
         self._motion_rng = random.Random(f"motion:{seed}")
         self._food_rng = random.Random(f"food:{seed}")
@@ -83,7 +84,8 @@ class World:
             eater = min(
                 (
                     creature for creature in self.creatures
-                    if food.overlaps_circle(creature.x, creature.y, creature.radius)
+                    if creature.alive and creature.energy < MAX_ENERGY
+                    and food.overlaps_circle(creature.x, creature.y, creature.radius)
                 ),
                 key=lambda creature: (
                     (creature.x - food.x) ** 2 + (creature.y - food.y) ** 2,
@@ -94,15 +96,17 @@ class World:
             if eater is None:
                 remaining.append(food)
             else:
-                eater.eat(food)
-                self.total_food_eaten += 1
+                if eater.eat(food):
+                    self.total_food_eaten += 1
+                else:
+                    remaining.append(food)
 
         self.food = remaining
         for _ in range(self.food_count - len(self.food)):
             self.food.append(self._spawn_food())
 
     def update(self, dt: float) -> None:
-        """Advance motion and food contact in fixed time steps."""
+        """Advance survival, living creatures' motion, and eating in fixed steps."""
         if not math.isfinite(dt) or dt < 0:
             raise ValueError("Simulation time must be finite and non-negative.")
         if self.paused or dt == 0:
@@ -110,7 +114,13 @@ class World:
 
         self._accumulator += dt
         while self._accumulator + 1e-12 >= SIMULATION_STEP:
+            survivors = []
             for creature in self.creatures:
+                creature.update_survival(SIMULATION_STEP)
+                if not creature.alive:
+                    self.dead_creatures.append(creature)
+                    continue
+                survivors.append(creature)
                 if creature.turn_time_remaining <= 0:
                     creature.turn_rate = self._motion_rng.uniform(
                         -math.pi / 2, math.pi / 2
@@ -119,6 +129,9 @@ class World:
                 creature.rotate(creature.turn_rate * SIMULATION_STEP)
                 creature.move(SIMULATION_STEP, self.width, self.height)
                 creature.turn_time_remaining -= SIMULATION_STEP
+            self.creatures = survivors
+            if self.selected_creature not in self.creatures:
+                self.selected_creature = None
             self._resolve_food_collisions()
             self.elapsed_time += SIMULATION_STEP
             self._accumulator = max(0.0, self._accumulator - SIMULATION_STEP)
@@ -127,8 +140,13 @@ class World:
         """Select the nearest creature under a click in arena coordinates."""
         x, y = position
         nearest = min(
-            self.creatures, key=lambda creature: math.hypot(x - creature.x, y - creature.y)
+            self.creatures,
+            key=lambda creature: math.hypot(x - creature.x, y - creature.y),
+            default=None,
         )
+        if nearest is None:
+            self.selected_creature = None
+            return
         distance = math.hypot(x - nearest.x, y - nearest.y)
         self.selected_creature = nearest if distance <= nearest.radius + 6 else None
 
