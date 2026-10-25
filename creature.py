@@ -46,6 +46,9 @@ class Creature:
     death_cause: str | None = None
     max_speed: float = field(init=False)
     brain: NeuralNetwork | None = field(default=None, repr=False, compare=False)
+    generation: int = 1
+    parent_id: int | None = None
+    mutation_count: int = 0
 
     def __post_init__(self) -> None:
         self.max_speed = abs(self.speed)

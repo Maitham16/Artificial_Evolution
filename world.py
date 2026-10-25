@@ -6,10 +6,12 @@ import random
 import numpy as np
 import pygame
 
-from creature import MAX_ENERGY, Creature, create_population
+from brain import DEFAULT_MUTATION_RATE, DEFAULT_MUTATION_SCALE, validate_mutation_parameters
+from creature import MAX_ENERGY, POPULATION_SIZE, Creature, create_population
 from food import FOOD_COUNT, FOOD_RADIUS, Food
 from perception import VISION_RANGE, FoodPerception, sense_food
 from selection import FitnessEvaluation, evaluate_population
+from reproduction import OffspringBrain, reproduce_brains
 
 
 SIMULATION_STEP = 1.0 / 60.0
@@ -31,15 +33,20 @@ class World:
         seed: int | None = None,
         food_count: int = FOOD_COUNT,
         controller: str = "neural",
+        mutation_rate: float = DEFAULT_MUTATION_RATE,
+        mutation_scale: float = DEFAULT_MUTATION_SCALE,
     ) -> None:
         if food_count < 0:
             raise ValueError("Food count must be non-negative.")
         if controller not in ("neural", "random"):
             raise ValueError("Controller must be 'neural' or 'random'.")
+        validate_mutation_parameters(mutation_rate, mutation_scale)
         self.width = width
         self.height = height
         self.food_count = food_count
         self.controller = controller
+        self.mutation_rate = mutation_rate
+        self.mutation_scale = mutation_scale
         self.grid_spacing = 40
         self.show_grid = True
         self.show_perception = True
@@ -49,22 +56,61 @@ class World:
         self.regenerate_population(seed)
 
     def regenerate_population(self, seed: int | None = None) -> None:
-        """Reset creatures, food, counters, and time from a reproducible seed."""
+        """Restart the experiment with random founders and an empty history."""
         seed = seed if seed is not None else random.SystemRandom().randrange(2**32)
-        creatures = create_population(self.width, self.height, random.Random(seed))
         self.seed = seed
+        self.generation_history: list[FitnessEvaluation] = []
+        self._start_generation(1)
+
+    def _start_generation(
+        self, generation: int, inherited: list[OffspringBrain] | None = None
+    ) -> None:
+        """Create newborn bodies and a fresh environment for one generation."""
+        suffix = "" if generation == 1 else f":generation:{generation}"
+        population_seed = self.seed if generation == 1 else f"population:{self.seed}{suffix}"
+        creatures = create_population(self.width, self.height, random.Random(population_seed))
+        if inherited is not None and len(inherited) != len(creatures):
+            raise ValueError("Every newborn must receive one inherited brain.")
+        for index, creature in enumerate(creatures):
+            creature.generation = generation
+            if inherited is not None:
+                inheritance = inherited[index]
+                creature.brain = inheritance.brain
+                creature.parent_id = inheritance.parent_id
+                creature.mutation_count = inheritance.mutations
+        self.generation = generation
         self.creatures = creatures
         self.dead_creatures: list[Creature] = []
         self.final_evaluation: FitnessEvaluation | None = None
         self.selected_creature: Creature | None = creatures[0]
-        self._motion_rng = random.Random(f"motion:{seed}")
-        self._food_rng = random.Random(f"food:{seed}")
+        self._motion_rng = random.Random(f"motion:{self.seed}{suffix}")
+        self._food_rng = random.Random(f"food:{self.seed}{suffix}")
         self.food: list[Food] = []
         self.total_food_eaten = 0
         for _ in range(self.food_count):
             self.food.append(self._spawn_food())
         self._accumulator = 0.0
         self.elapsed_time = 0.0
+
+    def advance_generation(self) -> bool:
+        """Breed the selected completed generation; leave an active run intact."""
+        evaluation = self.final_evaluation
+        if self.creatures or evaluation is None or not evaluation.complete or not evaluation.selected_ids:
+            return False
+        records = {creature.creature_id: creature for creature in self.dead_creatures}
+        if any(parent_id not in records for parent_id in evaluation.selected_ids):
+            raise ValueError("Selected parent records are missing.")
+        parents = [records[parent_id] for parent_id in evaluation.selected_ids]
+        next_generation = self.generation + 1
+        mutation_seed = random.Random(
+            f"mutation:{self.seed}:generation:{next_generation}"
+        ).getrandbits(128)
+        offspring = reproduce_brains(
+            parents, np.random.default_rng(mutation_seed), offspring_count=POPULATION_SIZE,
+            mutation_rate=self.mutation_rate, mutation_scale=self.mutation_scale,
+        )
+        self._start_generation(next_generation, offspring)
+        return True
 
     def get_fitness_evaluation(self) -> FitnessEvaluation:
         """Return live scores or the frozen final ranking, without altering the run."""
@@ -194,6 +240,7 @@ class World:
             self._resolve_food_collisions()
             if not self.creatures and self.final_evaluation is None:
                 self.final_evaluation = evaluate_population(self.dead_creatures)
+                self.generation_history.append(self.final_evaluation)
             self.elapsed_time += SIMULATION_STEP
             self._accumulator = max(0.0, self._accumulator - SIMULATION_STEP)
 

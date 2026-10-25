@@ -3,10 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **9 — Implement natural selection**. Creatures earn fitness from
-survival time and food eaten. Rankings include all 100 original creatures, and the
-top 20% are selected as future breeding candidates once the run ends. Reproduction,
-mutation, training, and evolving new generations remain later steps.
+Current step: **10 — Implement reproduction and mutation**. Creatures earn fitness
+from survival time and food eaten. At the end of each generation, the top 20%
+become parents. Press **N** to create 100 offspring with inherited, mutated
+neural networks. Comparing fitness across independent experiments remains later work.
 
 ## Run the world
 
@@ -27,8 +27,9 @@ python main.py --controller random --seed 42
 - Press **G** to hide or show the grid.
 - Press **V** to hide or show the selected creature's perception overlay.
 - Press **F** to open or close the fitness leaderboard.
+- Press **N** after a generation ends to breed the next generation.
 - Press **Space** to pause or resume movement, eating, energy use, and aging.
-- Press **R** to reset creatures, food, energy, ages, deaths, and simulation time.
+- Press **R** to restart with random founders, clearing generations and results.
 - **Click a creature** to inspect its properties. Click empty space to deselect.
 - Press **Esc**, or close the window, to quit.
 
@@ -56,11 +57,15 @@ Each creature has a unique ID within its population and these initial properties
 | Lifespan | Seeded random value from 60 to 120 simulated seconds |
 | Food eaten | 0 initially; incremented once per consumed pellet |
 | Fitness | 0 initially; survival seconds plus 10 points per eaten pellet |
+| Generation | 1 for random founders; increases when selected parents reproduce |
+| Parent | None for founders; previous generation's selected parent ID for offspring |
+| Mutations | Number of parameters actually changed during birth; 0 for founders |
 
 The selected creature has a white ring, and its properties appear below the arena.
 The first creature is selected initially. Pause with **Space** to inspect a
 creature while it holds still. Its inspector shows energy, hunger, age/lifespan,
-food count, fitness, position, current/maximum speed, size, facing direction, and turn rate.
+food count, fitness, generation, parent, mutation count, position, current/maximum
+speed, size, facing direction, and turn rate.
 Small energy bars below creatures change from green to amber to red as hunger
 increases.
 
@@ -85,8 +90,7 @@ creature ID, keeping results reproducible.
 During a run, rankings are **provisional** and candidate selection is pending.
 When the population becomes extinct, the world freezes the final ranking and
 selects the top **20%**, rounding up for small populations: 20 candidates from the
-usual 100. These are candidate IDs associated with the retained creature/brain
-records. Reproduction and mutation will use them in later steps.
+usual 100. These IDs identify the retained creature/brain records used for reproduction.
 
 The header shows best and mean fitness across the entire original population.
 Clicking a living creature shows its individual score. **F** opens the top-ten
@@ -94,15 +98,58 @@ leaderboard with survival time, meals, score, and live/dead or selected status.
 The world continues while the leaderboard is open; use **Space** to pause. Close
 the leaderboard before selecting creatures in the arena.
 
-Completed runs show their best result and selection count. **R** clears the final
-results and begins a new population with zero scores. Ranking and drawing the
+Completed runs show their best result and selection count. **N** breeds the next
+generation; **R** restarts with random founders. Ranking and drawing the
 leaderboard do not change movement, randomness, food, or brain parameters.
 
 The code exposes live or final immutable snapshots through
 `World.get_fitness_evaluation()`. Its `ranking` contains every evaluated creature,
 and its `selected_ids` is populated only for completed runs.
-`World.final_evaluation` retains the final snapshot until reset. The default rule
-and selection fraction are defined in `selection.py`.
+`World.final_evaluation` retains the final snapshot until breeding or reset.
+`World.generation_history` keeps one immutable final evaluation per completed
+generation until restart. The default rule and selection fraction are defined in
+`selection.py`.
+
+## Reproduction and mutation
+
+Generations run separately. Once all creatures die, final results remain visible
+until you press **N**. This control also works while viewing the leaderboard.
+Pressing **N** during a living generation has no effect.
+
+Each of the usual **20 selected parents produces five offspring**, rebuilding the
+population to **100**. Birth slots are shuffled to avoid associating parent rank
+with particular body positions. Each offspring receives an independent copy of
+one parent's complete network: all **90 weights and biases**. Reproduction is
+asexual, without crossover or gradient training.
+
+Every parameter independently has a **10% mutation probability**. A mutation
+adds Gaussian noise with **mean 0 and standard deviation 0.1**. About nine
+parameters per offspring change on average; the actual count varies, and an
+offspring can receive no mutations. Parents and siblings never share parameter
+arrays. Parameters remain fixed throughout each creature's lifetime.
+
+Only the brain is inherited. New bodies receive fresh positions, colors, sizes,
+headings, speed limits, and lifespans. Energy starts at 100, and age, meals, and
+fitness start at zero. Food and per-generation counters also restart. The
+inspector shows the creature's generation, its parent's generation and ID, and
+the number of changed parameters. IDs are local to each generation.
+
+The founding seed and generation number determine separate random streams for
+bodies, food, steering, and mutations. Repeating the same seed, controller, and
+generation sequence reproduces the same results; waiting longer on the final
+results screen does not change offspring. **R** chooses a new founding seed and
+returns to generation 1. Pause and display settings survive both controls.
+
+Programmatically, `World.advance_generation()` returns `True` when reproduction
+succeeds and `False` while the generation is incomplete. `World` accepts
+`mutation_rate` (0–1) and `mutation_scale` (finite, non-negative) for controlled
+checks. Setting either to zero creates exact, independent brain copies.
+`reproduction.py` handles parent allocation and birth records, while
+`NeuralNetwork.mutated_copy()` implements inheritance and mutation.
+
+The random movement controller can also advance generations, but it continues to
+ignore inherited brains when choosing movement. Evolutionary improvement is a
+question for repeated experiments; reproduction alone does not establish it.
 
 ## Sensory perception
 
@@ -134,8 +181,9 @@ each simulation step; the display shows the current view after movement/eating.
 
 Every creature owns an independent **8-input, 8-hidden, 2-output** feed-forward
 network. NumPy matrix multiplication and `tanh` activations compute each decision.
-The network has **90 parameters**, including biases. Parameters are randomly
-initialized from a seed and remain fixed during a run.
+The network has **90 parameters**, including biases. Founders receive random
+parameters; descendants inherit mutated copies from selected parents. Parameters
+remain fixed during each creature's lifetime.
 
 The eight inputs, in order, are:
 
@@ -166,14 +214,14 @@ speed = throttle * maximum_speed
 The first output chooses left/right turning; the second chooses forward speed.
 Zero outputs mean straight movement at half maximum speed. Neural decisions run
 once per fixed simulation step. Food information reaches movement through the
-network's parameters, which may produce useful or unhelpful actions while
-untrained. The brain label and the selected creature's current speed and turn rate
+network's parameters, which may produce useful or unhelpful actions. The brain
+label and the selected creature's current speed and turn rate
 make the active controller visible.
 
 The random mode retains the earlier gradual random steering and cruising speed.
 Both modes start with the same physical traits, food, and seeded network
 parameters for a given seed. Both use the same fitness rule. Comparisons across
-independent runs and evolving generations remain later work.
+independent runs remain later work.
 
 ## Survival
 
@@ -197,12 +245,14 @@ Every fixed step chooses motor commands, charges energy for the newly chosen
 speed, advances age, removes fatal creatures, then moves and feeds survivors.
 A creature with positive energy can recover by eating; one that has already died
 cannot move, eat, or revive. Death reduces the
-population. Final creature states remain in `World.dead_creatures` until reset.
+population. Final creature states remain in `World.dead_creatures` until breeding
+or reset; final fitness snapshots remain in generation history until reset.
 
 The header shows living creatures, hungry creatures, total deaths, and the
 starvation/old-age breakdown. An extinct population shows final fitness and
-selection results and keeps the controls usable. **R** starts again with 100 living
-creatures, zero scores, and zero deaths. Pause freezes the full simulation,
+selection results and keeps the controls usable. **N** breeds offspring; **R**
+starts again with random founders. Both create 100 living creatures with zero
+scores and deaths. Pause freezes the full simulation,
 including hunger, lifespan, and earned fitness.
 
 ## Food and eating
@@ -261,7 +311,7 @@ can now affect both neural decisions and survival.
 To render a few frames without opening a window, optionally saving a preview:
 
 ```sh
-python main.py --headless --frames 120 --seed 42 --screenshot .cache/selection-preview.png
+python main.py --headless --frames 120 --seed 42 --screenshot .cache/reproduction-preview.png
 ```
 
 Headless mode requires `--frames` so it exits automatically and advances exactly
@@ -274,20 +324,26 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: all 90 checks, a 125-second headless run through final selection,
-leaderboard/pause/reset controls, and a 120-frame native macOS Cocoa run.
-Selection tests cover both score components, dead-creature scores, deterministic
-ranking, frozen results, top-20% selection, reset, observation without simulation
-changes, and matching final results across frame rates. Existing perception,
-neural, movement, food, and survival checks remain included.
+Verified: **109 checks**, two complete 125-second simulated generations with
+reproduction into generations 2 and 3, the **N** keyboard transition, and a
+120-frame native macOS Cocoa run. Screenshots were checked for generation,
+parent, mutation, and final-ranking displays.
+
+Reproduction checks cover independent copies of every weight and bias, mutation
+settings, deterministic offspring, balanced parent allocation, selected-parent
+inheritance, newborn survival resets, repeated generation transitions, history,
+restart, and preservation of pause/display settings and random movement mode.
+Existing fitness, perception, neural, movement, food, and survival checks remain
+included.
 
 ## Project structure
 
 ```text
 main.py               Window, controls, simulation timing, and launch options
-world.py              Simulation, perception, survival, food, and final fitness results
+world.py              Simulation, generations, perception, survival, food, and fitness
 creature.py           Creature state, motor controls, survival, drawing, and spawning
-brain.py              NumPy network, seeded parameters, and forward inference
+brain.py              NumPy network, inference, independent copies, and mutation
+reproduction.py       Balanced selected-parent reproduction and offspring records
 perception.py         Read-only food distance, direction, visibility, and neural signals
 selection.py          Fitness formula, immutable rankings, and final candidate selection
 food.py               Food properties, circle collision checks, and drawing
@@ -297,6 +353,7 @@ test_survival.py      Energy, hunger, aging, death, extinction, and reset checks
 test_brain.py         Network math, sensors, motor commands, and seeded brain checks
 test_perception.py    Perception geometry, edge cases, brain inputs, and overlay checks
 test_selection.py     Scores, ranking, final selection, immutability, and reset checks
+test_reproduction.py  Brain inheritance, mutation, lineage, and generation transitions
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection
