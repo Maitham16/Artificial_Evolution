@@ -9,6 +9,7 @@ import pygame
 from brain import DEFAULT_MUTATION_RATE, DEFAULT_MUTATION_SCALE, validate_mutation_parameters
 from creature import MAX_ENERGY, POPULATION_SIZE, Creature, create_population
 from food import FOOD_COUNT, FOOD_RADIUS, Food
+from generation_stats import GenerationStats
 from perception import VISION_RANGE, FoodPerception, sense_food
 from selection import FitnessEvaluation, evaluate_population
 from reproduction import OffspringBrain, reproduce_brains
@@ -51,6 +52,7 @@ class World:
         self.show_grid = True
         self.show_perception = True
         self.show_fitness = False
+        self.show_history = False
         self.paused = False
         self.surface = pygame.Surface((width, height))
         self.regenerate_population(seed)
@@ -60,6 +62,7 @@ class World:
         seed = seed if seed is not None else random.SystemRandom().randrange(2**32)
         self.seed = seed
         self.generation_history: list[FitnessEvaluation] = []
+        self.generation_stats: list[GenerationStats] = []
         self._start_generation(1)
 
     def _start_generation(
@@ -91,6 +94,10 @@ class World:
             self.food.append(self._spawn_food())
         self._accumulator = 0.0
         self.elapsed_time = 0.0
+        self._alive_time = 0.0
+        self._speed_time = 0.0
+        self._food_visible_time = 0.0
+        self._food_facing_time = 0.0
 
     def advance_generation(self) -> bool:
         """Breed the selected completed generation; leave an active run intact."""
@@ -215,17 +222,31 @@ class World:
             survivors = []
             for creature in self.creatures:
                 uses_brain = self.controller == "neural" and creature.brain is not None
+                food_visible, food_direction = False, 0.0
                 if creature.alive:
                     if uses_brain:
                         sensors = self.get_sensory_inputs(creature, food_positions)
+                        food_visible, food_direction = bool(sensors[2]), sensors[1] * math.pi
                         turn, throttle = creature.brain.forward(sensors)
                         creature.apply_controls(float(turn), (float(throttle) + 1.0) / 2.0)
-                    elif creature.turn_time_remaining <= 0:
-                        creature.turn_rate = self._motion_rng.uniform(
-                            -math.pi / 2, math.pi / 2
-                        )
-                        creature.turn_time_remaining = self._motion_rng.uniform(0.75, 2.0)
+                    else:
+                        observation = self.perceive_food(creature, food_positions)
+                        food_visible = observation.visible
+                        food_direction = observation.direction if food_visible else 0.0
+                        if creature.turn_time_remaining <= 0:
+                            creature.turn_rate = self._motion_rng.uniform(
+                                -math.pi / 2, math.pi / 2
+                            )
+                            creature.turn_time_remaining = self._motion_rng.uniform(0.75, 2.0)
+                previous_age = creature.age
                 creature.update_survival(SIMULATION_STEP)
+                lived = creature.age - previous_age
+                self._alive_time += lived
+                self._speed_time += abs(creature.speed) * lived
+                if food_visible:
+                    self._food_visible_time += lived
+                    if abs(food_direction) <= math.pi / 4:
+                        self._food_facing_time += lived
                 if not creature.alive:
                     self.dead_creatures.append(creature)
                     continue
@@ -241,6 +262,21 @@ class World:
             if not self.creatures and self.final_evaluation is None:
                 self.final_evaluation = evaluate_population(self.dead_creatures)
                 self.generation_history.append(self.final_evaluation)
+                entries = self.final_evaluation.ranking
+                count = len(entries)
+                if count:
+                    self.generation_stats.append(GenerationStats(
+                        generation=self.generation,
+                        population_size=count,
+                        duration_seconds=self.elapsed_time + SIMULATION_STEP,
+                        mean_fitness=self.final_evaluation.mean_fitness,
+                        best_fitness=self.final_evaluation.best.fitness,
+                        mean_food_eaten=sum(entry.food_eaten for entry in entries) / count,
+                        mean_survival_seconds=sum(entry.survival_seconds for entry in entries) / count,
+                        mean_speed=self._speed_time / self._alive_time if self._alive_time else 0.0,
+                        food_visible_seconds=self._food_visible_time,
+                        food_facing_seconds=self._food_facing_time,
+                    ))
             self.elapsed_time += SIMULATION_STEP
             self._accumulator = max(0.0, self._accumulator - SIMULATION_STEP)
 

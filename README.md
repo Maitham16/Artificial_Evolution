@@ -3,10 +3,11 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **10 — Implement reproduction and mutation**. Creatures earn fitness
-from survival time and food eaten. At the end of each generation, the top 20%
-become parents. Press **N** to create 100 offspring with inherited, mutated
-neural networks. Comparing fitness across independent experiments remains later work.
+Current step: **11 — Simulate multiple generations**. The world automatically
+cycles through survival, selection, reproduction, and mutation. Watch creatures
+at 1x, 5x, or 20x speed and compare completed generations in the history view.
+Comparing evolution against random movement across independent experiments
+remains later work.
 
 ## Run the world
 
@@ -27,7 +28,10 @@ python main.py --controller random --seed 42
 - Press **G** to hide or show the grid.
 - Press **V** to hide or show the selected creature's perception overlay.
 - Press **F** to open or close the fitness leaderboard.
-- Press **N** after a generation ends to breed the next generation.
+- Press **T** to open or close generation history and trend charts.
+- Press **S** to cycle between **1x**, **5x**, and **20x** simulation speed.
+- Press **A** to switch automatic generation cycling on or off.
+- Press **N** after a generation ends to breed manually, within the generation limit.
 - Press **Space** to pause or resume movement, eating, energy use, and aging.
 - Press **R** to restart with random founders, clearing generations and results.
 - **Click a creature** to inspect its properties. Click empty space to deselect.
@@ -38,6 +42,79 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Multiple generations
+
+Automatic cycling is on by default. When a population becomes extinct, its final
+results are recorded and its selected parents produce the next generation.
+Use **A** or `--manual` to wait between generations and review results before
+pressing **N**. **Space** freezes survival and automatic generation transitions. Increasing
+speed runs more fixed 1/60-second ticks per frame; the physics step stays the same.
+
+Run a fixed number of generations while watching the world:
+
+```sh
+python main.py --seed 42 --generations 10 --speed 20
+```
+
+After generation 10 completes, the simulation stops advancing and opens history.
+The window remains open for inspection; **R** starts a new run with the same
+generation limit and speed. With no generation limit, automatic cycling continues
+until you close the window. **N** cannot advance beyond a configured limit.
+
+To complete the same run without opening a window and save its observations:
+
+```sh
+python main.py --headless --seed 42 --generations 10 --speed 20 \
+  --report .cache/generations.json --screenshot .cache/generations-preview.png
+```
+
+Headless mode exits when the generation target is complete. If `--frames` is also
+given, whichever limit is reached first ends the run. Headless manual mode needs
+`--frames`, because keyboard input cannot advance its generations.
+
+The **T** history panel plots mean/best fitness and mean meals over all completed
+generations, with a table of the latest eight. Incomplete generations are excluded.
+The table also shows mean survival age, mean commanded speed weighted by actual
+time alive, and the fraction of visible-food time spent facing the nearest pellet
+within **±45 degrees**. This last measure samples heading before movement at each
+tick, weighted by actual creature-time alive, including partial final ticks.
+It displays **N/A** when no food was visible. These observations add no fitness
+reward and do not change movement decisions or random streams.
+
+The history and fitness panels keep the simulation running behind them; pause
+to inspect at leisure. They are mutually exclusive and block arena clicks while
+open. Restart clears both histories and total simulation time while preserving
+pause, speed, auto/manual mode, generation limit, and display preferences.
+
+`--report PATH` writes JSON on exit, containing the seed, controller, mutation
+settings, fixed timestep, target, completed count, total simulated time, and one
+statistics record per completed generation. Reports also include raw visible-food
+and facing-food creature-seconds. An interrupted run can contain a partial current
+generation in total time, but only completed generations have statistics records.
+`World.generation_stats` holds immutable records; `EvolutionSimulation` in
+`simulation.py` handles timing, automatic cycles, limits, and reports.
+
+Facing food is a descriptive orientation measure, not proof of food seeking.
+Food layout, body traits, competition, and chance vary between generations. A
+single seeded trajectory can show changes, but independent runs and the random
+movement comparison are needed to evaluate whether evolution reliably helps.
+
+The recorded [seed-42 example](results/step11-seed42.json) completed ten
+generations with the default neural controller and mutation settings:
+
+| Observation | Generation 1 | Generation 10 |
+| --- | ---: | ---: |
+| Mean fitness | 148.36 | 297.50 |
+| Mean meals per creature | 8.65 | 21.92 |
+| Mean survival | 61.86 s | 78.30 s |
+| Mean commanded speed | 30.82 px/s | 52.76 px/s |
+| Facing visible food | 28.30% | 28.06% |
+
+Feeding and survival increased in this run, while food-facing time stayed close
+to its starting level. Results fluctuated between generations rather than
+improving on every cycle. These observations do not yet establish reliable
+food-seeking behavior or an advantage over random movement.
 
 ## Creatures
 
@@ -98,8 +175,9 @@ leaderboard with survival time, meals, score, and live/dead or selected status.
 The world continues while the leaderboard is open; use **Space** to pause. Close
 the leaderboard before selecting creatures in the arena.
 
-Completed runs show their best result and selection count. **N** breeds the next
-generation; **R** restarts with random founders. Ranking and drawing the
+Completed generations retain their best result and selection count in history.
+Automatic mode breeds the next generation; **N** does so in manual mode.
+**R** restarts with random founders. Ranking and drawing the
 leaderboard do not change movement, randomness, food, or brain parameters.
 
 The code exposes live or final immutable snapshots through
@@ -112,8 +190,9 @@ generation until restart. The default rule and selection fraction are defined in
 
 ## Reproduction and mutation
 
-Generations run separately. Once all creatures die, final results remain visible
-until you press **N**. This control also works while viewing the leaderboard.
+Generations run separately. Once all creatures die, final results are recorded
+before the next population is born. Automatic cycling breeds on the next tick;
+manual mode waits for **N**, which also works while viewing the leaderboard.
 Pressing **N** during a living generation has no effect.
 
 Each of the usual **20 selected parents produces five offspring**, rebuilding the
@@ -250,9 +329,10 @@ or reset; final fitness snapshots remain in generation history until reset.
 
 The header shows living creatures, hungry creatures, total deaths, and the
 starvation/old-age breakdown. An extinct population shows final fitness and
-selection results and keeps the controls usable. **N** breeds offspring; **R**
-starts again with random founders. Both create 100 living creatures with zero
-scores and deaths. Pause freezes the full simulation,
+selection results in manual mode or after reaching a generation target. Automatic
+cycling breeds offspring; **N** does so manually. **R** starts again with random
+founders. Each new population has 100 living creatures with zero scores and
+deaths. Pause freezes the full simulation,
 including hunger, lifespan, and earned fitness.
 
 ## Food and eating
@@ -314,9 +394,11 @@ To render a few frames without opening a window, optionally saving a preview:
 python main.py --headless --frames 120 --seed 42 --screenshot .cache/reproduction-preview.png
 ```
 
-Headless mode requires `--frames` so it exits automatically and advances exactly
-one 1/60-second simulation step per frame, without waiting for real time. The
-command above therefore captures the world after 2 seconds of simulated life.
+Headless mode requires `--frames` or automatic `--generations` so it exits on its
+own. At the default 1x speed it advances one 1/60-second simulation tick per frame,
+without waiting for real time. At 5x or 20x it advances five or twenty ticks per
+frame, stopping early if its generation target is reached. The command above
+captures the world after 2 seconds of simulated life at 1x.
 
 Run all checks with the standard Python test runner:
 
@@ -324,10 +406,12 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **109 checks**, two complete 125-second simulated generations with
-reproduction into generations 2 and 3, the **N** keyboard transition, and a
-120-frame native macOS Cocoa run. Screenshots were checked for generation,
-parent, mutation, and final-ranking displays.
+Verified: **124 checks**, a full ten-generation seeded run, JSON observations,
+the rendered generation-history panel, and a 120-frame native macOS Cocoa run
+that automatically reached generation 3. Cycle checks cover exact limits,
+time carried across generation boundaries, matching results across frame rates
+and speed settings, pause/manual/restart behavior, actual-time-weighted behavioral
+measurements, keyboard controls, and bounded headless reports.
 
 Reproduction checks cover independent copies of every weight and bias, mutation
 settings, deterministic offspring, balanced parent allocation, selected-parent
@@ -340,7 +424,9 @@ included.
 
 ```text
 main.py               Window, controls, simulation timing, and launch options
-world.py              Simulation, generations, perception, survival, food, and fitness
+world.py              One-generation physics, observation, survival, food, and fitness
+simulation.py         Automatic cycles, speed, generation limits, restart, and reports
+generation_stats.py   Immutable completed-generation behavioral observations
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, inference, independent copies, and mutation
 reproduction.py       Balanced selected-parent reproduction and offspring records
@@ -354,6 +440,8 @@ test_brain.py         Network math, sensors, motor commands, and seeded brain ch
 test_perception.py    Perception geometry, edge cases, brain inputs, and overlay checks
 test_selection.py     Scores, ranking, final selection, immutability, and reset checks
 test_reproduction.py  Brain inheritance, mutation, lineage, and generation transitions
+test_simulation.py    Automatic cycles, timing, behavioral metrics, controls, and reports
+results/step11-seed42.json  Observations from one seeded ten-generation run
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection

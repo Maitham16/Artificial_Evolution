@@ -1,6 +1,7 @@
-"""Launch Step 10: selected brains reproduce with mutations across generations."""
+"""Launch Step 11: run evolutionary cycles and observe completed generations."""
 
 import argparse
+import json
 import math
 import os
 from pathlib import Path
@@ -12,6 +13,7 @@ import pygame
 from creature import MAX_ENERGY
 from perception import VISION_RANGE
 from selection import FitnessEvaluation
+from simulation import SPEEDS, EvolutionSimulation
 from world import SIMULATION_STEP, World
 
 
@@ -33,7 +35,7 @@ def positive_integer(value: str) -> int:
     return number
 
 
-def handle_events(world: World) -> bool:
+def handle_events(world: World, simulation: EvolutionSimulation | None = None) -> bool:
     """Return False when the user closes the window or presses Escape."""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -47,21 +49,106 @@ def handle_events(world: World) -> bool:
                 world.show_perception = not world.show_perception
             if event.key == pygame.K_f:
                 world.show_fitness = not world.show_fitness
+                world.show_history = False
+            if event.key == pygame.K_t:
+                world.show_history = not world.show_history
+                world.show_fitness = False
+            if event.key == pygame.K_a and simulation is not None:
+                simulation.auto_advance = not simulation.auto_advance
+            if event.key == pygame.K_s and simulation is not None:
+                simulation.cycle_speed()
             if event.key == pygame.K_r:
-                world.regenerate_population()
+                if simulation is not None:
+                    simulation.restart()
+                else:
+                    world.regenerate_population()
             if event.key == pygame.K_n:
-                world.advance_generation()
+                if simulation is not None:
+                    simulation.advance_generation()
+                else:
+                    world.advance_generation()
             if event.key == pygame.K_SPACE:
                 world.paused = not world.paused
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if not world.show_fitness:
+            if not world.show_fitness and not world.show_history:
                 world.select_creature((event.pos[0] - PADDING, event.pos[1] - HEADER_HEIGHT))
     return True
+
+
+def draw_trend(
+    screen: pygame.Surface, rect: pygame.Rect, title: str,
+    series: list[tuple[list[float], tuple[int, int, int]]],
+    generations: list[int], font: pygame.font.Font,
+) -> None:
+    screen.blit(font.render(title, True, MUTED), (rect.left, rect.top - 22))
+    maximum = max(1.0, max(max(values) for values, _ in series))
+    plot = pygame.Rect(rect.left + 36, rect.top + 5, rect.width - 42, rect.height - 10)
+    for fraction in (0.0, 0.5, 1.0):
+        y = round(plot.bottom - fraction * plot.height)
+        pygame.draw.line(screen, (31, 49, 56), (plot.left, y), (plot.right, y))
+    for value, y in ((maximum, plot.top), (0, plot.bottom - 12)):
+        screen.blit(font.render(f"{value:.0f}", True, MUTED), (rect.left, y))
+    span = max(1, len(generations) - 1)
+    for values, color in series:
+        points = [
+            (round(plot.left + index / span * plot.width),
+             round(plot.bottom - value / maximum * plot.height))
+            for index, value in enumerate(values)
+        ]
+        if len(points) > 1:
+            pygame.draw.lines(screen, color, False, points, 2)
+        if len(points) <= 50:
+            for point in points:
+                pygame.draw.circle(screen, color, point, 3)
+    screen.blit(font.render(f"G{generations[0]}", True, MUTED), (plot.left, rect.bottom + 5))
+    if len(generations) > 1:
+        label = font.render(f"G{generations[-1]}", True, MUTED)
+        screen.blit(label, (plot.right - label.get_width(), rect.bottom + 5))
+
+
+def draw_history_panel(
+    screen: pygame.Surface, world: World, fonts: dict[str, pygame.font.Font],
+) -> None:
+    panel = pygame.Rect(0, 0, 900, 520)
+    panel.center = (PADDING + world.width // 2, HEADER_HEIGHT + world.height // 2)
+    pygame.draw.rect(screen, BACKGROUND, panel, border_radius=12)
+    pygame.draw.rect(screen, MUTED, panel, width=1, border_radius=12)
+    x, y = panel.left + 28, panel.top
+    screen.blit(fonts["title"].render("Evolution across generations", True, TEXT), (x, y + 20))
+    note = f"{len(world.generation_stats)} completed / fitness: mean (mint), best (gold)"
+    screen.blit(fonts["small"].render(note, True, ACCENT), (x, y + 61))
+    stats = world.generation_stats
+    if stats:
+        generations = [row.generation for row in stats]
+        draw_trend(screen, pygame.Rect(x, y + 110, 400, 140), "Fitness", [
+            ([row.mean_fitness for row in stats], ACCENT),
+            ([row.best_fitness for row in stats], (224, 205, 117)),
+        ], generations, fonts["small"])
+        draw_trend(screen, pygame.Rect(x + 444, y + 110, 400, 140), "Mean meals per creature", [
+            ([row.mean_food_eaten for row in stats], (166, 220, 100)),
+        ], generations, fonts["small"])
+        columns = (x, x + 65, x + 180, x + 290, x + 400, x + 520, x + 665)
+        headings = ("GEN", "MEAN FIT", "BEST FIT", "MEALS", "AGE (s)", "SPEED (px/s)", "FACING FOOD")
+        for column, heading in zip(columns, headings):
+            screen.blit(fonts["small"].render(heading, True, MUTED), (column, y + 284))
+        for index, row in enumerate(stats[-8:]):
+            facing = row.food_facing_fraction
+            values = (str(row.generation), f"{row.mean_fitness:.1f}", f"{row.best_fitness:.1f}",
+                      f"{row.mean_food_eaten:.2f}", f"{row.mean_survival_seconds:.1f}",
+                      f"{row.mean_speed:.1f}", "N/A" if facing is None else f"{facing:.1%}")
+            for column, value in zip(columns, values):
+                screen.blit(fonts["small"].render(value, True, TEXT), (column, y + 310 + index * 20))
+    else:
+        message = "Complete a generation to see its history. The world keeps running behind this panel."
+        screen.blit(fonts["small"].render(message, True, TEXT), (x, y + 160))
+    explanation = "Facing food: nearest visible pellet within +/-45 deg ahead. Descriptive measure; T closes."
+    screen.blit(fonts["small"].render(explanation, True, MUTED), (x, panel.bottom - 29))
 
 
 def draw_fitness_panel(
     screen: pygame.Surface, world: World, evaluation: FitnessEvaluation,
     fonts: dict[str, pygame.font.Font],
+    simulation: EvolutionSimulation | None = None,
 ) -> None:
     """Show the leading scores while the world continues or remains paused."""
     panel = pygame.Rect(0, 0, 740, 410)
@@ -103,16 +190,24 @@ def draw_fitness_panel(
         f"Showing top {min(10, count)} of {count}."
     )
     screen.blit(fonts["small"].render(note, True, MUTED), (x, panel.bottom - 48))
-    action = "N  Next generation     /     F  Close leaderboard" if evaluation.complete else "F  Close leaderboard"
+    action = "F  Close leaderboard"
+    if evaluation.complete:
+        if simulation is not None and simulation.finished:
+            action = "Run complete     /     T  History     /     F  Close leaderboard"
+        elif simulation is not None and simulation.auto_advance:
+            action = "Auto cycling     /     T  History     /     F  Close leaderboard"
+        else:
+            action = "N  Next generation     /     F  Close leaderboard"
     screen.blit(fonts["small"].render(action, True, ACCENT), (x, panel.bottom - 25))
 
 
 def draw_interface(
-    screen: pygame.Surface, world: World, fonts: dict[str, pygame.font.Font]
+    screen: pygame.Surface, world: World, fonts: dict[str, pygame.font.Font],
+    simulation: EvolutionSimulation | None = None,
 ) -> None:
     screen.fill(BACKGROUND)
     screen.blit(fonts["small"].render("ARTIFICIAL EVOLUTION", True, ACCENT), (40, 25))
-    screen.blit(fonts["title"].render("The virtual world", True, TEXT), (38, 48))
+    screen.blit(fonts["title"].render("The evolving world", True, TEXT), (38, 48))
     evaluation = world.get_fitness_evaluation()
     best_score = evaluation.best.fitness if evaluation.best is not None else 0.0
     controller_name = "NEURAL" if world.controller == "neural" else "RANDOM"
@@ -124,6 +219,12 @@ def draw_interface(
         controller_note = f"Gen {world.generation} / {brains} / Sight {VISION_RANGE:.0f} px"
     else:
         controller_note = f"Gen {world.generation} / Random movement baseline"
+    if simulation is not None:
+        generation = str(world.generation)
+        if simulation.generation_limit is not None:
+            generation += f"/{simulation.generation_limit}"
+        mode = "Done" if simulation.finished else "Auto" if simulation.auto_advance else "Manual"
+        controller_note = f"Gen {generation} / {mode} / {simulation.speed}x / Sight {VISION_RANGE:.0f} px"
     screen.blit(fonts["small"].render(controller_label, True, ACCENT), (400, 31))
     screen.blit(fonts["small"].render(controller_note, True, MUTED), (400, 55))
 
@@ -139,7 +240,7 @@ def draw_interface(
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 10 / REPRODUCTION", True, MUTED)
+    stage = fonts["small"].render("STEP 11 / GENERATIONS", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
         f"FOOD {len(world.food)}  /  EATEN {world.total_food_eaten}",
@@ -177,8 +278,10 @@ def draw_interface(
     screen.blit(fonts["small"].render(perception_text, True, MUTED), (400, 81))
 
     world.draw(screen, (PADDING, HEADER_HEIGHT))
-    if world.show_fitness:
-        draw_fitness_panel(screen, world, evaluation, fonts)
+    if world.show_history:
+        draw_history_panel(screen, world, fonts)
+    elif world.show_fitness:
+        draw_fitness_panel(screen, world, evaluation, fonts, simulation)
     elif not world.creatures:
         panel = pygame.Rect(0, 0, 580, 124)
         panel.center = (PADDING + world.width // 2, HEADER_HEIGHT + world.height // 2)
@@ -191,27 +294,24 @@ def draw_interface(
         )
         summary += f" / {len(evaluation.selected_ids)} selected"
         result = fonts["small"].render(summary, True, TEXT)
-        hint = fonts["small"].render("N  Next generation    /    F  Ranking    /    R  Restart", True, ACCENT)
+        hint_text = "N  Next generation    /    T  History    /    R  Restart"
+        if simulation is not None and simulation.finished:
+            hint_text = "Run complete    /    T  History    /    R  Restart"
+        elif simulation is not None and simulation.auto_advance:
+            hint_text = "Next generation starts automatically    /    T  History"
+        hint = fonts["small"].render(hint_text, True, ACCENT)
         screen.blit(title, title.get_rect(center=(panel.centerx, panel.centery - 31)))
         screen.blit(result, result.get_rect(center=(panel.centerx, panel.centery + 5)))
         screen.blit(hint, hint.get_rect(center=(panel.centerx, panel.centery + 35)))
 
     footer_y = HEADER_HEIGHT + world.height + 16
+    auto = "on" if simulation is None or simulation.auto_advance else "off"
+    speed = simulation.speed if simulation is not None else 1
     controls = (
-        f"Space  {'Resume' if world.paused else 'Pause'}     /     "
-        f"G  Grid {'on' if world.show_grid else 'off'}     /     "
-        f"V  Overlay {'on' if world.show_perception else 'off'}     /     "
-        "F  Fitness     /     N  Breed     /     "
-        "R  Restart     /     Click  Inspect     /     Esc  Quit"
+        f"Space {'Resume' if world.paused else 'Pause'}  /  A Auto {auto}  /  S {speed}x  /  "
+        "T History  /  F Fitness  /  N Next  /  R Restart  /  G Grid  /  V Senses  /  Esc Quit"
     )
     screen.blit(fonts["small"].render(controls, True, MUTED), (PADDING, footer_y))
-    dimensions = fonts["small"].render(
-        f"{world.width:,} x {world.height:,} pixels", True, MUTED
-    )
-    screen.blit(
-        dimensions,
-        (screen.get_width() - PADDING - dimensions.get_width(), footer_y),
-    )
 
     creature = world.selected_creature
     if creature is None:
@@ -251,7 +351,13 @@ def run(
     screenshot: Path | None = None,
     seed: int | None = None,
     controller: str = "neural",
+    generations: int | None = None,
+    speed: int = 1,
+    manual: bool = False,
+    report: Path | None = None,
 ) -> int:
+    if headless and frames is None and (generations is None or manual):
+        raise ValueError("Headless mode needs frames or an automatic generation limit.")
     if headless:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -259,40 +365,65 @@ def run(
         pygame.display.init()
         pygame.font.init()
         world = World(seed=seed, controller=controller)
+        simulation = EvolutionSimulation(world, generation_limit=generations,
+                                         speed=speed, auto_advance=not manual)
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption(f"Artificial Evolution | Reproduction | {controller.title()}")
+        pygame.display.set_caption(f"Artificial Evolution | Generations | {controller.title()}")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),
         }
         clock = pygame.time.Clock()
         rendered_frames = 0
+        reported_generations = 0
         print(
             f"World ready: {world.width} x {world.height}; "
             f"creatures: {len(world.creatures)}; seed: {world.seed}; "
             f"food: {len(world.food)}; "
             f"controller: {world.controller}; "
+            f"speed: {simulation.speed}x; generations: {generations or 'unlimited'}; "
             f"display driver: {pygame.display.get_driver()}",
             flush=True,
         )
 
         while frames is None or rendered_frames < frames:
             frame_dt = clock.tick(0 if headless else TARGET_FPS) / 1000.0
-            if not handle_events(world):
+            if not handle_events(world, simulation):
                 break
-            # Headless runs advance exactly one simulation tick per saved frame.
+            if len(world.generation_stats) < reported_generations:
+                reported_generations = 0
+            # Speed changes tick count per frame, never the physics timestep.
             dt = SIMULATION_STEP if headless else min(frame_dt, MAX_FRAME_SECONDS)
-            world.update(dt)
-            draw_interface(screen, world, fonts)
+            simulation.update(dt)
+            for stats in world.generation_stats[reported_generations:]:
+                facing = stats.food_facing_fraction
+                facing_label = "N/A" if facing is None else f"{facing:.1%}"
+                print(
+                    f"Generation {stats.generation}: mean fitness {stats.mean_fitness:.2f}; "
+                    f"best {stats.best_fitness:.2f}; meals/creature {stats.mean_food_eaten:.2f}; "
+                    f"mean age {stats.mean_survival_seconds:.2f}s; facing food {facing_label}",
+                    flush=True,
+                )
+                if simulation.finished:
+                    world.show_history = True
+                    world.show_fitness = False
+            reported_generations = len(world.generation_stats)
+            draw_interface(screen, world, fonts, simulation)
             pygame.display.flip()
             rendered_frames += 1
+            if headless and simulation.finished:
+                break
 
         if screenshot is not None and rendered_frames:
             screenshot.parent.mkdir(parents=True, exist_ok=True)
             pygame.image.save(screen, str(screenshot))
             print(f"Screenshot saved: {screenshot}")
+        if report is not None:
+            report.parent.mkdir(parents=True, exist_ok=True)
+            report.write_text(json.dumps(simulation.report(), indent=2, allow_nan=False) + "\n")
+            print(f"Report saved: {report}")
     finally:
         pygame.quit()
 
@@ -311,19 +442,27 @@ def main() -> int:
         "--screenshot", type=Path, help="save the final frame as an image on exit"
     )
     parser.add_argument("--seed", type=int, help="recreate a particular initial population")
+    parser.add_argument("--generations", type=positive_integer, help="stop after N complete generations")
+    parser.add_argument("--speed", type=int, choices=SPEEDS, default=1, help="simulation speed multiplier")
+    parser.add_argument("--manual", action="store_true", help="wait for N between generations")
+    parser.add_argument("--report", type=Path, help="save completed-generation observations as JSON")
     parser.add_argument(
         "--controller", choices=("neural", "random"), default="neural",
         help="use NumPy brains (default) or the original random movement baseline",
     )
     args = parser.parse_args()
-    if args.headless and args.frames is None:
-        parser.error("--headless requires --frames so the run finishes automatically")
+    if args.headless and args.frames is None and (args.generations is None or args.manual):
+        parser.error("--headless requires --frames or automatic --generations")
     return run(
         headless=args.headless,
         frames=args.frames,
         screenshot=args.screenshot,
         seed=args.seed,
         controller=args.controller,
+        generations=args.generations,
+        speed=args.speed,
+        manual=args.manual,
+        report=args.report,
     )
 
 
