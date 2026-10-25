@@ -85,6 +85,8 @@ class EvolutionSimulation:
             "evolution_enabled": world.evolution_enabled,
             "population_size": world.population_size,
             "food_count": world.food_count,
+            "arena_size": [world.width, world.height],
+            "food_sensor_mode": world.food_sensor_mode,
             "mutation_rate": world.mutation_rate,
             "mutation_scale": world.mutation_scale,
             "simulation_step_seconds": SIMULATION_STEP,

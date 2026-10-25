@@ -6,7 +6,8 @@ import random
 import numpy as np
 import pygame
 
-from brain import DEFAULT_MUTATION_RATE, DEFAULT_MUTATION_SCALE, validate_mutation_parameters
+from brain import (DEFAULT_MUTATION_RATE, DEFAULT_MUTATION_SCALE, FOOD_SENSOR_MODES,
+                   food_inputs_for_control, validate_mutation_parameters)
 from creature import MAX_ENERGY, POPULATION_SIZE, Creature, create_population
 from food import FOOD_COUNT, FOOD_RADIUS, Food
 from generation_stats import SURVIVAL_CHECKPOINT_SECONDS, GenerationStats
@@ -38,6 +39,7 @@ class World:
         mutation_scale: float = DEFAULT_MUTATION_SCALE,
         evolution_enabled: bool = True,
         population_size: int = POPULATION_SIZE,
+        food_sensor_mode: str = "intact",
     ) -> None:
         if type(food_count) is not int or food_count < 0:
             raise ValueError("Food count must be a non-negative integer.")
@@ -46,6 +48,8 @@ class World:
         if controller not in ("neural", "random"):
             raise ValueError("Controller must be 'neural' or 'random'.")
         validate_mutation_parameters(mutation_rate, mutation_scale)
+        if food_sensor_mode not in FOOD_SENSOR_MODES:
+            raise ValueError(f"Food sensor mode must be one of {FOOD_SENSOR_MODES}.")
         self.width = width
         self.height = height
         self.food_count = food_count
@@ -54,6 +58,7 @@ class World:
         self.mutation_rate = mutation_rate
         self.mutation_scale = mutation_scale
         self.evolution_enabled = evolution_enabled
+        self.food_sensor_mode = food_sensor_mode
         self.grid_spacing = 40
         self.show_grid = True
         self.show_perception = True
@@ -238,6 +243,8 @@ class World:
                     if uses_brain:
                         sensors = self.get_sensory_inputs(creature, food_positions)
                         food_visible, food_direction = bool(sensors[2]), sensors[1] * math.pi
+                        if self.food_sensor_mode != "intact":
+                            sensors = food_inputs_for_control(sensors, self.food_sensor_mode)
                         turn, throttle = creature.brain.forward(sensors)
                         creature.apply_controls(float(turn), (float(throttle) + 1.0) / 2.0)
                     else:

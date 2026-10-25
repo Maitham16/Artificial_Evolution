@@ -14,6 +14,7 @@ HIDDEN_SIZE = 8
 OUTPUT_SIZE = 2
 DEFAULT_MUTATION_RATE = 0.1
 DEFAULT_MUTATION_SCALE = 0.1
+FOOD_SENSOR_MODES = ("intact", "mirrored", "hidden")
 MAX_TURN_RATE = math.pi / 2
 SENSOR_NAMES = (
     "food_proximity", "food_direction", "food_visible", "hunger",
@@ -26,6 +27,24 @@ def validate_mutation_parameters(rate: float, scale: float) -> None:
         raise ValueError("Mutation rate must be between 0 and 1.")
     if not math.isfinite(scale) or scale < 0:
         raise ValueError("Mutation scale must be finite and non-negative.")
+
+
+def food_inputs_for_control(sensors: np.ndarray, mode: str) -> np.ndarray:
+    """Intervene on food inputs only; keep truthful observations separate."""
+    if mode not in FOOD_SENSOR_MODES:
+        raise ValueError(f"Food sensor mode must be one of {FOOD_SENSOR_MODES}.")
+    values = np.asarray(sensors, dtype=np.float64)
+    if values.shape != (INPUT_SIZE,) or not np.all(np.isfinite(values)):
+        raise ValueError("Food interventions require eight finite inputs.")
+    if mode == "intact":
+        return values
+    values = values.copy()
+    if mode == "hidden":
+        values[:3] = 0
+    elif values[2]:
+        # Reverse left/right while preserving front/back, including the -pi boundary.
+        values[1] = (-values[1] + 1) % 2 - 1
+    return values
 
 
 class NeuralNetwork:

@@ -3,9 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **14 — Experiment with evolutionary parameters**. Configure
-mutation, population size, and food scarcity, then explore their effects using
-independent training seeds and fresh validation arenas with matched random controls.
+Current step: **15 — Analyze emergent intelligence**. Test frozen brains in
+unseen environments with repeated trials, targeted sensor interventions, and
+controlled steering probes. Measure food-guided behavior separately from fitness
+improvements and assess the limits of generalization.
 
 ## Run the world
 
@@ -40,6 +41,160 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Analyze emergent food-guided behavior
+
+Run the full, fixed-protocol analysis:
+
+```sh
+python analyze_intelligence.py --workers 4 --models-dir .cache/intelligence-models \
+  --output .cache/intelligence.json --plot .cache/intelligence.png
+```
+
+The study uses **eight new training seeds (1501–1508)** and **ten generations**
+under the original settings: population 100, food 150, mutation probability 10%,
+Gaussian mutation scale 0.1, and the existing fitness/selection rules. No setting
+is chosen from the Step 14 validation results. Founder brains are copied before
+training, and all 100 final-cohort brains are frozen after training. No test
+result selects a model, creature, generation, or hyperparameter.
+
+Each lineage is tested on **two new layouts in each of two environments**:
+
+| Environment | Dimensions | Food | Relationship to training |
+| --- | --- | ---: | --- |
+| Standard | 1000 × 600 | 150 | New bodies and food layouts at the trained geometry |
+| Wide | 1200 × 500 | 150 | New layouts and an unseen aspect ratio, with equal area/density |
+
+Test seeds use a separate `step15:test` namespace containing lineage, environment,
+and repeat. The design has **32 distinct unseen layouts**. Separate training/test
+environments are central to evaluating generalization, as illustrated by
+[Cobbe et al.'s generalization study](https://proceedings.mlr.press/v97/cobbe19a/cobbe19a.pdf).
+This project uses evolutionary selection, with its own operational criteria.
+
+Every layout has five matched conditions:
+
+| Condition | Brain and food information |
+| --- | --- |
+| Intact | Frozen evolved brains with truthful sensors |
+| Mirrored | The same brains with food bearing reflected left/right; distance, visibility, hunger, and walls stay accurate |
+| Hidden | The same brains with all three food inputs set to zero |
+| Founder | Frozen original founder brains with truthful sensors |
+| Random | The existing random movement controller |
+
+Bodies, food, lifespan limits, and random streams start identically within each
+layout. Replenishment then follows each condition's behavior. No selection,
+reproduction, mutation, or weight updates occur during testing. Genome hashes
+verify source and test weights. All creatures are evaluated, including those
+that die early. The fresh study runs **80 training and 160 test cohorts**, totaling
+**240 cohorts**.
+
+Food interventions happen only at the brain-control boundary. Physical food
+and observations remain truthful: `World.get_sensory_inputs()` still reports the
+real sensory state, and the simulation's food-facing statistics use real food.
+Reports record `food_sensor_mode` and `arena_size`. The hidden-input condition is
+a secondary stress test: feature removal can itself change the input distribution,
+so its performance drop alone cannot establish feature understanding. This
+limitation is discussed by [Hooker et al.](https://papers.nips.cc/paper/2019/file/fe4b8556000d0f0cae99daa5c5c5a410-Paper.pdf).
+
+The separate **counterfactual steering probe** presents each frozen brain with
+food at ±45° and ±90°, distances 40/80/120 pixels, and hunger 25%/75%. All wall
+inputs are 1, representing open space. Each pair changes only target side.
+Its signed response is:
+
+```text
+steering gain = (turn output with food on the right - output with food on the left) / 2
+```
+
+Positive gain indicates a shift in steering toward target side. A separate
+descriptive fraction counts pairs where the brain actually commands right for
+the right target and left for the left target; a fixed turning bias cannot satisfy
+that fraction. Zero turn counts as neither direction. The probe has 12 pairs per
+brain, but these are not independent experimental samples.
+
+The independent unit remains **one trained lineage (n = 8)**. The two test layouts
+are averaged within each environment and lineage before inference. Predeclared
+primary tests ask whether:
+
+1. Truthful bearing improves mean meals over mirrored bearing in standard arenas.
+2. The same benefit appears in wide arenas.
+3. Evolved steering gain is positive.
+4. Evolved steering gain exceeds the founders' gain.
+
+All four use the existing two-sided exact paired sign test, with Holm correction
+across the four tests. Mean-difference intervals use 20,000 paired bootstrap
+resamples at 95% confidence and remain approximate/pointwise. The full operational
+criterion requires all four adjusted p-values below 0.05 and positive intervals.
+Secondary contrasts are descriptive. A positive interval with an insufficient
+directional-consistency p-value does not pass the declared rule.
+
+These criteria assess useful **reactive food guidance**, not human-like
+intelligence, memory, or planning. Failure does not exclude all food-dependent
+behavior, including strategies involving speed or contexts outside the probe.
+Effects are reported in meals and steering units so their practical size remains
+visible.
+
+Frozen founder/evolved brains are saved as numeric `.npz` archives with seed,
+training configuration, complete-cohort IDs, and genome hashes. Loading uses
+`allow_pickle=False` and checks shapes, finite values, hashes, and configuration.
+You can reproduce testing without repeating training:
+
+```sh
+python analyze_intelligence.py --workers 4 --reuse-models \
+  --models-dir results/step15-models --output .cache/replayed-intelligence.json
+```
+
+The repeated test seeds are deterministic, so this is a reproducibility check,
+not new independent evidence. For a new study, choose new training seeds before
+examining outcomes. `--seeds`, `--generations`, and `--repeats` set the budget.
+Progress reports stay `running` until every planned lineage, environment,
+repeat, and condition has finished; incomplete studies cannot be plotted.
+
+Regenerate a figure from a complete report:
+
+```sh
+python plot_intelligence.py results/step15-intelligence.json \
+  --output .cache/intelligence.png
+```
+
+### Recorded Step 15 results
+
+The completed study includes all **240 planned cohorts**, **eight independent
+lineages**, and **32 unseen layouts**. Mean meals per creature, averaged within
+lineage before averaging across lineages:
+
+| Condition | Standard arena | Wide arena |
+| --- | ---: | ---: |
+| Intact evolved | 21.88 | 21.97 |
+| Mirrored bearing | 17.73 | 17.68 |
+| Hidden food inputs | 15.25 | 14.52 |
+| Founder brains | 8.43 | 8.25 |
+| Random movement | 23.97 | 23.76 |
+
+The four predeclared primary tests produced:
+
+| Test | Mean effect | 95% paired bootstrap interval | Holm-adjusted p | Decision |
+| --- | ---: | --- | ---: | --- |
+| Intact − mirrored meals, standard | +4.158 | [2.423, 6.171] | 0.03125 | Higher |
+| Intact − mirrored meals, wide | +4.293 | [2.362, 6.671] | 0.07031 | Inconclusive |
+| Evolved steering gain above zero | +0.07367 | [0.04121, 0.11111] | 0.03125 | Higher |
+| Evolved gain above founders | +0.07351 | [0.03985, 0.11410] | 0.03125 | Higher |
+
+**Three of four criteria pass: there is evidence of useful reactive food
+guidance, while robust generalization remains unconfirmed.** Truthful bearing
+improved feeding in all eight standard-arena lineages. The wide arena had a
+similar positive average effect, with seven of eight lineages benefiting, but
+did not meet the declared directional-consistency threshold. This uncertainty
+does not establish an absence of food guidance in wide arenas.
+
+Evolved mean steering gain was 0.07367, versus 0.00016 for founders. Correct
+commands on both sides appeared in **22.0%** of evolved probe pairs versus
+**5.47%** for founders; many responses therefore still had turning biases or
+failed to turn correctly on both sides. Intact evolved creatures also remained
+below random movement in mean food intake and fitness in both environments.
+Useful sensory behavior has emerged without establishing superior overall
+performance, planning, or human-like intelligence.
+
+![Step 15 food-guidance and generalization results](results/step15-intelligence.png)
 
 ## Experiment with parameters
 
@@ -720,7 +875,18 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **172 checks**, including population sizes 1, 7, 50, and 150 across
+Verified: **193 checks**, including frozen-model round trips, repeated unseen
+arenas, truthful observations during sensor interventions, matched conditions,
+lineage-level inference, all four decision gates, reproducible model reuse, and
+PNG/SVG/PDF exports. A controlled food-seeking brain verifies that the movement
+and sensor intervention can distinguish successful guidance from mirrored
+guidance; this hand-built brain is used only in tests, never in the study.
+
+The Step 15 report passed a completeness audit, and its stored analysis matches
+fresh recomputation exactly. All eight saved model archives reproduce their
+genome hashes and steering probes. The exported figure was visually inspected.
+
+The checks also include population sizes 1, 7, 50, and 150 across
 generation changes and restart; configured survival denominators; parameter CLI
 validation; matched/frozen validation; random-control reuse; reproducible sweeps;
 and exploratory paired summaries and exports. A native macOS run verified custom
@@ -769,6 +935,8 @@ compare_creatures.py  Paired training/test experiments and seed-level statistica
 plot_comparison.py    Held-out comparisons and paired-difference uncertainty plots
 experiment_parameters.py  Paired mutation/population/food exploration and summaries
 plot_parameters.py    Parameter-response curves and paired validation fitness gaps
+analyze_intelligence.py  Frozen models, repeated unseen tests, sensor controls, and steering probes
+plot_intelligence.py  Food-direction benefits and corrected operational evidence
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, inference, independent copies, and mutation
 reproduction.py       Balanced selected-parent reproduction and offspring records
@@ -786,6 +954,7 @@ test_simulation.py    Automatic cycles, timing, behavioral metrics, controls, an
 test_plot_evolution.py  Checkpoint accounting, plotted values, missing data, and export
 test_comparison.py    Matched controls, frozen evaluation, independent pairs, and inference
 test_parameters.py    Configurable populations, controlled sweeps, caching, and validation
+test_intelligence.py  Sensor truth, positive controls, archives, repeated trials, and criteria
 results/step11-seed42.json  Observations from one seeded ten-generation run
 results/step12-seed42.json  Repeated seed-42 trajectory with checkpoint survival rates
 results/step12-evolution.png  Exported fitness, survival, and food-consumption figure
@@ -793,6 +962,9 @@ results/step13-comparison.json  Protocol, training/test data, and paired inferen
 results/step13-comparison.png  Held-out outcomes and paired difference intervals
 results/step14-parameters.json  Exploratory protocol, raw data, and paired estimates
 results/step14-parameters.png  Parameter effects on evolved and random fitness
+results/step15-intelligence.json  Full emergent-behavior protocol, trials, probes, and inference
+results/step15-intelligence.png  Food-guidance effects and generalization evidence
+results/step15-models/  Eight verified frozen founder/evolved model archives
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection
