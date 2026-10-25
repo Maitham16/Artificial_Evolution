@@ -3,10 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **17 — Investigate what the creatures learned**. Reuse the sixteen
-fixed-speed evolved populations, compare against unselected ancestral brains,
-and intervene on food inputs in new matched environments. Preserve Step 16's
-code, models, results, and conclusions.
+Current step: **18 — Test natural selection against random-parent reproduction**.
+Train fresh paired lineages with identical founders, mutation draws, population
+size, and budget. Change only which parents reproduce, then test frozen cohorts
+in matched new worlds. Preserve all earlier source and results.
 
 ## Run the world
 
@@ -41,6 +41,215 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Test the causal contribution of parent selection
+
+Step 18 addresses the limitation of comparing evolved brains only with their
+unmutated founders. A new **random-parent reproduction** arm inherits weights
+through the same generational bottleneck and mutations as the fitness-selected
+arm. It is neither random movement nor fresh random-brain replacement.
+
+Before adding this step, all **227 tests passed**. The baseline manifest
+`results/step18-baseline.json` records the preceding commit and hashes of all
+105 tracked files, including 64 result artifacts. The baseline transcript is
+`results/step18-baseline-tests.txt`. Earlier experiment code and records remain
+unchanged; new standalone experiment files are added and this README is extended.
+
+Run the full study:
+
+```sh
+python experiment_selection.py --workers 8 --models-dir .cache/selection-models \
+  --output .cache/selection.json --protocol-output .cache/selection-protocol.json \
+  --plot .cache/selection.png
+```
+
+The fixed protocol uses **16 new independent seed pairs (1801–1816)**. Both
+arms start from the same 100 random neural networks, bodies, food, and lifespans.
+Both receive **10 complete generations**, with the same 100 newborns and 150
+maintained food pellets per generation. Training is uniform food in 1000 × 600.
+Neural control, truthful food inputs, fixed **60 pixels/second**, **5 energy units
+per living second**, turning limits, sensory range, fitness, and death rules
+match the preceding fixed-speed experiments. Fitness remains survival seconds
+plus ten times meals consumed.
+
+Only the choice of parents differs:
+
+| Rule | Fitness selection | Random-parent control |
+| --- | --- | --- |
+| Eligible population | All 100 completed-cohort creatures | Same, including early deaths |
+| Parent choice | Highest-fitness 20; lower ID breaks exact ties | Uniform sample of 20 without replacement, independent of fitness |
+| Parent ordering | Sort chosen IDs before reproduction | Same neutral ordering |
+| Offspring | Five per parent, 100 total | Same |
+| Birth-slot assignment | Existing shuffled balanced allocation | Same shuffle draws |
+| Inherited weights | Copy parent's neural parameters | Same |
+| Mutation | Per-parameter probability 0.1, Gaussian scale 0.1 | Same masks and Gaussian draws |
+
+Sorting chosen parent IDs is a common rule in **both new experimental arms**;
+it keeps the random-parent arm independent of fitness even in inheritance
+ordering. The existing `World` and its earlier experiments are not modified.
+The new `ParentPolicyWorld` subclass varies the parent-set rule while reusing
+the existing physics and reproduction/mutation code.
+
+Random-parent sampling uses a separate deterministic RNG namespace. It never
+consumes the mutation stream. Both arms use the canonical generation-specific
+mutation seed. `RecordedMutationRNG` observes every birth-slot shuffle, mutation
+mask draw, and Gaussian draw without altering its sequence. Hashes of the actual
+draws must match across paired arms, along with per-offspring mutation counts.
+The model archives retain those traces, chosen parents, all candidate fitness
+scores, and offspring parent IDs for all **nine reproduction transitions**.
+
+Every training generation must also begin with identical physical hashes across
+arms. The first generation's complete observations must match exactly. Reversing
+fitness rankings in a controlled test changes the fitness-selected parent set,
+while random-parent choice and its resulting offspring remain unchanged.
+
+The training budget is **1,000 creature evaluations per arm and seed**, for
+**320 total training cohorts**. This matches population size, generation count,
+reproductive bottleneck, fecundity, and mutation opportunity. It does not force
+the same survival duration or wall-clock time: living longer is an outcome.
+The random-parent control contains both neutral bottleneck drift and mutation,
+with no preference for successful creatures.
+
+After training, all 100 brains in each final birth cohort are frozen. The
+original 100 founder brains are also retained as an additional test group,
+without extra founder training. Each seed pair faces **one new layout in each
+of three environments**:
+
+| Environment | Geometry | Maintained food |
+| --- | --- | --- |
+| Uniform | 1000 × 600 | 150 uniform pellets |
+| Clustered | 1000 × 600 | 150 pellets around the existing four seeded clusters |
+| Wide clustered | 1200 × 500 | Same cluster rule, unfamiliar arena shape |
+
+Both trained groups and the founder group run in separate matched worlds for
+every layout. Starting bodies, food, lifespans, cluster centers, and initial
+random streams match. Later replenishment can diverge as behavior diverges.
+No reproduction, mutation, learning, or test-based model choice occurs during
+testing. Full cohorts include early deaths. The `step18:test` seed namespace
+separates test layouts from training and previous Step 16/17 layouts, and hashes
+verify separation from all newly trained lineages as well.
+
+The study has **48 unseen test layouts**, **144 test cohorts**, and **464 total
+cohorts**. The independent unit is **one independently initialized seed pair
+(n = 16)**. Test repeats, if requested for a future study, are averaged within
+environment and seed pair before inference.
+
+The **six primary contrasts** are:
+
+1. Fitness selection minus random-parent fitness, in each of three environments.
+2. Fitness selection minus founder fitness, in each of three environments.
+
+All six use two-sided exact paired sign tests, the existing `1e-10` numerical-tie
+tolerance, and Holm correction over the full family. Mean-difference intervals
+use 20,000 paired percentile bootstrap resamples, with approximate pointwise
+95% coverage. A higher/lower decision requires adjusted p < 0.05 and an interval
+excluding zero in the same direction. A net selection improvement within an
+environment requires **both contrasts higher**. This distinguishes improvement
+over founders from merely preventing a drift-related loss. An inconclusive
+contrast does not establish equivalence or absence of a selection effect.
+
+Meals, survival to 60 seconds, drift-minus-founder comparisons, and training
+curves are descriptive secondary results. Training bands resample seed pairs
+and have pointwise 95% coverage; changing training layouts mean that curve
+trends alone are not the primary evidence. The matched held-out contrasts are
+the causal comparison. They test the effect of **fitness-dependent parent
+choice in this model and budget**, not a universal mathematical proof that
+selection always improves every population or environment.
+
+`results/step18-protocol.json` records settings, contrasts, source hashes, UTC
+declaration time, and excluded layouts before trials start. This is a local
+declaration, not an externally registered study. Partial reports remain `running`
+and cannot be plotted. Numeric model archives use `allow_pickle=False` and
+include all three brain cohorts, both complete training histories, and mutation
+and parent-choice traces. Existing archives are preserved rather than overwritten.
+
+Replay only the held-out tests, without retraining:
+
+```sh
+python experiment_selection.py --workers 8 --reuse-models \
+  --models-dir results/step18-models --output .cache/replayed-selection.json
+python plot_selection.py results/step18-selection.json --output .cache/selection.png
+```
+
+Replaying deterministic seeds checks reproducibility and does not add independent
+training pairs. `--seeds`, `--generations`, and `--repeats` permit other studies,
+whose budgets and decision rules should be chosen before inspecting outcomes.
+
+
+### Recorded Step 18 results
+
+All **16 seed pairs**, **320 training cohorts**, **144 test cohorts**, and **48
+unseen test layouts** completed. The audit reconstructed every parent choice,
+verified all 160 paired training layouts and identical first-generation
+observations, and independently replayed all **144 paired mutation schedules**.
+Recorded shuffle, mask, and Gaussian-draw hashes matched for both arms. Every
+transition used 20 parents with five offspring each. All 16 model archives,
+containing 48 frozen brain banks, passed validation. All 64 earlier result
+artifacts and all pre-existing source files remain unchanged.
+
+Mean held-out fitness:
+
+| Environment | Fitness selection | Random parents | Original founders |
+| --- | ---: | ---: | ---: |
+| Uniform | 353.10 | 279.46 | 287.96 |
+| Clustered | 327.78 | 225.21 | 227.57 |
+| Wide clustered | 333.28 | 219.11 | 209.22 |
+
+The six predeclared primary tests produced:
+
+| Environment | Fitness contrast | Mean difference | 95% paired interval | Holm p | Decision |
+| --- | --- | ---: | --- | ---: | --- |
+| Uniform | Selection − random parents | +73.64 | [53.39, 94.46] | 0.0001831 | Higher |
+| Uniform | Selection − founders | +65.14 | [51.55, 78.51] | 0.0001831 | Higher |
+| Clustered | Selection − random parents | +102.58 | [44.76, 161.35] | 0.07681 | Inconclusive |
+| Clustered | Selection − founders | +100.21 | [58.03, 144.91] | 0.04254 | Higher |
+| Wide clustered | Selection − random parents | +114.17 | [65.39, 167.20] | 0.002075 | Higher |
+| Wide clustered | Selection − founders | +124.06 | [81.33, 171.67] | 0.002075 | Higher |
+
+**Fitness-dependent parent choice caused a supported net improvement in the
+uniform and wide-clustered tests under this protocol.** Both primary contrasts
+passed in those environments. Selection beat random parents and founders in
+all 16 uniform seed pairs and 15 of 16 wide-clustered pairs. Because founders,
+physical starts, mutation draws, reproductive bottleneck, and training budget
+were matched, these contrasts distinguish the effect of choosing successful
+parents from random inheritance and mutation. The founder comparison confirms
+improvement beyond the initial population, rather than only avoiding drift loss.
+
+The standard clustered result remains **inconclusive against random parents**:
+12 pairs favored selection and four favored drift. Its mean-difference interval
+was positive, but its sign-test p-value did not meet the declared threshold.
+Selection exceeded founders in 13 of 16 pairs there, passing that comparison.
+Five of six primary contrasts therefore pass, and the criterion requiring net
+improvement in all three environments is **not met**. This uncertainty does not
+establish absence of a selection effect, and the protocol was not changed to
+turn the result into a positive decision.
+
+Descriptive feeding and survival means:
+
+| Environment | Selection meals | Drift meals | Founder meals | Selection survival | Drift survival | Founder survival |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Uniform | 27.20 | 20.75 | 21.49 | 86.9% | 70.1% | 73.2% |
+| Clustered | 27.39 | 18.20 | 18.37 | 42.8% | 27.1% | 27.6% |
+| Wide clustered | 27.69 | 17.48 | 16.65 | 46.8% | 29.1% | 25.9% |
+
+Meals are per creature and survival means reaching 60 simulated seconds. These
+secondary means favor selection in all environments, but have no confirmatory
+p-values. Drift-minus-founder fitness intervals cross zero in every environment;
+they do not demonstrate equivalence or prove that drift necessarily harms fitness.
+
+Training began at an identical mean fitness of **288.05** in both arms. At
+generation 10, the means were **348.63 with selection** and **271.34 with random
+parents**. This trajectory is descriptive; the held-out comparisons above are
+the primary evidence. The experiment supports selection's causal contribution
+in this virtual world and budget, not a universal guarantee of improvement.
+
+![Step 18 matched selection versus random-parent reproduction](results/step18-selection.png)
+
+The figure was visually inspected. `results/step18-audit.json` records all
+preservation, parent-choice, independently replayed mutation, model, budget,
+layout, and statistical checks, plus runtime versions and artifact hashes.
+`results/step18-tests.txt` saves the passing **242-test** transcript. The full
+JSON report retains each cohort, each parent decision, and all secondary intervals.
 
 ## Investigate learned food guidance and movement
 
@@ -1291,7 +1500,14 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **227 checks**, including source-model reuse, deterministic founder
+Verified: **242 checks**, including fitness-independent random-parent sampling,
+neutral parent ordering, inheritance instead of brain replacement, matched
+mutation traces, balanced offspring counts, equal paired starting conditions,
+founder controls, complete training/test budgets, six-test inference, model
+replay, source preservation, and plotting. The passing 227-test baseline was
+recorded before Step 18.
+
+The checks also cover source-model reuse, deterministic founder
 reconstruction, paired sensor interactions, complete factorial conditions,
 cross-lineage layout exclusion, numerical probes, twelve-test correction,
 archive/input preservation, incomplete-report rejection, reproducible parallel
@@ -1368,6 +1584,8 @@ experiment_speed.py   Fixed-speed retraining, greedy/random controls, and 16-see
 plot_speed.py         Paired fitness, meals, and survival comparisons at equal speed
 experiment_strategy.py  Saved-brain sensor interventions, ancestral controls, and attribution tests
 plot_strategy.py      Food-bearing benefits and residual evolutionary-history comparisons
+experiment_selection.py  Matched fitness selection versus random-parent inheritance
+plot_selection.py     Training curves and paired held-out selection effects
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, inference, independent copies, and mutation
 reproduction.py       Balanced selected-parent reproduction and offspring records
@@ -1388,6 +1606,7 @@ test_parameters.py    Configurable populations, controlled sweeps, caching, and 
 test_intelligence.py  Sensor truth, positive controls, archives, repeated trials, and criteria
 test_speed.py         Speed/energy fairness, greedy guidance, clustered food, and study inference
 test_strategy.py      Source preservation, factorial controls, paired interactions, and probes
+test_parent_selection.py  Fitness independence, matched mutations, inheritance, and causal controls
 results/step11-seed42.json  Observations from one seeded ten-generation run
 results/step12-seed42.json  Repeated seed-42 trajectory with checkpoint survival rates
 results/step12-evolution.png  Exported fitness, survival, and food-consumption figure
@@ -1415,6 +1634,14 @@ results/step17-protocol.json  Pre-trial source/model hashes, contrasts, and layo
 results/step17-strategy.json  Complete sensor-intervention trials, probes, and paired analysis
 results/step17-strategy.png  Food-bearing and residual fitness evidence
 results/step17-unselected-models/  Sixteen exact reconstructed ancestral cohorts
+results/step18-baseline.json  All tracked pre-Step-18 source/result hashes
+results/step18-baseline-tests.txt  Passing 227-test baseline transcript
+results/step18-tests.txt  Full 242-test verification transcript
+results/step18-audit.json  Parent-choice, independent mutation replay, and preservation audit
+results/step18-protocol.json  Pre-trial paired-selection protocol and source hashes
+results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
+results/step18-selection.png  Matched training curves and causal selection comparisons
+results/step18-models/  Sixteen paired selected/drift/founder brain archives
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection
