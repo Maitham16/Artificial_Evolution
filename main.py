@@ -1,4 +1,4 @@
-"""Launch Step 8: creatures perceive nearby food by distance and direction."""
+"""Launch Step 9: fitness rewards survival and eating, with final selection."""
 
 import argparse
 import math
@@ -11,6 +11,7 @@ import pygame
 
 from creature import MAX_ENERGY
 from perception import VISION_RANGE
+from selection import FitnessEvaluation
 from world import SIMULATION_STEP, World
 
 
@@ -44,13 +45,63 @@ def handle_events(world: World) -> bool:
                 world.show_grid = not world.show_grid
             if event.key == pygame.K_v:
                 world.show_perception = not world.show_perception
+            if event.key == pygame.K_f:
+                world.show_fitness = not world.show_fitness
             if event.key == pygame.K_r:
                 world.regenerate_population()
             if event.key == pygame.K_SPACE:
                 world.paused = not world.paused
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            world.select_creature((event.pos[0] - PADDING, event.pos[1] - HEADER_HEIGHT))
+            if not world.show_fitness:
+                world.select_creature((event.pos[0] - PADDING, event.pos[1] - HEADER_HEIGHT))
     return True
+
+
+def draw_fitness_panel(
+    screen: pygame.Surface, world: World, evaluation: FitnessEvaluation,
+    fonts: dict[str, pygame.font.Font],
+) -> None:
+    """Show the leading scores while the world continues or remains paused."""
+    panel = pygame.Rect(0, 0, 740, 410)
+    panel.center = (PADDING + world.width // 2, HEADER_HEIGHT + world.height // 2)
+    pygame.draw.rect(screen, BACKGROUND, panel, border_radius=12)
+    pygame.draw.rect(screen, MUTED, panel, width=1, border_radius=12)
+    x = panel.left + 28
+    screen.blit(fonts["title"].render("Fitness leaderboard", True, TEXT), (x, panel.top + 20))
+    state = (
+        f"FINAL / TOP {evaluation.selection_fraction:.0%} SELECTED"
+        if evaluation.complete else "LIVE / PROVISIONAL SCORES"
+    )
+    screen.blit(fonts["small"].render(state, True, ACCENT), (x, panel.top + 61))
+    rule = "Fitness = seconds alive + 10 x food eaten"
+    screen.blit(fonts["small"].render(rule, True, MUTED), (x, panel.top + 86))
+
+    columns = (x, x + 65, x + 175, x + 315, x + 420, x + 540)
+    y = panel.top + 124
+    for column, label in zip(columns, ("RANK", "CREATURE", "SURVIVAL", "FOOD", "FITNESS", "STATE")):
+        screen.blit(fonts["small"].render(label, True, MUTED), (column, y))
+    for rank, entry in enumerate(evaluation.ranking[:10], start=1):
+        y = panel.top + 151 + (rank - 1) * 21
+        selected = entry.creature_id in evaluation.selected_ids
+        values = (
+            str(rank), f"#{entry.creature_id:03d}", f"{entry.survival_seconds:.2f} s",
+            str(entry.food_eaten), f"{entry.fitness:.2f}",
+            "SELECTED" if selected else "ALIVE" if entry.alive else "DEAD",
+        )
+        color = ACCENT if selected else TEXT
+        for column, value in zip(columns, values):
+            screen.blit(fonts["small"].render(value, True, color), (column, y))
+
+    count = len(evaluation.ranking)
+    note = (
+        f"Top {min(10, count)} of {count} shown / "
+        f"{len(evaluation.selected_ids)} future breeding candidates selected."
+        if evaluation.complete else
+        f"Top {evaluation.selection_fraction:.0%} selected after the run ends. "
+        f"Showing top {min(10, count)} of {count}."
+    )
+    screen.blit(fonts["small"].render(note, True, MUTED), (x, panel.bottom - 48))
+    screen.blit(fonts["small"].render("F  Close leaderboard", True, ACCENT), (x, panel.bottom - 25))
 
 
 def draw_interface(
@@ -59,11 +110,15 @@ def draw_interface(
     screen.fill(BACKGROUND)
     screen.blit(fonts["small"].render("ARTIFICIAL EVOLUTION", True, ACCENT), (40, 25))
     screen.blit(fonts["title"].render("The virtual world", True, TEXT), (38, 48))
+    evaluation = world.get_fitness_evaluation()
+    best_score = evaluation.best.fitness if evaluation.best is not None else 0.0
+    controller_name = "NEURAL" if world.controller == "neural" else "RANDOM"
+    controller_label = (
+        f"{controller_name} / BEST {best_score:.1f} / MEAN {evaluation.mean_fitness:.1f}"
+    )
     if world.controller == "neural":
-        controller_label = "NUMPY BRAINS  8 > 8 > 2"
-        controller_note = f"Untrained / 90 parameters / Sight {VISION_RANGE:.0f} px"
+        controller_note = f"Untrained 8 > 8 > 2 / Sight {VISION_RANGE:.0f} px"
     else:
-        controller_label = "RANDOM MOVEMENT"
         controller_note = "Original baseline controller"
     screen.blit(fonts["small"].render(controller_label, True, ACCENT), (400, 31))
     screen.blit(fonts["small"].render(controller_note, True, MUTED), (400, 55))
@@ -80,7 +135,7 @@ def draw_interface(
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 08 / PERCEPTION", True, MUTED)
+    stage = fonts["small"].render("STEP 09 / SELECTION", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
         f"FOOD {len(world.food)}  /  EATEN {world.total_food_eaten}",
@@ -118,21 +173,31 @@ def draw_interface(
     screen.blit(fonts["small"].render(perception_text, True, MUTED), (400, 81))
 
     world.draw(screen, (PADDING, HEADER_HEIGHT))
-    if not world.creatures:
-        panel = pygame.Rect(0, 0, 440, 96)
+    if world.show_fitness:
+        draw_fitness_panel(screen, world, evaluation, fonts)
+    elif not world.creatures:
+        panel = pygame.Rect(0, 0, 580, 124)
         panel.center = (PADDING + world.width // 2, HEADER_HEIGHT + world.height // 2)
         pygame.draw.rect(screen, BACKGROUND, panel, border_radius=12)
         pygame.draw.rect(screen, MUTED, panel, width=1, border_radius=12)
-        title = fonts["title"].render("The population has died out", True, TEXT)
-        hint = fonts["small"].render("Press R to start a new population", True, ACCENT)
-        screen.blit(title, title.get_rect(center=(panel.centerx, panel.centery - 15)))
-        screen.blit(hint, hint.get_rect(center=(panel.centerx, panel.centery + 20)))
+        title = fonts["title"].render("Run complete", True, TEXT)
+        summary = (
+            f"Best #{evaluation.best.creature_id:03d}: {evaluation.best.fitness:.1f} points"
+            if evaluation.best is not None else "No creatures evaluated"
+        )
+        summary += f" / {len(evaluation.selected_ids)} selected"
+        result = fonts["small"].render(summary, True, TEXT)
+        hint = fonts["small"].render("F  Final ranking     /     R  Start a new population", True, ACCENT)
+        screen.blit(title, title.get_rect(center=(panel.centerx, panel.centery - 31)))
+        screen.blit(result, result.get_rect(center=(panel.centerx, panel.centery + 5)))
+        screen.blit(hint, hint.get_rect(center=(panel.centerx, panel.centery + 35)))
 
     footer_y = HEADER_HEIGHT + world.height + 16
     controls = (
         f"Space  {'Resume' if world.paused else 'Pause'}     /     "
         f"G  Grid {'on' if world.show_grid else 'off'}     /     "
         f"V  Overlay {'on' if world.show_perception else 'off'}     /     "
+        "F  Fitness     /     "
         "R  Reset world     /     Click  Inspect     /     Esc  Quit"
     )
     screen.blit(fonts["small"].render(controls, True, MUTED), (PADDING, footer_y))
@@ -153,7 +218,8 @@ def draw_interface(
             f"#{creature.creature_id:03d}    "
             f"Energy {creature.energy:.1f}/{MAX_ENERGY:.0f}    "
             f"Hunger {creature.hunger:.0%} ({creature.hunger_state})    "
-            f"Age {creature.age:.1f}/{creature.lifespan:.1f} s    Eaten {creature.food_eaten}"
+            f"Age {creature.age:.1f}/{creature.lifespan:.1f} s    Eaten {creature.food_eaten}    "
+            f"Fitness {creature.fitness:.1f}"
         )
         traits = (
             f"Position ({creature.x:.0f}, {creature.y:.0f})    "
@@ -190,7 +256,7 @@ def run(
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption(f"Artificial Evolution | Perception | {controller.title()}")
+        pygame.display.set_caption(f"Artificial Evolution | Natural Selection | {controller.title()}")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),

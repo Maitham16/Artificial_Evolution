@@ -3,10 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **8 — Add sensory perception**. Creatures sense nearby food by
-distance and relative direction, feeding proximity and bearing signals into their
-individual NumPy brains. The world includes movement, food, hunger, aging, and
-death. Reproduction, mutation, training, and evolution remain later steps.
+Current step: **9 — Implement natural selection**. Creatures earn fitness from
+survival time and food eaten. Rankings include all 100 original creatures, and the
+top 20% are selected as future breeding candidates once the run ends. Reproduction,
+mutation, training, and evolving new generations remain later steps.
 
 ## Run the world
 
@@ -26,6 +26,7 @@ python main.py --controller random --seed 42
 
 - Press **G** to hide or show the grid.
 - Press **V** to hide or show the selected creature's perception overlay.
+- Press **F** to open or close the fitness leaderboard.
 - Press **Space** to pause or resume movement, eating, energy use, and aging.
 - Press **R** to reset creatures, food, energy, ages, deaths, and simulation time.
 - **Click a creature** to inspect its properties. Click empty space to deselect.
@@ -54,13 +55,54 @@ Each creature has a unique ID within its population and these initial properties
 | Age | 0 simulated seconds initially |
 | Lifespan | Seeded random value from 60 to 120 simulated seconds |
 | Food eaten | 0 initially; incremented once per consumed pellet |
+| Fitness | 0 initially; survival seconds plus 10 points per eaten pellet |
 
 The selected creature has a white ring, and its properties appear below the arena.
 The first creature is selected initially. Pause with **Space** to inspect a
 creature while it holds still. Its inspector shows energy, hunger, age/lifespan,
-food count, position, current/maximum speed, size, facing direction, and turn rate.
+food count, fitness, position, current/maximum speed, size, facing direction, and turn rate.
 Small energy bars below creatures change from green to amber to red as hunger
 increases.
+
+## Fitness and natural selection
+
+The starting scoring rule is:
+
+```text
+fitness = 1 * simulated seconds alive + 10 * food pellets eaten
+```
+
+For example, a creature that survives 40 seconds and eats 3 pellets earns 70
+points. Survival uses each creature's actual age, including partial final steps.
+Food rewards count consumed pellets, including meals that restore only part of
+their energy because of capacity. Remaining energy adds no separate bonus.
+
+Scores update as living creatures age and eat. A dead creature keeps its earned
+score; continued world time does not increase it. Rankings include both living
+and dead creatures, ordered by descending fitness. Exact score ties use the lower
+creature ID, keeping results reproducible.
+
+During a run, rankings are **provisional** and candidate selection is pending.
+When the population becomes extinct, the world freezes the final ranking and
+selects the top **20%**, rounding up for small populations: 20 candidates from the
+usual 100. These are candidate IDs associated with the retained creature/brain
+records. Reproduction and mutation will use them in later steps.
+
+The header shows best and mean fitness across the entire original population.
+Clicking a living creature shows its individual score. **F** opens the top-ten
+leaderboard with survival time, meals, score, and live/dead or selected status.
+The world continues while the leaderboard is open; use **Space** to pause. Close
+the leaderboard before selecting creatures in the arena.
+
+Completed runs show their best result and selection count. **R** clears the final
+results and begins a new population with zero scores. Ranking and drawing the
+leaderboard do not change movement, randomness, food, or brain parameters.
+
+The code exposes live or final immutable snapshots through
+`World.get_fitness_evaluation()`. Its `ranking` contains every evaluated creature,
+and its `selected_ids` is populated only for completed runs.
+`World.final_evaluation` retains the final snapshot until reset. The default rule
+and selection fraction are defined in `selection.py`.
 
 ## Sensory perception
 
@@ -130,8 +172,8 @@ make the active controller visible.
 
 The random mode retains the earlier gradual random steering and cruising speed.
 Both modes start with the same physical traits, food, and seeded network
-parameters for a given seed. This step provides the two controllers; fitness
-comparison experiments remain later work.
+parameters for a given seed. Both use the same fitness rule. Comparisons across
+independent runs and evolving generations remain later work.
 
 ## Survival
 
@@ -158,9 +200,10 @@ cannot move, eat, or revive. Death reduces the
 population. Final creature states remain in `World.dead_creatures` until reset.
 
 The header shows living creatures, hungry creatures, total deaths, and the
-starvation/old-age breakdown. An extinct population shows a reset prompt and
-keeps the controls usable. **R** starts again with 100 living creatures and zero
-deaths. Pause freezes the full simulation, including hunger and lifespan.
+starvation/old-age breakdown. An extinct population shows final fitness and
+selection results and keeps the controls usable. **R** starts again with 100 living
+creatures, zero scores, and zero deaths. Pause freezes the full simulation,
+including hunger, lifespan, and earned fitness.
 
 ## Food and eating
 
@@ -218,7 +261,7 @@ can now affect both neural decisions and survival.
 To render a few frames without opening a window, optionally saving a preview:
 
 ```sh
-python main.py --headless --frames 120 --seed 42 --screenshot .cache/perception-preview.png
+python main.py --headless --frames 120 --seed 42 --screenshot .cache/selection-preview.png
 ```
 
 Headless mode requires `--frames` so it exits automatically and advances exactly
@@ -228,29 +271,32 @@ command above therefore captures the world after 2 seconds of simulated life.
 Run all checks with the standard Python test runner:
 
 ```sh
-python -m unittest -v test_movement.py test_food.py test_survival.py test_brain.py test_perception.py
+python -m unittest discover -v
 ```
 
-Verified: all 73 checks and 120-frame neural and random headless runs, plus a
-120-frame native macOS Cocoa run. Perception tests cover distance, bearing,
-rotation, range boundaries, coincident food, absent food, stale targets, brain
-inputs, and display-only overlay behavior. The regression tests retain neural,
-movement, food, survival, and frame-rate reproducibility coverage.
+Verified: all 90 checks, a 125-second headless run through final selection,
+leaderboard/pause/reset controls, and a 120-frame native macOS Cocoa run.
+Selection tests cover both score components, dead-creature scores, deterministic
+ranking, frozen results, top-20% selection, reset, observation without simulation
+changes, and matching final results across frame rates. Existing perception,
+neural, movement, food, and survival checks remain included.
 
 ## Project structure
 
 ```text
 main.py               Window, controls, simulation timing, and launch options
-world.py              Perception integration/overlay, controllers, survival, and food
+world.py              Simulation, perception, survival, food, and final fitness results
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, seeded parameters, and forward inference
 perception.py         Read-only food distance, direction, visibility, and neural signals
+selection.py          Fitness formula, immutable rankings, and final candidate selection
 food.py               Food properties, circle collision checks, and drawing
 test_movement.py      Movement, boundary, timing, pause, and reproducibility checks
 test_food.py          Food generation, contact, meal accounting, and reproducibility
 test_survival.py      Energy, hunger, aging, death, extinction, and reset checks
 test_brain.py         Network math, sensors, motor commands, and seeded brain checks
 test_perception.py    Perception geometry, edge cases, brain inputs, and overlay checks
+test_selection.py     Scores, ranking, final selection, immutability, and reset checks
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection

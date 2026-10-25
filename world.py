@@ -9,6 +9,7 @@ import pygame
 from creature import MAX_ENERGY, Creature, create_population
 from food import FOOD_COUNT, FOOD_RADIUS, Food
 from perception import VISION_RANGE, FoodPerception, sense_food
+from selection import FitnessEvaluation, evaluate_population
 
 
 SIMULATION_STEP = 1.0 / 60.0
@@ -42,6 +43,7 @@ class World:
         self.grid_spacing = 40
         self.show_grid = True
         self.show_perception = True
+        self.show_fitness = False
         self.paused = False
         self.surface = pygame.Surface((width, height))
         self.regenerate_population(seed)
@@ -53,6 +55,7 @@ class World:
         self.seed = seed
         self.creatures = creatures
         self.dead_creatures: list[Creature] = []
+        self.final_evaluation: FitnessEvaluation | None = None
         self.selected_creature: Creature | None = creatures[0]
         self._motion_rng = random.Random(f"motion:{seed}")
         self._food_rng = random.Random(f"food:{seed}")
@@ -62,6 +65,12 @@ class World:
             self.food.append(self._spawn_food())
         self._accumulator = 0.0
         self.elapsed_time = 0.0
+
+    def get_fitness_evaluation(self) -> FitnessEvaluation:
+        """Return live scores or the frozen final ranking, without altering the run."""
+        if self.final_evaluation is not None:
+            return self.final_evaluation
+        return evaluate_population([*self.creatures, *self.dead_creatures])
 
     def _spawn_food(self) -> Food:
         """Place a pellet in free space, clear of creatures and existing food."""
@@ -183,6 +192,8 @@ class World:
             if self.selected_creature not in self.creatures:
                 self.selected_creature = None
             self._resolve_food_collisions()
+            if not self.creatures and self.final_evaluation is None:
+                self.final_evaluation = evaluate_population(self.dead_creatures)
             self.elapsed_time += SIMULATION_STEP
             self._accumulator = max(0.0, self._accumulator - SIMULATION_STEP)
 

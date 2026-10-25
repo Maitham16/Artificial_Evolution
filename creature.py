@@ -9,6 +9,7 @@ import pygame
 
 from brain import MAX_TURN_RATE, NeuralNetwork
 from food import Food
+from selection import fitness_score
 
 
 POPULATION_SIZE = 100
@@ -61,6 +62,11 @@ class Creature:
     @property
     def alive(self) -> bool:
         return self.death_cause is None and self.energy > 0 and self.age < self.lifespan
+
+    @property
+    def fitness(self) -> float:
+        """Current earned score; age and meal count stop changing after death."""
+        return fitness_score(self.age, self.food_eaten)
 
     @property
     def hunger(self) -> float:
