@@ -3,10 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **4 — Implement movement**. The Pygame application displays 100
-creatures moving and turning in a 1,000 × 600 pixel habitat, with reflective wall
-boundaries. Food, survival mechanics, neural networks, and evolution will be
-implemented in later steps.
+Current step: **5 — Introduce food**. The Pygame application displays 100 moving
+creatures and 150 food pellets in a 1,000 × 600 pixel habitat. Creatures eat on
+contact, gaining energy. Energy consumption, death, neural networks, and evolution
+will be implemented in later steps.
 
 ## Run the world
 
@@ -18,8 +18,8 @@ python main.py
 ```
 
 - Press **G** to hide or show the grid.
-- Press **Space** to pause or resume movement.
-- Press **R** to generate a new random population.
+- Press **Space** to pause or resume movement and eating.
+- Press **R** to reset creatures, food, energy, counters, and simulation time.
 - **Click a creature** to inspect its properties. Click empty space to deselect.
 - Press **Esc**, or close the window, to quit.
 
@@ -40,11 +40,33 @@ Each creature has a unique ID within its population and these initial properties
 | Color | Random choice of six pastel colors; appearance only |
 | Facing direction | Random angle around the full circle, shown by the white eye |
 | Speed | Random value from 40 to 80 pixels per second |
-| Energy | 100 for every creature; constant at this step |
+| Energy | 100 initially; each eaten pellet adds 20 |
+| Food eaten | 0 initially; incremented once per consumed pellet |
 
 The selected creature has a white ring, and its properties appear below the arena.
 The first creature is selected initially. Pause with **Space** to inspect a
-creature while it holds still. Energy remains constant at this step.
+creature while it holds still. Its energy and food counter update as it eats.
+
+## Food and eating
+
+The arena starts with 150 green diamond-shaped pellets, each with a collision
+radius of 3 pixels and an energy value of 20. Food spawns fully inside the arena,
+clear of creatures and other pellets.
+
+Each simulation step checks circle contact using both the creature's and the
+pellet's radius. On contact, the creature gains the pellet's energy, its food
+counter increases, and the pellet is removed. If multiple creatures touch one
+pellet in the same step, the nearest center wins; an exact distance tie uses the
+lower creature ID. Each pellet awards energy only once.
+
+After all contacts are resolved, eaten pellets are replaced at random free
+positions, maintaining 150 available meals. Replacements start clear of creatures
+and are eligible for eating on subsequent steps. The header shows available food
+and total meals eaten; selecting a creature shows its individual meal count.
+
+Creatures keep their random steering and eat food they encounter along the way.
+Food affects their energy and counters. Energy can rise above the starting value
+of 100; energy costs and capacity rules belong to later survival steps.
 
 ## Movement
 
@@ -60,9 +82,9 @@ Creatures move independently and may pass through one another after spawning.
 
 Movement advances in fixed 1/60-second simulation steps, independently of display
 frame rate. The footer shows elapsed simulation time. Long desktop frame stalls
-are capped at 0.25 seconds of catch-up to avoid a large jump. Pausing freezes both
-movement and simulation time. **R** resets time and generates a fresh population,
-preserving the current pause state.
+are capped at 0.25 seconds of catch-up to avoid a large jump. Pausing freezes
+movement, eating, and simulation time. **R** resets time and generates a fresh
+population and food supply, preserving the current pause state.
 
 Use a seed to reproduce a population and its movement at the same simulation time:
 
@@ -72,36 +94,39 @@ python main.py --seed 42
 
 Without `--seed`, startup chooses a random seed. The active seed is displayed in
 the footer. **R** chooses a new seed and resets the population to 100 creatures.
-Population generation and motion use separate random-number generators.
+Population generation, motion, and food use separate random-number generators,
+so changing food availability does not change creature trajectories.
 
 To render a few frames without opening a window, optionally saving a preview:
 
 ```sh
-python main.py --headless --frames 120 --seed 42 --screenshot .cache/movement-preview.png
+python main.py --headless --frames 120 --seed 42 --screenshot .cache/food-preview.png
 ```
 
 Headless mode requires `--frames` so it exits automatically and advances exactly
 one 1/60-second simulation step per frame, without waiting for real time. The
 command above therefore captures the world after 2 seconds of simulated motion.
 
-Run the movement checks with the standard Python test runner:
+Run the movement and food checks with the standard Python test runner:
 
 ```sh
-python -m unittest -v test_movement.py
+python -m unittest -v test_movement.py test_food.py
 ```
 
-Verified: all 11 movement checks, pause/resume and inspection controls, and
-120-frame headless and native macOS Cocoa runs. The movement checks include wall
-and corner reflections, large travel distances, seeded motion, and matching
-simulation results at 30, 60, and 144 display updates per second.
+Verified: all 23 movement and food checks, pause/reset and inspection controls,
+and 120-frame headless and native macOS Cocoa runs. Food checks cover collision
+geometry, single meal ownership, energy accounting, spawning, and seeded results
+at 30, 60, and 144 display updates per second.
 
 ## Project structure
 
 ```text
 main.py               Window, controls, simulation timing, and launch options
-world.py              Fixed simulation steps, random steering, arena, and selection
+world.py              Simulation, random steering, food spawning, eating, and selection
 creature.py           Creature properties, motion, wall reflection, drawing, and spawning
+food.py               Food properties, circle collision checks, and drawing
 test_movement.py      Movement, boundary, timing, pause, and reproducibility checks
+test_food.py          Food generation, contact, meal accounting, and reproducibility
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection

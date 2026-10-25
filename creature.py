@@ -6,6 +6,8 @@ import random
 
 import pygame
 
+from food import Food
+
 
 POPULATION_SIZE = 100
 COLORS = (
@@ -32,6 +34,12 @@ class Creature:
     energy: float = 100.0
     turn_rate: float = 0.0  # radians per second
     turn_time_remaining: float = 0.0
+    food_eaten: int = 0
+
+    def eat(self, food: Food) -> None:
+        """Receive a meal after the world resolves ownership of a food collision."""
+        self.energy += food.energy
+        self.food_eaten += 1
 
     def rotate(self, angle: float) -> None:
         """Rotate clockwise by an angle in radians, keeping a normalized heading."""

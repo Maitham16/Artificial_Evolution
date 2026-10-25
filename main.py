@@ -1,4 +1,4 @@
-"""Launch Step 4: 100 creatures moving and turning inside a Pygame world."""
+"""Launch Step 5: moving creatures encounter food and eat on contact."""
 
 import argparse
 import math
@@ -64,8 +64,19 @@ def draw_interface(
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 04 / MOVEMENT", True, MUTED)
+    stage = fonts["small"].render("STEP 05 / FOOD", True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
+    food_label = fonts["small"].render(
+        f"FOOD {len(world.food)}  /  EATEN {world.total_food_eaten}",
+        True, (166, 220, 100),
+    )
+    food_x = screen.get_width() - PADDING - food_label.get_width()
+    pygame.draw.polygon(
+        screen, (166, 220, 100),
+        [(food_x - 15, 84), (food_x - 11, 88),
+         (food_x - 15, 92), (food_x - 19, 88)],
+    )
+    screen.blit(food_label, (food_x, 81))
 
     world.draw(screen, (PADDING, HEADER_HEIGHT))
 
@@ -73,7 +84,7 @@ def draw_interface(
     controls = (
         f"Space  {'Resume' if world.paused else 'Pause'}     /     "
         f"G  Grid {'on' if world.show_grid else 'off'}     /     "
-        "R  New population     /     Click  Inspect     /     Esc  Quit"
+        "R  Reset world     /     Click  Inspect     /     Esc  Quit"
     )
     screen.blit(fonts["small"].render(controls, True, MUTED), (PADDING, footer_y))
     dimensions = fonts["small"].render(
@@ -91,7 +102,8 @@ def draw_interface(
         details = (
             f"#{creature.creature_id:03d}    "
             f"Position ({creature.x:.0f}, {creature.y:.0f})    "
-            f"Energy {creature.energy:.0f}    Speed {creature.speed:.1f} px/s    "
+            f"Energy {creature.energy:.0f}    Eaten {creature.food_eaten}    "
+            f"Speed {creature.speed:.1f} px/s    "
             f"Radius {creature.radius} px    Facing {math.degrees(creature.heading):.0f} deg"
         )
     screen.blit(fonts["small"].render(details, True, TEXT), (PADDING, footer_y + 27))
@@ -121,7 +133,7 @@ def run(
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption("Artificial Evolution | 100 Creatures")
+        pygame.display.set_caption("Artificial Evolution | Creatures and Food")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),
@@ -131,6 +143,7 @@ def run(
         print(
             f"World ready: {world.width} x {world.height}; "
             f"creatures: {len(world.creatures)}; seed: {world.seed}; "
+            f"food: {len(world.food)}; "
             f"display driver: {pygame.display.get_driver()}",
             flush=True,
         )
