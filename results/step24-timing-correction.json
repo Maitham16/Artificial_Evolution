@@ -1,0 +1,46 @@
+{
+  "recorded_at_utc": "2026-10-26T04:52:50.464764+00:00",
+  "kind": "reporting_and_validation_only",
+  "diagnosis": {
+    "source_seed": 2401,
+    "generation": 3,
+    "time": 30.0,
+    "species": "predator",
+    "creature_id": 92,
+    "biological_age": 29.999999999999616,
+    "observed_alive": 14,
+    "incorrect_age_inferred_alive": 13
+  },
+  "reason": "Biological ages accumulate floating arithmetic and fatal partial steps; population loss is the actual fixed tick of removal, not an age comparison near a snapshot boundary.",
+  "fix": "Record removed_at when a death is removed, serialize it, and use it to reconstruct population snapshots; add a 30-second boundary regression.",
+  "before_aggregate_results_inspection": true,
+  "selection_movement_capture_and_energy_rules_unchanged": true,
+  "seeds_budgets_traits_sensors_fitness_and_inference_unchanged": true,
+  "initial_attempt_artifact_sha256": {
+    "results/step24-initial-attempt/execution.log": "352727cccf7569041744b16214b20cb18589a0fbd14fa516af02c18227dcacb0",
+    "results/step24-initial-attempt/experiment_predator_prey.py": "70ceb794e10cc8963500f590cc83127de21156b1edb173fc3a742662b6ef4361",
+    "results/step24-initial-attempt/incomplete-report.json": "7a45ec2597d44d074074914bd133384a68a33b8d2dc54034fb3a3672ecc39408",
+    "results/step24-initial-attempt/predator_prey.py": "5910999ce557f7d873a0ac7b34a42980f93cb722359912e4f4fe228096e31ff0",
+    "results/step24-initial-attempt/protocol.json": "9116763628bbd4d964e67723ac5be042ff0d7c833fc0299abb73323642cf1056",
+    "results/step24-initial-attempt/seed-2404.npz": "fc3d8314ac3441a686992358882efc53288aeb2c71c06c20fc244ddcdbcc9306",
+    "results/step24-initial-attempt/seed-2407.npz": "56fe552deb4cf3b128d524c97cacd051f2a833ec62d6a94416c37a9c5ecf4e72",
+    "results/step24-initial-attempt/test_predator_prey.py": "89e5299c3beab6fcd61d3f3c756e959150c96a7547e31e42cfc7a9e15ec9a2c6"
+  },
+  "source_changes": {
+    "predator_prey.py": {
+      "before_sha256": "5910999ce557f7d873a0ac7b34a42980f93cb722359912e4f4fe228096e31ff0",
+      "after_sha256": "08f52456856b3ea3e7bc543f8c9c708ffd5e2d8744ce0680de352c7be51c8f07",
+      "unified_diff": "--- initial/predator_prey.py\n+++ corrected/predator_prey.py\n@@ -86,6 +86,7 @@\n     opponent_visible_seconds: float = 0.\n     away_seconds: float = 0.\n     toward_seconds: float = 0.\n+    removed_at: float | None = None\n \n     @property\n     def fitness(self):\n@@ -197,6 +198,7 @@\n         for time, _, _, victim, hunter in sorted(events, key=lambda e: e[:3]):\n             if not victim.alive: continue\n             victim.death_cause = 'predation'\n+            victim.removed_at = self.elapsed_time + SIMULATION_STEP\n             hunter.captures += 1\n             gained = min(CAPTURE_ENERGY, hunter.energy_capacity - hunter.energy)\n             hunter.energy += gained\n@@ -230,6 +232,7 @@\n                 self._speed_time += c.speed * lived\n                 if observation.visible: c.opponent_visible_seconds += lived\n                 if not c.alive:\n+                    c.removed_at = self.elapsed_time + SIMULATION_STEP\n                     self.dead_creatures.append(c)\n                     continue\n                 c.rotate(c.turn_rate * SIMULATION_STEP)\n@@ -288,6 +291,7 @@\n             individual.append({'creature_id': c.creature_id, 'species': c.species, 'body': c.body.vector().tolist(),\n                 'age': c.age, 'food_eaten': c.food_eaten, 'captures': c.captures, 'fitness': c.fitness,\n                 'alive_at_end': c.alive, 'death_cause': c.death_cause, 'initial_energy': c.body.initial_energy,\n+                'removed_at': c.removed_at,\n                 'final_energy': c.energy, **{name: getattr(c, name) for name in (\n                     'basal_energy', 'movement_energy', 'sensing_energy', 'assimilated_energy', 'wasted_food_energy',\n                     'capture_assimilated_energy', 'wasted_capture_energy', 'opponent_visible_seconds', 'away_seconds', 'toward_seconds')}})\n"
+    },
+    "experiment_predator_prey.py": {
+      "before_sha256": "70ceb794e10cc8963500f590cc83127de21156b1edb173fc3a742662b6ef4361",
+      "after_sha256": "1186a01da3713d6c7debefef1a3b27f55d3a010be6d0007e9b7c2736b1d9162a",
+      "unified_diff": "--- initial/experiment_predator_prey.py\n+++ corrected/experiment_predator_prey.py\n@@ -68,6 +68,8 @@\n                     or not np.isclose(c['fitness'], c['age'] + (10 * c['food_eaten'] if expected_species == 'prey' else 30 * c['captures']))\n                     or c['death_cause'] not in (None, 'predation', 'starvation', 'old_age')\n                     or c['alive_at_end'] != (c['death_cause'] is None)\n+                    or (c['removed_at'] is None) != c['alive_at_end']\n+                    or (not c['alive_at_end'] and not c['age'] - 1e-7 <= c['removed_at'] <= min(row['duration'],c['age']+1/60)+1e-7)\n                     or (c['alive_at_end'] and not np.isclose(c['age'], row['duration']))\n                     or (expected_species == 'predator' and c['death_cause'] == 'predation')\n                     or not -1e-7 <= c['final_energy'] <= body.capacity + 1e-7):\n@@ -96,6 +98,7 @@\n                     or not event['removed_at'] - 1 / 60 - 1e-7 <= event['contact_time'] <= event['removed_at'] + 1e-7\n                     or not np.isclose(victim['age'], event['removed_at']) or hunter['age'] + 1e-7 < event['removed_at']):\n                 raise ValueError('Capture ownership and tick timing must match actual histories.')\n+            if victim['removed_at'] != event['removed_at']: raise ValueError('Capture and removal records must match.')\n         if any(c['captures'] != sum(e['predator_id']==c['creature_id'] for e in events) for c in records):\n             raise ValueError('Each hunter must receive exactly its own capture events.')\n         for species in SPECIES:\n@@ -122,7 +125,7 @@\n             raise ValueError('Population observations must have increasing finite times.')\n         for point in timeline:\n             for species in SPECIES:\n-                expected = counts[species] - sum(c['species'] == species and not c['alive_at_end'] and c['age'] <= point['time'] + 1e-7 for c in records)\n+                expected = counts[species] - sum(c['species'] == species and c['removed_at'] is not None and c['removed_at'] <= point['time'] + 1e-7 for c in records)\n                 if point[species] != expected: raise ValueError('Live population counts must agree with individual deaths.')\n \n \n"
+    },
+    "test_predator_prey.py": {
+      "before_sha256": "89e5299c3beab6fcd61d3f3c756e959150c96a7547e31e42cfc7a9e15ec9a2c6",
+      "after_sha256": "2a5d91143aea87093b8c30aa0452734a382b786148ab96e3b763df0467131a2b",
+      "unified_diff": "--- initial/test_predator_prey.py\n+++ corrected/test_predator_prey.py\n@@ -150,6 +150,22 @@\n             self.assertIn(child.parent_id,pools[child.species]);self.assertEqual(child.brain,old[child.parent_id].brain)\n             self.assertEqual(child.body,old[child.parent_id].body)\n             self.assertFalse(np.shares_memory(child.brain.input_weights,old[child.parent_id].brain.input_weights))\n+\n+    def test_population_boundary_uses_removal_tick_rather_than_rounded_biological_age(self):\n+        w=PredatorPreyWorld(seed=1,population_size=2,predators=1,food_count=0,episode_seconds=31)\n+        prey,hunter=w.creatures\n+        for c in w.creatures:c.brain=stopped_brain();c.x=200;c.heading=0\n+        prey.y=200;hunter.y=500\n+        w.update(10)\n+        for _ in range(3):prey.eat(Food(prey.x,prey.y))\n+        self.assertEqual(prey.energy,100)\n+        w.update(21)\n+        row=w.ecosystem_history[0]\n+        point=next(p for p in row['population'] if p['time']==30)\n+        self.assertEqual(point['prey'],1)\n+        self.assertAlmostEqual(prey.age,30)\n+        self.assertGreater(prey.removed_at,30)\n+        validate_cohorts(EvolutionSimulation(w,generation_limit=1).report(),study=False)\n \n     def test_body_mutation_stream_does_not_change_neural_mutation(self):\n         a=PredatorPreyWorld(seed=42,episode_seconds=.05,body_mutation_rate=0)\n"
+    }
+  }
+}

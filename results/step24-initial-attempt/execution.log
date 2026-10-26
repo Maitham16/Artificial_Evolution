@@ -1,0 +1,92 @@
+Seed 2402: both populations completed G1/8
+Seed 2401: both populations completed G1/8
+Seed 2405: both populations completed G1/8
+Seed 2406: both populations completed G1/8
+Seed 2407: both populations completed G1/8
+Seed 2403: both populations completed G1/8
+Seed 2408: both populations completed G1/8
+Seed 2404: both populations completed G1/8
+Seed 2405: both populations completed G2/8
+Seed 2407: both populations completed G2/8
+Seed 2402: both populations completed G2/8
+Seed 2401: both populations completed G2/8
+Seed 2403: both populations completed G2/8
+Seed 2408: both populations completed G2/8
+Seed 2406: both populations completed G2/8
+Seed 2404: both populations completed G2/8
+Seed 2405: both populations completed G3/8
+Seed 2407: both populations completed G3/8
+Seed 2402: both populations completed G3/8
+Seed 2403: both populations completed G3/8
+Seed 2401: both populations completed G3/8
+Seed 2408: both populations completed G3/8
+Seed 2406: both populations completed G3/8
+Seed 2404: both populations completed G3/8
+Seed 2405: both populations completed G4/8
+Seed 2401: both populations completed G4/8
+Seed 2407: both populations completed G4/8
+Seed 2408: both populations completed G4/8
+Seed 2403: both populations completed G4/8
+Seed 2402: both populations completed G4/8
+Seed 2406: both populations completed G4/8
+Seed 2405: both populations completed G5/8
+Seed 2404: both populations completed G4/8
+Seed 2401: both populations completed G5/8
+Seed 2402: both populations completed G5/8
+Seed 2403: both populations completed G5/8
+Seed 2408: both populations completed G5/8
+Seed 2407: both populations completed G5/8
+Seed 2406: both populations completed G5/8
+Seed 2405: both populations completed G6/8
+Seed 2401: both populations completed G6/8
+Seed 2404: both populations completed G5/8
+Seed 2402: both populations completed G6/8
+Seed 2403: both populations completed G6/8
+Seed 2405: both populations completed G7/8
+Seed 2408: both populations completed G6/8
+Seed 2406: both populations completed G6/8
+Seed 2407: both populations completed G6/8
+Seed 2401: both populations completed G7/8
+Seed 2404: both populations completed G6/8
+Seed 2402: both populations completed G7/8
+Seed 2405: both populations completed G8/8
+Seed 2403: both populations completed G7/8
+Seed 2408: both populations completed G7/8
+Seed 2406: both populations completed G7/8
+Seed 2401: both populations completed G8/8
+Seed 2407: both populations completed G7/8
+Seed 2404: both populations completed G7/8
+Seed 2402: both populations completed G8/8
+Seed 2403: both populations completed G8/8
+Seed 2406: both populations completed G8/8
+Seed 2408: both populations completed G8/8
+Seed 2404: both populations completed G8/8
+Seed 2407: both populations completed G8/8
+Seed 2404: frozen predator-1_prey-1 complete
+Seed 2407: frozen predator-1_prey-1 complete
+Seed 2404: frozen predator-1_prey-4 complete
+Seed 2407: frozen predator-1_prey-4 complete
+Seed 2404: frozen predator-1_prey-8 complete
+Seed 2407: frozen predator-1_prey-8 complete
+Seed 2404: frozen predator-4_prey-1 complete
+Seed 2407: frozen predator-4_prey-1 complete
+Seed 2404: frozen predator-4_prey-4 complete
+Seed 2407: frozen predator-4_prey-4 complete
+Seed 2404: frozen predator-4_prey-8 complete
+Seed 2407: frozen predator-4_prey-8 complete
+Seed 2404: frozen predator-8_prey-1 complete
+Seed 2407: frozen predator-8_prey-1 complete
+Seed 2404: frozen predator-8_prey-4 complete
+Seed 2407: frozen predator-8_prey-4 complete
+Seed 2404: frozen predator-8_prey-8 complete
+Seed 2407: frozen predator-8_prey-8 complete
+Seed 2404: frozen prey_hidden complete
+Seed 2407: frozen prey_hidden complete
+Seed 2404: frozen predator_hidden complete
+Seed 2407: frozen predator_hidden complete
+usage: experiment_predator_prey.py [-h] [--seeds SEEDS [SEEDS ...]]
+                                   [--generations GENERATIONS]
+                                   [--workers WORKERS]
+                                   [--models-dir MODELS_DIR] [--output OUTPUT]
+                                   [--protocol-output PROTOCOL_OUTPUT]
+experiment_predator_prey.py: error: Live population counts must agree with individual deaths.

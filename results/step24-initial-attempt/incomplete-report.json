@@ -1,0 +1,53 @@
+{
+  "format_version": 1,
+  "status": "running",
+  "protocol": {
+    "seeds": [
+      2401,
+      2402,
+      2403,
+      2404,
+      2405,
+      2406,
+      2407,
+      2408
+    ],
+    "generations": 8,
+    "checkpoints": [
+      1,
+      4,
+      8
+    ],
+    "configuration": {
+      "arena_size": [
+        1000,
+        600
+      ],
+      "population_size": 100,
+      "food_count": 150,
+      "fixed_speed": null,
+      "controller": "neural",
+      "food_distribution": "uniform",
+      "food_sensor_mode": "intact",
+      "mutation_rate": 0.1,
+      "mutation_scale": 0.1
+    },
+    "episode_seconds": 60.0,
+    "birth_counts": {
+      "prey": 80,
+      "predator": 20
+    },
+    "training_cohorts": 64,
+    "test_cohorts": 88,
+    "brains": "11\u20138\u20132, 114 parameters plus three inherited body genes. Original eight inputs plus nearest opponent proximity, signed direction, visibility. Predators cannot sense or eat pellets. No chase/flee policy is programmed.",
+    "physics": "Snapshot all inputs before any movement. Pay Step23 body costs first; fatal actors cannot hunt/eat. Reflective piecewise paths give earliest swept contact; each prey captured once, ties by prey then hunter ID. Captures resolve before prey meals. Removal, energy reward and age accounting occur at tick end; contact time also recorded. Each kill offers60 energy, capped by inherited storage.",
+    "selection": "Separate top20% pools: prey age+10*meals; predators age+30*captures. Both offspring banks are formed from the same completed arena before either is installed. Linked brain/body inheritance, canonical independent species/brain/body RNG streams. Neural rate.1 scale.1; body rate.25 log scale.08.",
+    "demography": "Fixed80 prey and20 predator births each generation. Live counts sampled every5s and at end; no within-window births. Censored survivors at horizon stay alive in reports. Dead genomes remain eligible. No reproductive resource budget, demographic extinction, or continuous population growth claim.",
+    "tests": "Freeze entire evaluated birth banks at G1, midpoint, final. All nine historical predator/prey pairings plus final prey-opponent-hidden and final predator-opponent-hidden. Every case uses the same unseen anchors/food/heading/lifespan scenario per source seed, excluding all current training starts; actual treated genes/reserves differ. No selection during testing.",
+    "primary": "Four directional improvements: final predators versus founders holding founder or final prey fixed (capture fraction); final prey versus founders holding founder or final predators fixed (alive-at-horizon fraction). Four exact paired two-sided sign tests with1e-10 ties and Holm. Directional verdict needs adjusted p<.05 and paired pointwise95% mean-difference interval excluding zero. Reciprocal improvement requires all four higher.",
+    "intervals": "20000 paired percentile bootstrap resamples; independent source seed is the unit, never individual creatures.",
+    "secondary": "Training fitness, 3x3 matrices, traits, population trajectories, away/toward movement, deaths, and two sensor interventions are descriptive. Sensor intervals have no confirmatory p-values. Away movement is relative to the nearest visible opponent and need not be deliberate escape.",
+    "limitations": "Stylized energetic/capture assumptions. No frozen-opponent training or drift control. Reciprocal historical gains alone cannot establish that changing opponents caused adaptation, a sustained arms race, or ecological cycles. Lower capture rates alone can reflect prey starvation; primary prey success uses alive-at-horizon survival instead."
+  },
+  "trials": []
+}

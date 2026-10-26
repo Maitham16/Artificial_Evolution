@@ -3,8 +3,8 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **23 — Evolve physical characteristics**. Speed, body size, and sensory
-range now evolve alongside neural-network weights, with explicit energy costs.
+Current step: **24 — Competition and predator–prey evolution**. Two populations
+share an arena and evolve separate brains and bodies through hunting and survival.
 Earlier experiments and saved results remain available.
 
 ## Run the world
@@ -40,6 +40,240 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Competition and predator–prey coevolution
+
+Step 24 adds an **opt-in shared arena** with 80 prey (mint) and 20 predators
+(rose). Prey compete for replenished plant food; predators compete to capture
+prey. Each species has a separate selection pool, and both offspring populations
+are formed from the same completed arena before either population is replaced.
+All founders are newly generated eleven-input brains and reference bodies; no
+previous experiment's trained models are reused.
+
+```sh
+python main.py --predator-prey --seed 2401 --generations 8 --speed 20
+python main.py --headless --predator-prey --seed 2401 --generations 8 \
+  --report .cache/predator-run.json --plot .cache/predator-run.png
+```
+
+`--population` is the **total birth count** and `--predators` specifies the
+predator portion; the remainder are prey. `--episode-seconds` sets the evaluation
+window, default 60 seconds, in whole 1/60-second ticks. The mode uses neural
+controllers and inherited cruise speeds. It is separate from `--seasons`,
+`--obstacles`, and `--traits`, and rejects `--fixed-speed`. Body mutation options
+from Step 23 remain available. Press **F** for separate role leaderboards or
+**T** for survival and capture histories. Click an actor to inspect its genes;
+an orange line shows its nearest detected opponent. Counts and captures remain
+visible throughout each cohort.
+
+### Senses, hunting, and competition
+
+Both species use **11–8–2 NumPy networks, 114 parameters**, plus three body genes.
+The original eight inputs are food proximity/direction/visibility, hunger, and
+four wall clearances. Three new inputs give the nearest opponent's proximity,
+signed bearing divided by π, and visibility within inherited sensory range.
+Prey detect predators; predators detect prey. Predators receive zero plant-food
+inputs and cannot eat pellets. Neither species receives a programmed chase or
+flee policy. Decisions use a common snapshot of all positions before any actor
+moves, so population iteration order supplies no positional advantage.
+
+Body development, storage, maintenance, movement, and sensing follow the declared
+Step 23 model, including the common newborn energy allocation. These remain toy
+2D energetic assumptions. Brains steer at the inherited cruise speed. Actors pay
+costs first; an actor dying during that tick cannot capture, eat, or be rescued
+by contact. Reflective movement is split into straight wall-bounce segments;
+swept relative disk contact detects encounters between endpoints. The first
+contact owns the prey, with exact ties broken by prey ID then predator ID. A
+prey can be captured only once. Capture removes prey before plant-food feeding.
+Each capture offers the hunter **60 energy units**, clipped to its inherited
+capacity; assimilated and wasted capture energy are recorded separately.
+
+Movement/contact geometry is continuous within each fixed tick. Removal,
+energetic credit, and survival accounting occur at the tick end. The report
+retains both the geometric contact time and removal time. There is no attack
+cooldown, injury model, or meat-value scaling with prey size. Plant food remains
+at 150 pellets in the declared study; subsequent replacement positions depend
+on each arena's behavior.
+
+The two fitness rules are deliberately separate:
+
+```text
+prey fitness = seconds alive + 10 × plant meals
+predator fitness = seconds alive + 30 × captures
+```
+
+Each species' top 20% supplies balanced, shuffled offspring. Linked brain/body
+inheritance uses neural mutation probability 0.1 and Gaussian scale 0.1; body
+mutation probability 0.25 and Gaussian log scale 0.08. Each species has independent
+recorded brain and body mutation streams. The score rewards capture/meal counts,
+including partially wasted energy, so it is not an energy-efficiency objective.
+
+### Population and defensive observations
+
+Birth counts reset to the controlled 80/20 split each generation. Within a
+cohort, actual live counts are sampled every five seconds and at evaluation end.
+Every newborn appears in the report, including prey killed by predators,
+starved actors, old-age deaths, and **censored survivors still alive at the time
+limit**. Archived genomes from dead actors can be selected for the next cohort.
+This is a generational competition experiment, without continuous births,
+reproductive resource budgets, demographic growth, or permanent lineage
+extinction. A cohort ending with zero predators does not mean the experiment's
+predator gene pool became permanently extinct.
+
+Reports retain role-specific survival, food/capture counts, death causes, trait
+values, fitness, and individual energy ledgers. Defensive behavior is described
+by prey movement **away from the nearest visible predator**, measured over actual
+visible-opponent living time; predator movement toward prey is measured the same
+way. These describe displacement, not intent or guaranteed successful escape.
+Undefined fractions remain missing when there is no visible opponent.
+`--prey-sensors hidden` or `--predator-sensors hidden` zeros only that species'
+three opponent inputs. Truthful observations and sensing costs remain intact.
+
+### Declared historical-opponent experiment
+
+The pre-change **321-test** transcript and hashes of all **256 tracked files**
+are saved in `results/step24-baseline*`. Existing saved experiments remain
+unchanged. Before production trials, the protocol and all Python source hashes
+are written to `results/step24-protocol.json`.
+
+Eight independent seeds (2401–2408) each train **eight shared cohorts**. Entire
+evaluated birth populations, including failures and censored survivors, are
+frozen at generations **1, 4, and 8**, without an extra reproduction event after
+the final cohort. All nine historical predator/prey pairings are tested on one
+new shared layout per seed. Two more cases mask final prey or predator opponent
+inputs separately, for **64 training + 88 held-out cohorts**, or **15,200
+individual evaluation episodes**. The held-out food/anchors/headings/lifespans
+match in all eleven cases per seed; actual body genes and reserves differ as
+intended. Shared-layout hashes exclude the treated body properties and test
+layouts are excluded from every current training layout.
+
+Four primary paired comparisons ask whether final predators capture more than
+founder predators against **founder and final prey**, and whether final prey
+survive better than founder prey against **founder and final predators**. Prey
+success uses the fraction alive at the horizon: fewer captures alone could arise
+because prey starved first. The independent unit is the source seed, **n = 8**.
+Exact two-sided paired sign tests use 1e−10 ties and Holm correction across four
+comparisons, with 20,000 paired bootstrap resamples for pointwise 95% intervals.
+A directional conclusion requires adjusted p < 0.05 and an interval excluding
+zero. “Reciprocal improvement detected” requires **all four** primary comparisons
+to be higher. With eight seeds, this is a strict criterion with limited power.
+
+The 3 × 3 historical matrices, training trends, trait changes, observed movement,
+population trajectories, and sensor interventions are descriptive. Two sensor
+interventions report pointwise paired intervals without confirmatory p-values.
+There is no frozen-opponent training control or new drift control in this step.
+Even reciprocal historical gains cannot establish that changing opponents caused
+adaptation, a sustained evolutionary arms race, or ecological population cycles.
+
+```sh
+python experiment_predator_prey.py --workers 8 --models-dir results/step24-models \
+  --output results/step24-coevolution.json --protocol-output results/step24-protocol.json
+python plot_predator_prey.py results/step24-coevolution.json \
+  --output results/step24-coevolution.png \
+  --populations-output results/step24-populations.png --world-output results/step24-world.png
+```
+
+Use new paths for reruns: reports and numeric archives are protected against
+replacement. The world screenshot replays the first declared held-out final/final
+pairing for a predetermined ten seconds, then selects its first living prey.
+The population figure uses every training cohort of that first source seed in
+its upper panels and equal-seed mean cohort fates in its lower panels.
+
+The first production attempt stopped at population validation before any aggregate
+analysis was produced. In seed 2401, generation 3, predator 92 had a biological
+age numerically just below 30 seconds but was still counted alive at the
+30-second observation; removal occurred in the following tick. The validator
+had inferred removals from rounded biological age. Reports now retain actual
+`removed_at` tick times for every death, and population counts use those times.
+This changes observation and validation, with no change to movement, capture,
+energy, selection, mutation, seeds, or budgets. A dedicated boundary regression
+and the full 342-test suite verify the correction. The original protocol,
+source versions, log, incomplete report, and two saved numeric banks are retained
+in `results/step24-initial-attempt/`; `results/step24-timing-correction.json`
+records the correction before the replacement production run.
+
+### Observed Step 24 results
+
+The corrected, complete study evaluated **152 cohorts and 15,200 individual
+episodes** across the eight declared seeds. **Reciprocal improvement was not
+established.** All four primary results were inconclusive, with Holm-adjusted
+p = 1.0 and pointwise intervals containing zero. The frozen historical capture
+matrix below uses equal-seed means; rows identify predator generation and
+columns identify prey generation:
+
+| Captured fraction of initial prey | Prey G1 | Prey G4 | Prey G8 |
+| --- | ---: | ---: | ---: |
+| Predators G1 | 89.69% | 91.88% | 89.53% |
+| Predators G4 | 92.50% | 92.66% | 89.38% |
+| Predators G8 | 92.03% | 92.50% | 90.16% |
+
+The corresponding **prey alive at the 60-second horizon** matrix is:
+
+| Prey survival | Prey G1 | Prey G4 | Prey G8 |
+| --- | ---: | ---: | ---: |
+| Predators G1 | 4.53% | 4.38% | 6.56% |
+| Predators G4 | 2.81% | 3.44% | 6.88% |
+| Predators G8 | 4.38% | 3.12% | 4.06% |
+
+Effects below are **percentage-point differences**, with the other population
+held fixed in each comparison. Positive values favor the final population.
+
+| Primary improvement | Difference | Pointwise 95% interval | Holm p | Verdict |
+| --- | ---: | --- | ---: | --- |
+| Final predators, founder prey: captures | +2.34 pp | [−1.09, 5.47] | 1.000 | Inconclusive |
+| Final prey, founder predators: survival | +2.03 pp | [−1.25, 5.00] | 1.000 | Inconclusive |
+| Final predators, final prey: captures | +0.63 pp | [−3.59, 4.37] | 1.000 | Inconclusive |
+| Final prey, final predators: survival | −0.31 pp | [−2.19, 1.56] | 1.000 | Inconclusive |
+
+Founder predators already captured **89.69%** of prey, leaving limited headroom
+for improvement in capture fraction. In final/final tests, **90.16%** of prey
+died from predation, **5.78%** starved, and **4.06%** remained alive. For predators,
+**97.50%** starved and **2.50%** remained alive. Mean observed age was 15.00 seconds
+for prey and 35.92 seconds for predators. No old-age deaths occurred in these
+final/final tests. These outcomes describe severe predation and predator losses
+within controlled cohorts; birth counts still reset between generations.
+
+In the predetermined training example (seed 2401, generation 8), prey declined
+from 80 to 29 by ten seconds and to five by the horizon; predators reached zero
+by 55 seconds. The population figure retains all eight cohorts of this source
+seed rather than selecting a favorable example.
+
+Training showed descriptive movement changes: prey away movement rose from
+46.67% to 50.26% of visible-opponent living time, and predator toward movement
+from 54.13% to 60.43%. Held-out final/final values were 50.03% away for prey and
+58.82% toward for predators. The sensor interventions did not provide a clear
+positive interval for either species: intact prey opponent inputs changed
+survival by +0.16 pp (interval −1.72 to 1.72), and intact predator inputs changed
+capture fraction by +1.09 pp (−5.94 to 7.34). These are descriptive intervals,
+without confirmatory sensor tests. Displacement toward or away from an opponent
+alone does not establish learned hunting or successful defensive control.
+
+Body genes also diverged descriptively from the common speed/radius/range
+reference (60, 8, 160): final prey birth means were **(60.66, 7.78, 158.90)**,
+and predator means were **(59.14, 8.70, 160.23)**. Those gene changes do not
+isolate selection from drift, identify one causal trait, or overturn the null
+reciprocal-improvement result. The study demonstrates the competition and joint
+inheritance mechanics; it does not establish a sustained evolutionary arms race.
+
+![Historical-opponent comparisons](results/step24-coevolution.png)
+
+[Population trajectories and fates](results/step24-populations.png) and the
+[ten-second held-out arena replay](results/step24-world.png) supplement the
+[complete observations](results/step24-coevolution.json). All eight three-checkpoint
+archives are retained in `results/step24-models/`.
+
+The audit independently reconstructs **112 species reproduction events**, every
+training physical start, all historical opponent combinations, both sensor
+masks, all energy ledgers and population losses, and all four exact tests,
+bootstrap intervals, and Holm adjustments. A complete final/final arena replay
+for the first declared seed matches its stored report bit-for-bit. All **253
+preexisting files** outside the intended README/main/simulation changes remain
+byte-identical, including **193 earlier result artifacts**. The corrected
+production source hashes all match the pre-rerun declaration. The two initially
+saved populations have exactly the same numeric genomes after the observer fix;
+their training reports are identical apart from the added individual removal
+times. All **342 tests pass**, with the full transcript saved in
+`results/step24-tests.txt`.
 
 ## Joint evolution of brains and bodies
 
@@ -2584,7 +2818,12 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **321 checks**, including linked brain/body inheritance, independent
+Verified: **342 checks**, including simultaneous opponent snapshots, reflected swept
+captures, unique ownership, censored survivors, separate gene pools, energy
+accounting, historical matrices, paired inference, sensor masking, and exports.
+The 321-test baseline was saved before Step 24.
+
+The checks also cover linked brain/body inheritance, independent
 mutation streams, gene bounds, individual energy conservation, capacity-aware
 eating above 100 energy, personalized perception, matched starts, frozen factorial
 interventions, deterministic archives, inference, and exports. The 303-test
@@ -2682,6 +2921,10 @@ included.
 ## Project structure
 
 ```text
+predator_prey.py      Shared arena, local opponent senses, captures, and two linked gene pools
+experiment_predator_prey.py  Frozen historical opponents, sensor masks, and reciprocal tests
+plot_predator_prey.py  Opponent matrices, population histories, role metrics, and world replay
+test_predator_prey.py  Swept ownership, simultaneous sensing, energy, censoring, inference, and exports
 body_traits.py        Linked body genes, trait physics, independent mutation, and energy ledgers
 experiment_traits.py  Twelve-seed frozen brain/body factorial study and paired inference
 plot_traits.py        Gene trajectories, cost curves, held-out comparisons, and body map
@@ -2774,6 +3017,18 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step24-baseline.json  Hashes of all 256 pre-Step-24 tracked files
+results/step24-baseline-tests.txt  Passing 321-test baseline transcript
+results/step24-protocol.json  Pre-trial senses, captures, energetic costs, budgets, and inference
+results/step24-coevolution.json  Complete training and frozen historical-opponent observations
+results/step24-coevolution.png  Training, historical matrices, and primary reciprocal effects
+results/step24-populations.png  Within-cohort counts and newborn fates across generations
+results/step24-world.png  Predetermined ten-second replay of the first held-out final pairing
+results/step24-models/  Eight numeric archives with both species at generations 1, 4, and 8
+results/step24-audit.json  Linked two-species replay, capture/energy accounting, and preservation
+results/step24-tests.txt  Passing 342-test verification transcript
+results/step24-initial-attempt/  Preserved incomplete attempt and pre-correction source/models
+results/step24-timing-correction.json  Pre-rerun removal-time reporting correction and exact source diffs
 results/step23-baseline.json  Hashes of all 231 pre-Step-23 tracked files
 results/step23-baseline-tests.txt  Passing 303-test baseline transcript
 results/step23-protocol.json  Pre-trial gene, cost, matching, budget, and inference declaration

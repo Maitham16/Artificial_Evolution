@@ -1,4 +1,4 @@
-"""Launch the world, with optional Step 21 seasons and lineage extinction."""
+"""Launch the virtual world and its opt-in evolutionary experiments."""
 
 import argparse
 import json
@@ -252,6 +252,10 @@ def draw_interface(
     screen: pygame.Surface, world: World, fonts: dict[str, pygame.font.Font],
     simulation: EvolutionSimulation | None = None,
 ) -> None:
+    if hasattr(world, "ecosystem_history"):
+        from predator_prey import draw_ecosystem_interface
+        draw_ecosystem_interface(screen, world, fonts, simulation)
+        return
     screen.fill(BACKGROUND)
     screen.blit(fonts["small"].render("ARTIFICIAL EVOLUTION", True, ACCENT), (40, 25))
     screen.blit(fonts["title"].render("The evolving world", True, TEXT), (38, 48))
@@ -445,10 +449,15 @@ def run(
     traits: bool = False,
     body_mutation_rate: float = .25,
     body_mutation_scale: float = .08,
+    predator_prey: bool = False,
+    predators: int = 20,
+    episode_seconds: float = 60.,
+    prey_sensors: str = "intact",
+    predator_sensors: str = "intact",
 ) -> int:
-    if sum((obstacles, seasons, traits)) > 1:
-        raise ValueError("Choose one of seasonal, obstacle, or body-trait mode.")
-    if traits and fixed_speed is not None:
+    if sum((obstacles, seasons, traits, predator_prey)) > 1:
+        raise ValueError("Choose one of seasonal, obstacle, body-trait, or predator–prey mode.")
+    if (traits or predator_prey) and fixed_speed is not None:
         raise ValueError("Body-trait mode derives speed from inherited genes, not --fixed-speed.")
     if headless and frames is None and (generations is None or manual):
         raise ValueError("Headless mode needs frames or an automatic generation limit.")
@@ -474,6 +483,12 @@ def run(
             from body_traits import TraitWorld
             world_type = TraitWorld
             seasonal_options = dict(body_mutation_rate=body_mutation_rate, body_mutation_scale=body_mutation_scale)
+        if predator_prey:
+            from predator_prey import PredatorPreyWorld
+            world_type = PredatorPreyWorld
+            seasonal_options = dict(predators=predators, episode_seconds=episode_seconds,
+                prey_sensors=prey_sensors, predator_sensors=predator_sensors,
+                body_mutation_rate=body_mutation_rate, body_mutation_scale=body_mutation_scale)
         world = world_type(seed=seed, controller=controller, population_size=population_size,
                       mutation_rate=mutation_rate, mutation_scale=mutation_scale, food_count=food_count,
                       fixed_speed=fixed_speed, food_distribution=food_distribution, **seasonal_options)
@@ -519,6 +534,11 @@ def run(
                     seasonal_note = (f"; {context['season']}, food {context['food_count']}, "
                                      f"eligible parents {context['eligible_parent_count']}"
                                      + ("; LINEAGE EXTINCT" if world.lineage_extinct else ""))
+                if predator_prey:
+                    context = world.ecosystem_history[stats.generation - 1]
+                    seasonal_note = (f"; prey alive {context['species']['prey']['alive_at_end']}/{world.prey_count}"
+                                     f"; predators alive {context['species']['predator']['alive_at_end']}/{world.predator_count}"
+                                     f"; captures {len(context['capture_events'])}")
                 print(
                     f"Generation {stats.generation}: mean fitness {stats.mean_fitness:.2f}; "
                     f"best {stats.best_fitness:.2f}; meals/creature {stats.mean_food_eaten:.2f}; "
@@ -545,7 +565,10 @@ def run(
             print(f"Report saved: {report}")
         if plot is not None:
             if world.generation_stats:
-                if traits:
+                if predator_prey:
+                    from plot_predator_prey import save_lineage_plot
+                    save_lineage_plot(simulation.report(), plot)
+                elif traits:
                     from plot_traits import save_lineage_plot
                     save_lineage_plot(simulation.report(), plot)
                 elif obstacles:
@@ -593,6 +616,11 @@ def main() -> int:
     parser.add_argument("--seasons", action="store_true", help="enable seasonal clustered food and maturity-gated reproduction")
     parser.add_argument("--obstacles", action="store_true", help="enable barriers, dangerous regions, and 16-input brains")
     parser.add_argument("--traits", action="store_true", help="evolve linked brains, cruise speed, radius, and sensory range")
+    parser.add_argument("--predator-prey", action="store_true", help="coevolve two separate neural/body gene pools in one arena")
+    parser.add_argument("--predators", type=positive_integer, default=20, help="predator births within the total --population; remaining births are prey")
+    parser.add_argument("--episode-seconds", type=mutation_scale, default=60., help="predator–prey evaluation window in fixed ticks")
+    parser.add_argument("--prey-sensors", choices=("intact", "hidden"), default="intact", help="mask only prey's opponent inputs")
+    parser.add_argument("--predator-sensors", choices=("intact", "hidden"), default="intact", help="mask only predators' opponent inputs")
     parser.add_argument("--body-mutation-rate", type=mutation_probability, default=.25, help="mutation probability per physical trait")
     parser.add_argument("--body-mutation-scale", type=mutation_scale, default=.08, help="Gaussian log-scale physical-trait mutation")
     parser.add_argument("--risk-sensors", choices=("intact", "hidden"), default="intact", help="control the eight added obstacle/hazard inputs")
@@ -614,10 +642,14 @@ def main() -> int:
         parser.error("--fixed-speed must be positive")
     if args.seasons and args.reproductive_age <= 0:
         parser.error("--reproductive-age must be positive")
-    if sum((args.seasons, args.obstacles, args.traits)) > 1:
-        parser.error("choose one of --seasons, --obstacles, or --traits")
-    if args.traits and args.fixed_speed is not None:
-        parser.error("--traits derives speed from inherited genes; omit --fixed-speed")
+    if sum((args.seasons, args.obstacles, args.traits, args.predator_prey)) > 1:
+        parser.error("choose one of --seasons, --obstacles, --traits, or --predator-prey")
+    if (args.traits or args.predator_prey) and args.fixed_speed is not None:
+        parser.error("body genes derive speed; omit --fixed-speed")
+    if args.predator_prey and (args.predators >= args.population or args.controller != "neural" or args.episode_seconds <= 0):
+        parser.error("predator–prey mode requires neural control, a positive episode, and fewer predators than total births")
+    if not args.predator_prey and (args.prey_sensors != "intact" or args.predator_sensors != "intact"):
+        parser.error("opponent sensor interventions require --predator-prey")
     if args.risk_sensors != "intact" and not args.obstacles:
         parser.error("--risk-sensors requires --obstacles")
     if args.headless and args.frames is None and (args.generations is None or args.manual):
@@ -649,6 +681,11 @@ def main() -> int:
         traits=args.traits,
         body_mutation_rate=args.body_mutation_rate,
         body_mutation_scale=args.body_mutation_scale,
+        predator_prey=args.predator_prey,
+        predators=args.predators,
+        episode_seconds=args.episode_seconds,
+        prey_sensors=args.prey_sensors,
+        predator_sensors=args.predator_sensors,
     )
 
 
