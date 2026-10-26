@@ -3,8 +3,8 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **24 — Competition and predator–prey evolution**. Two populations
-share an arena and evolve separate brains and bodies through hunting and survival.
+Current step: **25 — Cooperation and social behavior**. Creatures sense neighbors,
+signal, and share stored food energy under individual or group survival selection.
 Earlier experiments and saved results remain available.
 
 ## Run the world
@@ -40,6 +40,246 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Cooperation and social behavior
+
+Step 25 adds an **opt-in social world**: ten isolated groups of ten creatures,
+each in an equal 200 × 300 arena with 15 maintained food pellets. Creatures detect
+local neighbors and can evolve turning, signaling, and stored-energy sharing.
+All selection scores use actual survival time. There is **no direct reward for
+signals, donations, food eaten, or a prescribed cooperative action**.
+
+```sh
+python main.py --social --seed 2501 --generations 8 --speed 20
+python main.py --social --selection-level individual --seed 2501 --generations 8 --speed 20
+python main.py --headless --social --seed 2501 --generations 8 \
+  --report .cache/social-run.json --plot .cache/social-run.png
+```
+
+`--groups` divides `--population` into equal isolated groups of at least two;
+`--food-count` must divide equally among groups. `--selection-level` chooses
+`group` or `individual`. `--no-signaling` disables emission and its cost;
+`--no-sharing` blocks transfers. `--hide-signals` masks only received signal
+inputs while retaining emission and its cost formula. `--episode-seconds` sets
+the finite evaluation window in whole 1/60-second ticks. Social mode uses neural
+controllers, uniform food within each arena, and fixed reference bodies cruising
+at 60 pixels/second. It is separate from previous world modes and rejects
+`--fixed-speed`. Body traits are held fixed here to isolate social behavior.
+
+Team colors distinguish groups. A gold center marks plant-food access, blue halos
+show emitted signals, gold lines show recent transfers, and the selected actor's
+blue line identifies its nearest neighbor. **F** shows survival rankings; **T**
+shows survival and transfer history. Birth counts reset each generation; live
+counts and actual removals are recorded within each cohort. Censored survivors
+remain alive at the horizon, and archived dead genomes remain eligible to breed.
+This is a controlled generational experiment, without continuous births or
+permanent demographic-extinction claims.
+
+### Local senses and optional social actions
+
+New **17–8–3 networks have 171 parameters**. The eight existing inputs give local
+food geometry, hunger, and four clearances to the current group's walls. Nine
+additional inputs encode nearest-neighbor proximity/bearing/visibility/hunger,
+strongest received signal strength/bearing/visibility, local neighbor density,
+and the actor's own plant-food access flag. Neighbors and food in other groups
+are excluded. The three outputs choose turning, signal effort, and sharing
+effort; negative signal/share outputs mean zero effort. Bodies use the Step 23
+reference cost model: initial energy 90, capacity 100, and basal/movement/sensing
+powers 2/2.5/0.5 units per living second. These are stylized model assumptions.
+
+All decisions use a common snapshot of positions, energy deficits, and **previous
+tick** signals. A received signal is emission multiplied by
+`1 − distance / sensory_range`; the strongest positive local signal supplies its
+bearing. A signal has no prescribed meaning such as “food here” or “help me.”
+Current emission costs **0.2 × effort energy per living second**. Neighbor hunger
+is directly observable, so signaling could prove redundant.
+
+A positive sharing action offers at most **12 × effort energy units/second** to
+the nearest living group member within **48 pixels**. Donors retain a 10-unit
+reserve; only **80%** of donated energy reaches the recipient. Recipient capacity
+caps the offer, and competing gifts are scaled proportionally. All proposals use
+the same post-food, pre-transfer energy snapshot, preventing gifts from being
+forwarded repeatedly within a tick or favoring population iteration order.
+Actors dying during the tick cannot eat or receive a rescue afterward. Individual
+ledgers and cumulative directed transfer edges retain outgoing energy, incoming
+energy, food waste, and signal expenditure. The group's transfer loss is explicit:
+
+```text
+sum(shared energy received) = 0.8 × sum(shared energy given)
+final energy = initial + assimilated food + received gifts
+               − basal − movement − sensing − signaling − given gifts
+```
+
+Sharing transfers stored energy, including birth reserves as well as energy
+obtained from food. It does not create food, copy reserves, or mechanically
+choose the neediest recipient. The brain chooses whether to give; local geometry
+chooses the nearest potential receiver.
+
+### A controlled opportunity for cooperation
+
+Training uses **restricted plant-food access**: exactly five random members of
+each ten-member group can eat pellets. Roles are redrawn independently of genes
+each generation, matched between policies, and visible through the access input.
+The other five can benefit from neighbors sharing stored energy. This deliberate
+resource-access restriction creates a possible survival advantage for
+redistribution. It is an experimental constraint, not a claim that cooperation
+spontaneously appears in an unrestricted ecology. `--food-access open` allows
+every actor to eat; the same resource amounts and arenas remain available.
+A known-donor positive control verifies that sharing can extend a recipient's
+life and improve group survival without any action-score bonus.
+
+**Individual selection** chooses the top 20 actors by age; each supplies five
+mutated offspring, which mix among groups. **Group selection** chooses the two
+groups with the greatest mean age and reproduces each whole ten-member team five
+times, with member permutations. Both therefore select 20 parent genomes and
+produce 100 children. Neural mutation is probability 0.1 with Gaussian scale 0.1.
+Per-child mutation streams are matched exactly across policies and kept separate
+from parent assignment. Group selection changes **both survival incentives and
+preserved team assortment**; its effect cannot be attributed only to scoring.
+
+### Declared experiment
+
+Before changes, **342 tests passed**. `results/step25-baseline.json` records all
+286 preceding tracked file hashes; its companion transcript preserves that test
+run. Prior result artifacts remain unchanged. The production protocol and Python
+source hashes are recorded before trials.
+
+Eight independent seeds (2501–2508) each train both policies for eight evaluated
+cohorts, retaining the original founders and each policy's complete final birth
+population. The final evaluated cohort is frozen without an extra reproduction.
+Six cases are compared on a matched unseen layout in each of two environments
+(restricted and open access):
+
+| Frozen case | Population | Intervention |
+| --- | --- | --- |
+| Group | Group-selected final | Full social actions |
+| Individual | Individually selected final | Full social actions |
+| Group, sharing blocked | Group-selected final | No physical gifts |
+| Founder | Unselected original | Full social actions |
+| Founder, sharing blocked | Unselected original | No physical gifts |
+| Group, signals hidden | Group-selected final | Received signals masked; emission retained |
+
+Every case retains all individuals, including unsuccessful actors and censored
+survivors. Initial positions, food, headings, lifespans, and food-access roles
+match across all six cases within each environment. Both training policies also
+share starts and roles in every generation. New test layouts are excluded from
+all current training layouts. Replenished food subsequently follows behavior.
+The full study has **128 training + 96 test cohorts**, **22,400 individual
+evaluation episodes**, and 16 fresh test scenarios. The independent unit is the
+source seed, **n = 8**, rather than individuals or descendant groups.
+
+Six primary paired mean-age comparisons cover three questions in both access
+environments: group minus individual policy; final group full minus final group
+sharing blocked; and that final sharing benefit minus the corresponding founder
+sharing benefit. The last is an evolution-by-sharing interaction: a benefit
+already present in random founders is insufficient evidence that cooperation
+evolved. Exact two-sided sign tests use 1e−10 ties and Holm correction across all
+six. 20,000 paired bootstrap samples give pointwise 95% intervals. A directional
+verdict requires adjusted p < 0.05 and an interval excluding zero. “Evolved
+beneficial cooperation detected” requires **all three restricted-access
+comparisons** to be higher. Eight seeds and six tests give a strict criterion
+with limited power.
+
+Horizon survival, dependent-member survival, food, transfers, and signal measures
+are descriptive. The signal-mask contrast has a paired pointwise interval without
+a confirmatory p-value. Dependent-member means are missing under open access,
+where everyone can eat. There is no drift training control. Positive outcomes
+would not establish intent, reciprocity, language, a pure group-scoring effect,
+or a general evolutionary law.
+
+```sh
+python experiment_social.py --workers 8 --models-dir results/step25-models \
+  --output results/step25-cooperation.json --protocol-output results/step25-protocol.json
+python plot_social.py results/step25-cooperation.json \
+  --output results/step25-cooperation.png --outcomes-output results/step25-outcomes.png \
+  --world-output results/step25-world.png
+```
+
+Use new paths for reruns; existing reports and numeric archives are protected.
+The world image replays the first declared seed's held-out restricted group policy
+for a predetermined ten seconds and selects its first living actor if available.
+
+### Observed Step 25 results
+
+The complete declared study evaluated **224 cohorts and 22,400 individual
+episodes**. **Evolved beneficial cooperation was not established.** Group-selected
+creatures transferred more energy than individually selected creatures, but
+more sharing did not demonstrate a survival advantage under the declared tests.
+All six primary comparisons were inconclusive after Holm correction.
+
+The following are equal-seed means on unseen layouts. Energy received is actual
+post-loss transfer energy per newborn, rather than the number of donation
+requests or a social-action score.
+
+| Frozen condition | Restricted mean age (s) | Open mean age (s) | Restricted energy received | Open energy received |
+| --- | ---: | ---: | ---: | ---: |
+| Founder | 35.37 | 52.05 | 21.66 | 37.34 |
+| Individually selected | 37.79 | 55.67 | 8.72 | 15.10 |
+| Group selected | 36.32 | 53.51 | 19.05 | 32.55 |
+| Group selected, sharing blocked | 37.56 | 56.33 | 0.00 | 0.00 |
+| Founder, sharing blocked | 37.43 | 56.80 | 0.00 | 0.00 |
+| Group selected, signals hidden | 36.37 | 53.40 | 19.10 | 32.56 |
+
+| Primary mean-age contrast | Difference (s) | Pointwise 95% interval | Holm p | Verdict |
+| --- | ---: | --- | ---: | --- |
+| Restricted: group − individual | −1.48 | [−2.26, −0.56] | 0.4219 | Inconclusive |
+| Restricted: final sharing benefit | −1.24 | [−1.96, −0.48] | 0.4219 | Inconclusive |
+| Restricted: final benefit − founder benefit | +0.82 | [−0.09, 1.87] | 1.0000 | Inconclusive |
+| Open: group − individual | −2.15 | [−3.49, −0.52] | 0.4219 | Inconclusive |
+| Open: final sharing benefit | −2.82 | [−3.96, −1.56] | 0.4219 | Inconclusive |
+| Open: final benefit − founder benefit | +1.93 | [−0.10, 4.10] | 1.0000 | Inconclusive |
+
+For the four negative contrasts, pointwise bootstrap intervals exclude zero, but
+the exact paired sign tests had seven losses and one win (unadjusted p = 0.0703),
+and Holm-adjusted p = 0.4219. The declared decision requires **both** an adjusted
+sign-test threshold and an interval excluding zero. These results do not meet
+that criterion for a confirmed benefit or penalty. The founder-adjusted sharing
+gains also have intervals containing zero. This is not evidence that cooperation
+is impossible; it did not emerge as a demonstrated advantage in this protocol.
+
+During training, both policies began at mean age 36.13 seconds and 23.07 units of
+received energy per newborn. Final individual-policy values were 37.11 seconds
+and 8.52 units; group-policy values were 36.37 seconds and 18.39 units. Those
+training trends are descriptive. On restricted held-out layouts, the group policy
+still delivered about twice as much energy per newborn as the individual policy
+(19.05 versus 8.72), while its observed mean age remained lower.
+
+For restricted group-selected actors, sharing-dependent members lived an average
+18.22 seconds with sharing versus 17.87 when sharing was blocked. Food-access
+members' corresponding means, derived from the equal role counts, were 54.42 and
+57.24 seconds. This describes a small recipient-age gain alongside a larger
+food-access-member loss; neither role-specific contrast was a confirmatory test.
+The same group policy's observed horizon survival was 39.1% with sharing and
+43.3% with sharing blocked. Under open access those values were 72.4% and 84.4%.
+Thus transfer activity alone is insufficient evidence of useful redistribution.
+
+Received signal information also showed no clear positive interval: intact minus
+signals-hidden mean age was −0.05 seconds in restricted access (interval −1.09
+to 1.08) and +0.11 seconds in open access (−1.30 to 1.71). These are descriptive
+pointwise intervals without confirmatory signaling tests. Neighbor hunger was
+already directly visible; the study does not establish learned message meaning
+or a useful signaling contribution.
+
+![Social survival and sharing comparisons](results/step25-cooperation.png)
+
+[Frozen intervention outcomes](results/step25-outcomes.png), the
+[ten-second arena replay](results/step25-world.png), and
+[complete observations](results/step25-cooperation.json) retain the full result.
+Eight archives in `results/step25-models/` preserve all founder and final
+individual/group brains, including failed and censored actors.
+
+The audit independently reconstructs **112 reproduction events**, parent choices,
+team permutations, balanced offspring counts, and every neural mutation. Per-child
+mutation draws match exactly between policies. It reconstructs all 64 paired
+training scenarios and 16 fresh test scenarios, verifies every food/signal/
+transfer energy ledger and population loss, and recomputes all six exact tests,
+bootstrap intervals, and Holm adjustments. A complete held-out restricted/group
+replay for the first declared seed matches its stored report bit-for-bit.
+All production Python source hashes match the pre-trial declaration. All **283
+preexisting files** outside the intended README/main/simulation changes remain
+byte-identical, including **219 earlier result artifacts**. All **363 tests
+pass**, including the known-donor survival positive control; the complete
+transcript is saved in `results/step25-tests.txt`.
 
 ## Competition and predator–prey coevolution
 
@@ -2818,7 +3058,12 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **342 checks**, including simultaneous opponent snapshots, reflected swept
+Verified: **363 checks**, including local social snapshots, signaling costs, lossy
+capacity-limited transfers, no same-tick forwarding, access restrictions, whole-team
+inheritance, matched mutations, founder-adjusted sharing inference, and exports.
+The 342-test baseline was saved before Step 25.
+
+The checks also cover simultaneous opponent snapshots, reflected swept
 captures, unique ownership, censored survivors, separate gene pools, energy
 accounting, historical matrices, paired inference, sensor masking, and exports.
 The 321-test baseline was saved before Step 24.
@@ -2921,6 +3166,10 @@ included.
 ## Project structure
 
 ```text
+social.py             Isolated groups, neighbor sensing, costly signals, and conservative sharing
+experiment_social.py  Paired individual/group selection and founder-adjusted sharing tests
+plot_social.py        Survival/transfer contrasts, frozen interventions, and arena replay
+test_social.py        Social locality, conservation, inheritance, positive controls, and inference
 predator_prey.py      Shared arena, local opponent senses, captures, and two linked gene pools
 experiment_predator_prey.py  Frozen historical opponents, sensor masks, and reciprocal tests
 plot_predator_prey.py  Opponent matrices, population histories, role metrics, and world replay
@@ -3017,6 +3266,16 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step25-baseline.json  Hashes of all 286 pre-Step-25 tracked files
+results/step25-baseline-tests.txt  Passing 342-test baseline transcript
+results/step25-protocol.json  Pre-trial social mechanics, access, selection, budgets, and inference
+results/step25-cooperation.json  Paired training and frozen social interventions
+results/step25-cooperation.png  Survival, sharing, signals, and six primary contrasts
+results/step25-outcomes.png  Frozen policy survival and actual transfers in both environments
+results/step25-world.png  Predetermined ten-second held-out group-policy replay
+results/step25-models/  Eight numeric founder and individual/group final brain archives
+results/step25-audit.json  Team inheritance, mutation replay, energy/transfer, and preservation checks
+results/step25-tests.txt  Passing 363-test verification transcript
 results/step24-baseline.json  Hashes of all 256 pre-Step-24 tracked files
 results/step24-baseline-tests.txt  Passing 321-test baseline transcript
 results/step24-protocol.json  Pre-trial senses, captures, energetic costs, budgets, and inference

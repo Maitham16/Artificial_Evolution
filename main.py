@@ -252,6 +252,10 @@ def draw_interface(
     screen: pygame.Surface, world: World, fonts: dict[str, pygame.font.Font],
     simulation: EvolutionSimulation | None = None,
 ) -> None:
+    if hasattr(world, "social_history"):
+        from social import draw_social_interface
+        draw_social_interface(screen, world, fonts, simulation)
+        return
     if hasattr(world, "ecosystem_history"):
         from predator_prey import draw_ecosystem_interface
         draw_ecosystem_interface(screen, world, fonts, simulation)
@@ -454,10 +458,17 @@ def run(
     episode_seconds: float = 60.,
     prey_sensors: str = "intact",
     predator_sensors: str = "intact",
+    social: bool = False,
+    groups: int = 10,
+    selection_level: str = "group",
+    food_access: str = "restricted",
+    signaling: bool = True,
+    sharing: bool = True,
+    signals_hidden: bool = False,
 ) -> int:
-    if sum((obstacles, seasons, traits, predator_prey)) > 1:
-        raise ValueError("Choose one of seasonal, obstacle, body-trait, or predator–prey mode.")
-    if (traits or predator_prey) and fixed_speed is not None:
+    if sum((obstacles, seasons, traits, predator_prey, social)) > 1:
+        raise ValueError("Choose one experimental world mode.")
+    if (traits or predator_prey or social) and fixed_speed is not None:
         raise ValueError("Body-trait mode derives speed from inherited genes, not --fixed-speed.")
     if headless and frames is None and (generations is None or manual):
         raise ValueError("Headless mode needs frames or an automatic generation limit.")
@@ -489,6 +500,11 @@ def run(
             seasonal_options = dict(predators=predators, episode_seconds=episode_seconds,
                 prey_sensors=prey_sensors, predator_sensors=predator_sensors,
                 body_mutation_rate=body_mutation_rate, body_mutation_scale=body_mutation_scale)
+        if social:
+            from social import SocialWorld
+            world_type = SocialWorld
+            seasonal_options = dict(groups=groups, selection_level=selection_level, access=food_access,
+                signaling=signaling, sharing=sharing, signals_hidden=signals_hidden, episode_seconds=episode_seconds)
         world = world_type(seed=seed, controller=controller, population_size=population_size,
                       mutation_rate=mutation_rate, mutation_scale=mutation_scale, food_count=food_count,
                       fixed_speed=fixed_speed, food_distribution=food_distribution, **seasonal_options)
@@ -497,7 +513,8 @@ def run(
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption(f"Artificial Evolution | Fixed-speed study | {controller.title()}")
+        pygame.display.set_caption("Artificial Evolution | Social behavior" if social else
+                                   f"Artificial Evolution | Fixed-speed study | {controller.title()}")
         fonts = {
             "title": pygame.font.Font(None, 38),
             "small": pygame.font.Font(None, 20),
@@ -539,6 +556,10 @@ def run(
                     seasonal_note = (f"; prey alive {context['species']['prey']['alive_at_end']}/{world.prey_count}"
                                      f"; predators alive {context['species']['predator']['alive_at_end']}/{world.predator_count}"
                                      f"; captures {len(context['capture_events'])}")
+                if social:
+                    context = world.social_history[stats.generation - 1]
+                    seasonal_note = (f"; alive {context['survival_rate']:.1%}; shared {context['shared_in']:.1f}"
+                                     f"; {world.selection_level} selection")
                 print(
                     f"Generation {stats.generation}: mean fitness {stats.mean_fitness:.2f}; "
                     f"best {stats.best_fitness:.2f}; meals/creature {stats.mean_food_eaten:.2f}; "
@@ -565,7 +586,10 @@ def run(
             print(f"Report saved: {report}")
         if plot is not None:
             if world.generation_stats:
-                if predator_prey:
+                if social:
+                    from plot_social import save_lineage_plot
+                    save_lineage_plot(simulation.report(), plot)
+                elif predator_prey:
                     from plot_predator_prey import save_lineage_plot
                     save_lineage_plot(simulation.report(), plot)
                 elif traits:
@@ -617,8 +641,15 @@ def main() -> int:
     parser.add_argument("--obstacles", action="store_true", help="enable barriers, dangerous regions, and 16-input brains")
     parser.add_argument("--traits", action="store_true", help="evolve linked brains, cruise speed, radius, and sensory range")
     parser.add_argument("--predator-prey", action="store_true", help="coevolve two separate neural/body gene pools in one arena")
+    parser.add_argument("--social", action="store_true", help="local neighbor sensing, optional signaling/sharing, and survival selection")
+    parser.add_argument("--groups", type=positive_integer, default=10, help="equal isolated birth groups in social mode")
+    parser.add_argument("--selection-level", choices=("individual", "group"), default="group", help="social survival selection and offspring assortment")
+    parser.add_argument("--food-access", choices=("restricted", "open"), default="restricted", help="half or all group members may eat plant food")
+    parser.add_argument("--no-signaling", action="store_true", help="disable social signal emission and its energy cost")
+    parser.add_argument("--no-sharing", action="store_true", help="block social energy transfers")
+    parser.add_argument("--hide-signals", action="store_true", help="mask received signals while retaining emission and its cost")
     parser.add_argument("--predators", type=positive_integer, default=20, help="predator births within the total --population; remaining births are prey")
-    parser.add_argument("--episode-seconds", type=mutation_scale, default=60., help="predator–prey evaluation window in fixed ticks")
+    parser.add_argument("--episode-seconds", type=mutation_scale, default=60., help="predator–prey/social evaluation window in fixed ticks")
     parser.add_argument("--prey-sensors", choices=("intact", "hidden"), default="intact", help="mask only prey's opponent inputs")
     parser.add_argument("--predator-sensors", choices=("intact", "hidden"), default="intact", help="mask only predators' opponent inputs")
     parser.add_argument("--body-mutation-rate", type=mutation_probability, default=.25, help="mutation probability per physical trait")
@@ -642,14 +673,19 @@ def main() -> int:
         parser.error("--fixed-speed must be positive")
     if args.seasons and args.reproductive_age <= 0:
         parser.error("--reproductive-age must be positive")
-    if sum((args.seasons, args.obstacles, args.traits, args.predator_prey)) > 1:
-        parser.error("choose one of --seasons, --obstacles, --traits, or --predator-prey")
-    if (args.traits or args.predator_prey) and args.fixed_speed is not None:
+    if sum((args.seasons, args.obstacles, args.traits, args.predator_prey, args.social)) > 1:
+        parser.error("choose one experimental world mode")
+    if (args.traits or args.predator_prey or args.social) and args.fixed_speed is not None:
         parser.error("body genes derive speed; omit --fixed-speed")
     if args.predator_prey and (args.predators >= args.population or args.controller != "neural" or args.episode_seconds <= 0):
         parser.error("predator–prey mode requires neural control, a positive episode, and fewer predators than total births")
     if not args.predator_prey and (args.prey_sensors != "intact" or args.predator_sensors != "intact"):
         parser.error("opponent sensor interventions require --predator-prey")
+    if args.social and (args.controller != "neural" or args.food_distribution != "uniform" or args.episode_seconds <= 0
+                       or args.groups < 2 or args.population % args.groups or args.population // args.groups < 2 or args.food_count % args.groups):
+        parser.error("social mode needs neural control, uniform food, a positive window, equal groups of at least two, and divisible food")
+    if not args.social and (args.no_signaling or args.no_sharing or args.hide_signals):
+        parser.error("social action switches require --social")
     if args.risk_sensors != "intact" and not args.obstacles:
         parser.error("--risk-sensors requires --obstacles")
     if args.headless and args.frames is None and (args.generations is None or args.manual):
@@ -686,6 +722,13 @@ def main() -> int:
         episode_seconds=args.episode_seconds,
         prey_sensors=args.prey_sensors,
         predator_sensors=args.predator_sensors,
+        social=args.social,
+        groups=args.groups,
+        selection_level=args.selection_level,
+        food_access=args.food_access,
+        signaling=not args.no_signaling,
+        sharing=not args.no_sharing,
+        signals_hidden=args.hide_signals,
     )
 
 
