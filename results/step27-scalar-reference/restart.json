@@ -1,0 +1,6 @@
+{
+  "reason": "Runtime-only restart after scalar collision checks proved costly. No completed seed archives or numerical outcome estimates were available or inspected. All models, seeds, repeats, conditions, statistical families, and parameters are unchanged. The new evaluator uses a conservative vector broad phase followed by the original scalar contact/ownership checks; tests and canonical whole-cohort replays verify identical semantics.",
+  "completed_seed_archives": 0,
+  "initial_tests_passed": 397,
+  "initial_checkpoint_status": "running"
+}

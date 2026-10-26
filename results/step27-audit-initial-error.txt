@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Users/maith/Desktop/Artificial_Evolution/audit_evaluation.py", line 172, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/maith/Desktop/Artificial_Evolution/audit_evaluation.py", line 165, in main
+    result = audit(args.report, args.protocol, args.baseline, args.tests, args.output,
+                   [Path(f"results/step27-{name}.png") for name in ("evaluation", "effects", "mechanisms")])
+  File "/Users/maith/Desktop/Artificial_Evolution/audit_evaluation.py", line 90, in audit
+    assert record["initial_conditions"] == start
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

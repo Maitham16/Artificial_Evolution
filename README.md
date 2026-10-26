@@ -3,8 +3,9 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **26 — Continuous evolution and artificial ecosystems**. Births,
-deaths, and mutations occur in one persistent habitat with recorded ancestry.
+Current step: **27 — Comprehensive experimental evaluation**. Random, greedy,
+fitness-selected, and neutral-evolution controllers face matched unseen worlds,
+with seed-level confidence intervals, tests, and failure reporting.
 Earlier experiments and saved results remain available.
 
 ## Run the world
@@ -40,6 +41,307 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Comprehensive experimental evaluation
+
+Step 27 reuses **all 16 independent paired training populations from Step 18**,
+then evaluates them in fresh matched test environments. This is a new evaluation
+of existing lineages, rather than an independent replication of their training.
+Earlier source, model, and result files remain unchanged.
+
+### Controllers and matched conditions
+
+| Controller | Policy / inheritance |
+| --- | --- |
+| Random | Random turn rates held for 0.75–2 seconds; ignores food. |
+| Greedy | Turn toward the nearest food within 160 pixels, using the same turn limit; random fallback when none is visible. |
+| Evolved | Neural weights inherited through fitness-selected parents. |
+| Neutral evolution | Neural weights inherited through uniformly random parents, independent of fitness, with matched mutation. |
+| Founder diagnostic | Original unselected brains from the same source seed. |
+| Food-input diagnostics | Frozen evolved and neutral brains with only the three food inputs set to zero. |
+
+The archived evolved and neutral arms share original brains, physical starts in
+every training generation, mutation masks and Gaussian perturbations, shuffled
+birth slots, and the same **10 scored generations / nine inheritance steps**.
+Both use a bottleneck of 20 parents with five offspring each. Selection uses
+fitness; neutral reproduction samples from all 100 completed lifetimes, including
+early deaths. This counterfactual parent eligibility prevents survival selection
+from entering the neutral baseline. It is distinct from random movement and
+fresh random-brain replacement.
+
+All 100 brains from the final birth cohort are frozen for testing. There is no
+test-based champion selection or retraining. Random/greedy policies carry unused
+founder arrays only for consistent bookkeeping; their movement does not use
+those arrays, and no genetic-diversity score is attributed to these policies.
+
+Every controller moves at **60 pixels/second**, pays **5 energy/second**, starts
+with 100 energy, has capacity 100, senses food within 160 pixels, and turns at
+most 90 degrees/second. Body positions, headings, sizes, individual lifespans,
+and food locations match at the start of each test. Food provides 20 energy and
+is immediately replenished under the existing World rule. Later placements may
+diverge as different paths and meals change rejection sampling around creatures;
+initial conditions and replenishment rules, rather than identical future food
+coordinates, are controlled.
+
+### Declared test environments and budgets
+
+| Environment | Arena | Food stock | Purpose |
+| --- | --- | ---: | --- |
+| Uniform | 1000 × 600 | 150 uniform | Unseen layouts in the training distribution. |
+| Clustered | 1000 × 600 | 150 clustered | Shift in food distribution. |
+| Sparse | 1000 × 600 | 50 uniform | Resource limitation. |
+| Wide clustered | 1200 × 500 | 150 clustered | Joint geometry and food-distribution shift. |
+| Barren | 1000 × 600 | 0 | Resource-impossibility control. |
+
+Each source seed (1801–1816) has **two new test worlds per environment**. All
+four baselines and the founder diagnostic run in every world. The two hidden-food
+diagnostics also run in each food-containing world; barren worlds already have
+zero food signals, so redundant interventions are omitted. This produces **160
+matched starts, 1,056 test cohorts, and 105,600 individual lifetimes**. Test seed
+namespaces are separate from training and all previously saved layouts. All
+scheduled trials, ties, early starvation, and resource failures are retained.
+
+Before implementation, all **382 tests passed**. The baseline manifest hashes
+all **384 pre-Step-27 tracked files**. Before production testing, the protocol
+records the source-study hash, each archived model hash and genome digest,
+all Python source hashes, layout exclusions, analysis families, and failure rules.
+
+The initial scalar-only evaluation was stopped for runtime **before any complete
+seed archive or numerical outcome estimate was saved or inspected**. Intermediate
+cohort values existed only inside unfinished workers. Its
+sources, protocol, checkpoint, 397-test transcript, progress log, and equivalence
+probe are preserved in `results/step27-scalar-reference/`. The scientific
+settings are unchanged. The replacement evaluator uses a conservative vector
+broad phase, followed by the original scalar contact/ownership checks, sequential
+capacity checks, and unchanged replenishment draws. Added tests compare complete
+states and lifetimes with World; the final audit also replays complete production
+cohorts through the original scalar implementation. The new protocol hashes the
+preserved reference records as well as the current source.
+
+### Inference, adaptation, and diversity
+
+The independent unit is the **training seed pair**. Test repeats are averaged
+within each seed/environment/controller before analysis; individual creatures
+and repeated environments do not inflate the sample size. Metrics include
+fitness (`survival seconds + 10 × meals`), mean meals, survival to 60 seconds,
+mean lifetime, starvation fraction, and fraction never eating. Fitness and its
+components are dependent endpoints, rather than independent corroborations.
+
+There are **45 primary two-sided exact paired sign tests**: evolved versus
+random/greedy/neutral, across three metrics and five environments. Holm correction
+covers the entire family of 45. Absolute differences at most `1e-10` count as sign
+ties. The sign test addresses equal win/loss probability among non-ties, while
+mean effects and **pointwise 95% percentile bootstrap intervals** address mean
+differences. Bootstrap sampling resamples independent seeds/pairs 20,000 times
+with fixed namespace-derived seeds. An advantage/disadvantage requires adjusted
+`p < 0.05` and a mean-effect interval excluding zero in the same direction.
+Inconclusive results do not demonstrate equivalence. Intervals are approximate
+and do not provide simultaneous familywise coverage.
+
+A separate, explicitly **exploratory family of 21 tests** receives its own Holm
+correction: evolved/neutral fitness gain over founders in five environments (10),
+evolved fitness loss after hiding food and its difference from neutral sensor
+loss in four food environments (8), and three final genetic/diversity comparisons
+(3). Other diagnostic meal/survival and transfer estimates are descriptive.
+
+Adaptation means improvement over the original brains on matched unseen worlds,
+alongside the archived training trajectories. No controller learns within a
+test or retrains after an environmental shift. Hiding food tests dependence on
+those inputs, including distribution-shift effects; it cannot establish a
+specific learned algorithm. Comparing sensor losses between evolved and neutral
+brains helps separate evolved dependence from generic neural sensitivity.
+
+Every training genome is reconstructed from the recorded founders, parents,
+and mutation draws. Diversity includes RMS unordered-pair distance across all
+90 neural parameters and across the **81 parameters affecting steering** (excluding
+the unused throttle column/bias), plus effective genealogical founder families
+and unique genotype hashes. Weights/biases are scaled by their initial standard
+deviations; features are divided by the square root of the parameter count.
+Genetic distance depends on coordinates and can include functionally equivalent
+networks; it is not a measure of intelligence or proof of speciation.
+
+### Reproduce and inspect the evaluation
+
+```sh
+python experiment_evaluation.py --workers 8 --repeats 2 \
+  --runs-dir results/step27-runs --output results/step27-evaluation.json \
+  --protocol-output results/step27-protocol.json
+python plot_evaluation.py results/step27-evaluation.json \
+  --output results/step27-evaluation.png --effects-output results/step27-effects.png \
+  --mechanisms-output results/step27-mechanisms.png
+python audit_evaluation.py
+```
+
+Use **new output, protocol, raw-record, and audit paths** for reruns; existing
+records are protected. The Step 18 model directory and source publication are
+read-only inputs; original training can be rebuilt using that step's documented
+workflow. Compact study records link to 16 lossless compressed archives containing
+every individual test lifetime. Reports retain model/food/body hashes, per-seed
+effects, corrected p-values, confidence intervals, and **every nonpositive
+evolved-minus-baseline seed fitness case**, rather than a chosen example.
+
+This evaluation addresses the fixed-speed generational food-seeking model. It
+does not pool scores from seasons, obstacles, body evolution, predator–prey,
+social behavior, or continuous ecosystems, whose rules and estimands differ.
+All generational test cohorts eventually die by the lifespan limit; their
+extinction is distinct from failure of continuous population renewal.
+
+### Observed Step 27 results
+
+All **16 seed groups, 160 matched test worlds, 1,056 cohorts, and 105,600
+individual lifetimes** completed. The findings support useful food-dependent
+adaptation under this training budget, with substantial limits. Evolution
+outperforms random movement on fitness and meals in all four food-containing
+environments; greedy steering outperforms evolution. Fitness advantages over
+neutral inheritance meet the primary decision rule in uniform and sparse food,
+while the clustered-environment fitness contrasts remain inconclusive.
+
+Mean test fitness with **pointwise 95% bootstrap intervals**:
+
+| Environment | Random | Greedy | Evolved | Neutral evolution |
+| --- | ---: | ---: | ---: | ---: |
+| Uniform | 319.71 [314.58, 324.84] | 648.94 [642.83, 654.47] | 347.44 [336.84, 358.63] | 275.08 [256.95, 291.37] |
+| Clustered | 200.97 [193.31, 208.25] | 1158.70 [1135.14, 1181.67] | 329.35 [293.02, 368.30] | 220.72 [190.07, 252.92] |
+| Sparse | 63.23 [61.96, 64.54] | 217.22 [211.87, 222.35] | 75.91 [71.10, 80.91] | 60.59 [57.98, 63.57] |
+| Wide clustered | 204.40 [198.10, 210.63] | 1162.59 [1144.79, 1181.08] | 342.82 [297.83, 393.76] | 216.83 [184.93, 251.21] |
+| Barren | 20.00 [20.00, 20.00] | 20.00 [20.00, 20.00] | 20.00 [20.00, 20.00] | 20.00 [20.00, 20.00] |
+
+All primary fitness contrasts are shown below. Differences are **evolved minus
+baseline**, intervals are pointwise paired 95% bootstrap intervals, and p-values
+are corrected over **all 45 primary tests**, including meals and survival.
+W/L/T counts are independent seed-mean wins/losses/ties, after averaging repeats.
+
+| Environment | Baseline | Fitness difference [95% CI] | Holm p | W/L/T | Decision |
+| --- | --- | ---: | ---: | ---: | --- |
+| Uniform | Random | +27.72 [+16.88, +38.20] | 0.011414 | 15/1/0 | higher |
+| Uniform | Greedy | -301.50 [-314.77, -287.88] | 0.0013733 | 0/16/0 | lower |
+| Uniform | Neutral | +72.36 [+53.22, +93.82] | 0.0013733 | 16/0/0 | higher |
+| Clustered | Random | +128.39 [+88.82, +171.09] | 0.0013733 | 16/0/0 | higher |
+| Clustered | Greedy | -829.35 [-870.00, -784.82] | 0.0013733 | 0/16/0 | lower |
+| Clustered | Neutral | +108.63 [+59.73, +158.97] | 0.29779 | 13/3/0 | inconclusive |
+| Sparse | Random | +12.68 [+7.97, +17.21] | 0.011414 | 15/1/0 | higher |
+| Sparse | Greedy | -141.30 [-146.94, -135.57] | 0.0013733 | 0/16/0 | lower |
+| Sparse | Neutral | +15.32 [+11.15, +20.42] | 0.0013733 | 16/0/0 | higher |
+| Wide clustered | Random | +138.43 [+92.30, +188.09] | 0.0013733 | 16/0/0 | higher |
+| Wide clustered | Greedy | -819.77 [-870.82, -761.24] | 0.0013733 | 0/16/0 | lower |
+| Wide clustered | Neutral | +125.99 [+71.06, +183.99] | 0.29779 | 13/3/0 | inconclusive |
+| Barren | Random | +0.00 [+0.00, +0.00] | 1 | 0/0/16 | inconclusive |
+| Barren | Greedy | +0.00 [+0.00, +0.00] | 1 | 0/0/16 | inconclusive |
+| Barren | Neutral | +0.00 [+0.00, +0.00] | 1 | 0/0/16 | inconclusive |
+
+**Meals and survival give a more specific result.** Evolved meal consumption
+exceeds random in all four food environments and exceeds neutral in uniform and
+sparse food under the primary rule. Survival to 60 seconds exceeds random in
+clustered and wide-clustered food, and exceeds neutral in uniform and clustered
+food. Other positive survival means remain inconclusive after correction.
+Greedy exceeds evolved fitness, meals, and survival in every food-containing
+environment, in all 16 seed groups for each endpoint.
+
+| Environment | Random meals / survival | Greedy meals / survival | Evolved meals / survival | Neutral meals / survival |
+| --- | ---: | ---: | ---: | ---: |
+| Uniform | 24.113 / 82.03% | 56.050 / 97.38% | 26.671 / 84.78% | 20.393 / 68.75% |
+| Clustered | 15.737 / 25.84% | 107.153 / 96.69% | 27.321 / 46.47% | 17.666 / 28.53% |
+| Sparse | 3.192 / 2.47% | 15.852 / 46.28% | 4.135 / 5.38% | 3.004 / 2.06% |
+| Wide clustered | 16.145 / 25.41% | 107.617 / 94.88% | 28.673 / 46.78% | 17.422 / 26.00% |
+| Barren | 0.000 / 0.00% | 0.000 / 0.00% | 0.000 / 0.00% | 0.000 / 0.00% |
+
+These last cells are means; full meal/survival intervals, all 45 corrected tests,
+and all seed values are retained in the study JSON and figures. For example,
+uniform-food survival improves by **2.75 percentage points** versus random
+(**95% CI 0.59–4.81 pp**), but only 12/16 seed directions are positive and
+Holm **p = 0.768**, so the declared decision is inconclusive. Clustered fitness
+versus neutral has a positive mean interval but only 13 wins / three losses and
+Holm **p = 0.298**. This difference between mean estimation and directional
+evidence is retained rather than changing the predeclared test after results.
+
+### What changed, and which inputs matter?
+
+Fitness-selected populations exceed their original founder brains in every
+food-containing environment under the **exploratory** decision rule (Holm
+p ≤ 0.00882). Neutral-versus-founder fitness comparisons are inconclusive in
+all five environments; inherited mutation and drift alone do not show the same
+consistent improvement in this sample.
+
+Hiding the three food inputs lowers evolved fitness in every food-containing
+environment. The evolved sensor loss also exceeds neutral sensor loss in all
+four environments under the separate exploratory correction:
+
+| Environment | Evolved intact − hidden fitness [95% CI] | Holm p | Evolved loss − neutral loss [95% CI] | Holm p |
+| --- | ---: | ---: | ---: | ---: |
+| Uniform | +86.06 [+51.53, +126.59] | 0.00064087 | +88.01 [+46.73, +135.40] | 0.00064087 |
+| Clustered | +117.48 [+78.15, +158.27] | 0.0088196 | +115.05 [+72.96, +162.98] | 0.0088196 |
+| Sparse | +18.77 [+12.01, +26.43] | 0.0088196 | +18.62 [+11.96, +26.25] | 0.0088196 |
+| Wide clustered | +134.56 [+84.61, +192.45] | 0.0088196 | +126.55 [+68.17, +194.57] | 0.041809 |
+
+This supports **selection producing useful food-dependent control**, alongside
+any general movement improvements. It does not identify a specific targeting
+algorithm or isolate distance from direction: all three food signals are hidden
+together, and the intervention can create unfamiliar neural input states. The
+large gap to the explicitly food-directed greedy policy remains a clear limit.
+
+Final birth-cohort genetic diversity (all 100 genomes, including those whose
+test bodies later die) is:
+
+| Metric | Selection mean [95% CI] | Neutral mean [95% CI] | Selection − neutral [95% CI] | Exploratory Holm p |
+| --- | ---: | ---: | ---: | ---: |
+| full rms | 1.056 [0.929, 1.173] | 1.268 [1.205, 1.324] | -0.211 [-0.358, -0.079] | 0.19144 |
+| steering rms | 1.054 [0.927, 1.169] | 1.266 [1.200, 1.325] | -0.212 [-0.352, -0.087] | 0.19144 |
+| effective founder families | 2.494 [2.002, 2.991] | 3.577 [3.123, 4.056] | -1.083 [-1.872, -0.299] | 0.53769 |
+
+Effective founder-family counts and genetic distances decline in the archived
+curves. Selection has lower final mean diversity than neutral inheritance, but
+**all three between-arm diversity decisions are inconclusive** under the
+21-test exploratory family. A negative pointwise mean interval alone does not
+override the corrected directional test. Diversity is neither fitness nor a
+measure of functional intelligence.
+
+### Failure cases and limits of the result
+
+- **Greedy wins:** every evolved seed has lower fitness than greedy in each
+  food-containing environment. Evolution has not matched this simple hand-coded
+  controller within nine inherited transitions.
+- **Individual seed failures:** seed **1809** loses to random on uniform-food
+  fitness, and seed **1814** loses on sparse-food fitness. Seeds **1807, 1808,
+  and 1815** lose to neutral fitness in both clustered settings. Every case and
+  its signed difference remains in `nonpositive_fitness_seed_cases`.
+- **Scarcity remains severe:** evolved 60-second survival is only **5.38%** in
+  sparse food and **98.56%** eventually die from starvation. Greedy survival is
+  **46.28%**, with **66.56%** starvation. Higher mean fitness is not a solution
+  to the resource-limited environment.
+- **No food means no rescue:** every barren-condition individual starves at
+  approximately **20 seconds**, eats nothing, and fails the 60-second survival
+  checkpoint. All baseline fitness differences are exactly zero in the saved
+  cohort scores; the physical constraint dominates policy.
+- **Reward definition matters:** fitness rewards meal count as well as lifetime.
+  A pellet counts even when capacity clips some of its energy, so high fitness
+  is not a direct measure of energy efficiency, optimal foraging, or general
+  intelligence. These components are dependent endpoints.
+
+The [performance figure](results/step27-evaluation.png),
+[all-primary-effects figure](results/step27-effects.png), and
+[mechanism/diversity figure](results/step27-mechanisms.png) accompany the
+[complete study](results/step27-evaluation.json) and
+[pre-test declaration](results/step27-protocol.json). The 16 compressed raw
+archives retain every individual lifetime. These conclusions apply to this
+fixed training budget and food model; the reused lineages do not constitute
+new independent training replications.
+
+All **401 tests passed**. The [completed audit](results/step27-audit.json)
+reconstructs all 160 starts, recomputes all 105,600 individual test lifetimes,
+replays 288 archived inheritance transitions, independently checks all 45 primary
+and 21 exploratory sign/Holm calculations, and reproduces **12 complete cohorts
+bit for bit through the original scalar World**, including every baseline,
+founders, food interventions, and barren controls. All **383 earlier files other
+than README**, including **309 previous result artifacts**, retain baseline hashes.
+
+The first audit helper reconstructed speed using integer `60` instead of the
+experiment's declared float `60.0`. These values give equal physics but different
+JSON layout hashes. The helper now imports `FIXED_SPEED`; its
+[declared version](results/step27-audit-declared.py) and
+[initial error log](results/step27-audit-initial-error.txt) are preserved. The
+final audit records both helper hashes and verifies every declared source version.
+Experiment, plotting, test, model, statistical-analysis, and result data sources
+were unchanged by this audit-only repair.
 
 ## Continuous evolution and artificial ecosystems
 
@@ -3273,7 +3575,13 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **382 checks**, including funded continuous births, cooldown/reserves,
+Verified: **401 checks**, including complete matched multi-baseline evaluation,
+seed-level inference, complete failure cases, source/raw corruption detection,
+mutation/genetic-diversity replay, serial/parallel identity, scalar/vector
+collision equivalence, and scientific plots.
+The 382-test baseline was saved before Step 27.
+
+The checks also cover funded continuous births, cooldown/reserves,
 capacity and placement failures, absorbing extinction, finite regrowth, ancestry,
 mutation controls, lifetime archives, population accounting, and exports.
 The 363-test baseline was saved before Step 26.
@@ -3386,6 +3694,11 @@ included.
 ## Project structure
 
 ```text
+experiment_evaluation.py  Matched random/greedy/evolved/neutral tests, diagnostics, and seed-level inference
+evaluation_world.py   Conservative vector broad phase with original scalar contact and ownership rules
+plot_evaluation.py    Performance intervals, 45 paired effects, and mechanistic/genetic diagnostics
+audit_evaluation.py   Reproducible provenance, lifetime, inference, genetic, and deterministic replay audit
+test_evaluation.py    Baseline fairness, archive integrity, inference, and serial/parallel reproducibility
 ecosystem.py          Paid continuous births, ancestry, finite regrowth, and genetic diversity
 experiment_ecosystem.py  Repeated resource/mutation conditions and lossless lifetime archives
 plot_ecosystem.py     Population/diversity time series, ancestry tree, and persistent-world replay
@@ -3490,6 +3803,19 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step27-baseline.json  Hashes of all 384 pre-Step-27 tracked files
+results/step27-baseline-tests.txt  Passing 382-test baseline transcript
+results/step27-protocol.json  Pre-test model/source hashes, conditions, inference, and failure rules
+results/step27-evaluation.json  All seed/cohort results, means, intervals, tests, and failure cases
+results/step27-evaluation.png  Five-environment fitness, food, and survival with seed intervals
+results/step27-effects.png  All 45 primary paired comparisons and corrected p-values
+results/step27-mechanisms.png  Adaptation, sensor dependence, diversity, and starvation evidence
+results/step27-runs/  Sixteen lossless reports retaining every individual test lifetime
+results/step27-audit.json  Source preservation, individual metrics, inference, diversity, and replay audit
+results/step27-audit-declared.py  Exact pre-production audit helper, preserved before the speed-type repair
+results/step27-audit-initial-error.txt  Initial helper-only checksum failure transcript
+results/step27-tests.txt  Passing 401-test verification transcript
+results/step27-scalar-reference/  Initial scalar-only sources, protocol, checkpoint, tests, and runtime-restart evidence
 results/step26-baseline.json  Hashes of all 307 pre-Step-26 tracked files
 results/step26-baseline-tests.txt  Passing 363-test baseline transcript
 results/step26-protocol.json  Pre-trial reproductive costs, renewal criteria, diversity, and conditions

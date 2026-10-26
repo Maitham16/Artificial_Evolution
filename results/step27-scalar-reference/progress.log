@@ -1,0 +1,11 @@
+Seed 1808: uniform repeat 1/2 complete (7 controllers)
+Seed 1803: uniform repeat 1/2 complete (7 controllers)
+Seed 1804: uniform repeat 1/2 complete (7 controllers)
+Seed 1807: uniform repeat 1/2 complete (7 controllers)
+Seed 1805: uniform repeat 1/2 complete (7 controllers)
+Seed 1801: uniform repeat 1/2 complete (7 controllers)
+Seed 1806: uniform repeat 1/2 complete (7 controllers)
+Seed 1802: uniform repeat 1/2 complete (7 controllers)
+Seed 1808: uniform repeat 2/2 complete (7 controllers)
+/opt/homebrew/Cellar/python@3.13/3.13.17/Frameworks/Python.framework/Versions/3.13/lib/python3.13/multiprocessing/resource_tracker.py:479: UserWarning: resource_tracker: There appear to be 5 leaked semaphore objects to clean up at shutdown: {'/mp-0_hfku34', '/mp-ayfyht00', '/mp-_qk8_c0k', '/mp-exr904uv', '/mp-ybzs92oh'}
+  warnings.warn(

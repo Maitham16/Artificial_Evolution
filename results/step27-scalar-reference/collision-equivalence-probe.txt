@@ -1,0 +1,8 @@
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.17)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+random uniform CPU times [5.357227, 1.4262170000000003] speedup 3.756249574924432
+random clustered CPU times [5.316174999999999, 1.3787499999999984] speedup 3.855793291024483
+greedy uniform CPU times [5.468408999999999, 1.510974000000001] speedup 3.6191284562143333
+greedy clustered CPU times [5.532512999999998, 1.5416380000000025] speedup 3.588723811945469
+neural uniform CPU times [6.6851720000000014, 2.5985239999999976] speedup 2.572680490924851
+neural clustered CPU times [6.552439, 2.5199339999999992] speedup 2.6002423079334624
