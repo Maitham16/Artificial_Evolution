@@ -1,0 +1,2 @@
+generation,population_size,duration_seconds,mean_fitness,best_fitness,mean_food_eaten,mean_survival_seconds,mean_speed,food_visible_seconds,food_facing_seconds,survival_checkpoint_seconds,survivors_at_checkpoint,food_facing_fraction,survival_rate
+1,20,20.01666666666681,20.00000000000041,20.00000000000041,0.0,20.00000000000041,60.000000000005144,0.0,0.0,60.0,0,,0.0

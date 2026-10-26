@@ -3,18 +3,41 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **27 — Comprehensive experimental evaluation**. Random, greedy,
-fitness-selected, and neutral-evolution controllers face matched unseen worlds,
-with seed-level confidence intervals, tests, and failure reporting.
+Current step: **28 — Final simulator and research demonstration**.
+**Artificial Evolution 1.0.0** brings seven live worlds, evolutionary algorithms,
+ancestry visualization, reproducible exports, and 15 research studies into one
+interactive workbench.
 Earlier experiments and saved results remain available.
 
-## Run the world
+## Run the research workbench
 
 From this project folder:
 
 ```sh
+python3.13 -m venv .venv
 source .venv/bin/activate
-python main.py
+python -m pip install -r requirements.txt
+python simulator.py
+```
+
+Choose a mode, environment, and algorithm; **Apply / new run** archives the
+current run and starts the configured seed. Click creatures for energy, ancestry,
+and current-state neuron activations. **Lineages** shows parent edges and founder
+families. **Research** opens published figures and launches complete protocols
+into fresh folders. **Export run** saves data, configuration, genomes, plots,
+screenshots, and a local HTML report while the simulation continues.
+
+[User guide](docs/USER_GUIDE.md) · [Reproducibility](docs/REPRODUCIBILITY.md) ·
+[Version 1.0 release](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.0)
+
+![The artificial-life research workbench](results/step28-workbench.png)
+
+### Original single-mode viewer
+
+The original viewer and scientific scripts retain their published source versions:
+
+```sh
+python main.py --seed 42
 ```
 
 Neural control is the default. The existing random movement controller is also
@@ -41,6 +64,87 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Final simulator and research demonstration
+
+Step 28 integrates the existing models through a validated configuration and
+observation layer. The application keeps mode-specific objectives and biological
+rules explicit:
+
+| World | Interactive algorithms / controls |
+| --- | --- |
+| Food seeking | Fitness selection, neutral inheritance, random, greedy, frozen founders |
+| Changing seasons | Seasonal stock, moving clusters, maturity-gated selection |
+| Obstacles & hazards | Neural selection and random/greedy controls, risk-sensor intervention |
+| Brains & bodies | Inherited speed, size, sensory range, and explicit energy costs |
+| Predator & prey | Simultaneous selection in separate gene pools, opponent sensing |
+| Social behavior | Group/individual survival, access, signaling, and sharing |
+| Continuous ecosystem | Energy-funded or clonal births, finite regrowth, ancestry and population cap |
+
+The sidebar exposes only algorithms supported by the chosen world. Five food
+environments are available where supported; seasons and isolated social groups
+retain their own constraints. Advanced settings and imported JSON configurations
+are validated before replacing the current run. Presets are in `configs/`.
+
+Live charts track population, earned fitness, and living founder families.
+Generation-local scores reset at cohort boundaries. Continuous means include
+all observed lifetimes. Prey and predator scores stay separate, and social
+fitness uses survival age. Neural RMS, mode-specific energy/collision/capture/
+sharing telemetry, cohort censoring, and complete ancestry are exported.
+Founder-family colors and ancestry depth are genealogical, rather than species
+labels. The hidden-neuron panel previews the current state.
+
+**Space** pauses, **S** cycles target speed, **A** toggles automatic breeding or
+births, **N** advances a completed cohort, **R** restarts the current seed,
+**E** exports, **L** opens ancestry, **B** opens research, and **H** opens help.
+The measured speed reports actual throughput. UI workloads are bounded without
+skipping model ticks; each physics step remains 1/60 second.
+
+Exports go to unique folders under `exports/` and include full configuration and
+tick/control history, population/individual/telemetry/lineage/generation CSVs,
+numeric birth genomes, PNG/SVG/PDF figures, an application image, an HTML report,
+and a SHA-256 manifest. Files are staged before a bundle becomes visible.
+Background export uses an immutable snapshot. The native validation records and
+seven-mode demonstration bundles are saved with this release.
+
+```sh
+python simulator.py --config configs/continuous.json
+python simulator.py --headless --config configs/neutral.json --ticks 1200 --export-root exports/headless
+python simulator.py --verify-bundle PATH/TO/bundle
+python simulator.py --replay PATH/TO/bundle/run.json --headless
+python simulator.py --catalog
+python simulator.py --study 27 --workers 8 --export-root exports/new-research
+```
+
+The Research panel integrates all **15 studies from Steps 13–27**. Full studies
+retain their own seed budgets and analysis, use isolated outputs, and run in
+owned background processes with progress/cancellation. A plotter follows a
+successful study before its status becomes complete. Published datasets are
+read-only inputs. Saved-population studies require the research-evidence asset.
+
+**428 tests passed**, including the 401 preceding checks, kernel parity,
+configuration validation, observer purity, cross-generation ancestry, censored
+survivors, seven-mode replay, immutable exports, corruption detection, UI
+hitboxes, background-job status/cancellation, CLI entry, and deterministic ZIPs.
+The [integration record](results/step28-integration.json) verifies complete
+exports and bitwise tick replay for all seven worlds and the saved native
+interactions. Its two-seed, one-second study/plot job is an engineering smoke
+check; the earlier independent-seed studies remain the statistical evidence.
+
+The baseline manifest records **427 pre-Step-28 files**. All **426 files other
+than README**, including **347 earlier result artifacts**, retain their hashes.
+The original model kernels, viewer, trained models, and reports are preserved.
+See the [release audit](results/step28-audit.json),
+[ancestry demonstration](results/step28-lineages.png), and
+[research catalog](results/step28-research.png).
+
+The GitHub release provides an application/source ZIP and an optional complete
+research-evidence ZIP. `build_release.py` packages committed Git blobs with fixed
+ZIP metadata, per-file manifests, archive checksums, and the exact release commit.
+The source package includes presets, guides, demonstration figures, and the Step
+27 summary; the research package supplies all historical models and raw records.
+Live demonstrations describe individual runs. Confidence intervals and corrected
+tests come from the documented independent-seed experiments.
 
 ## Comprehensive experimental evaluation
 
@@ -3575,7 +3679,12 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **401 checks**, including complete matched multi-baseline evaluation,
+Verified: **428 checks**, including unified mode/configuration validation, passive
+observation, complete ancestry and censored survivors, tick replay, integrity-
+checked bundles, GUI controls, study isolation/cancellation, and deterministic
+release packaging. The 401-test baseline was saved before Step 28.
+
+The checks also cover complete matched multi-baseline evaluation,
 seed-level inference, complete failure cases, source/raw corruption detection,
 mutation/genetic-diversity replay, serial/parallel identity, scalar/vector
 collision equivalence, and scientific plots.
@@ -3694,6 +3803,17 @@ included.
 ## Project structure
 
 ```text
+simulator.py          Unified interactive application, headless exports, replay, and study CLI
+research_app.py       Responsive Pygame workbench, controls, ancestry, inspector, and research panel
+research_session.py   Validated modes, passive lifetime/genome observation, replay, and export bundles
+research_catalog.py   All 15 research recipes and isolated background study/plot processes
+build_release.py      Deterministic Git-based source/research release assets and manifests
+validate_simulator.py  Seven-mode export/replay, native-record, job-runner, and preservation audit
+test_research_session.py  Kernel parity, ancestry, observer purity, censoring, and artifact integrity
+test_research_app.py  Interactive controls, job lifecycle, CLI, and reproducible release packaging
+configs/             Nine complete mode/algorithm presets
+docs/                User guide, reproducibility instructions, and release notes
+exports/             Local run/study bundles (ignored by Git)
 experiment_evaluation.py  Matched random/greedy/evolved/neutral tests, diagnostics, and seed-level inference
 evaluation_world.py   Conservative vector broad phase with original scalar contact and ownership rules
 plot_evaluation.py    Performance intervals, 45 paired effects, and mechanistic/genetic diagnostics
@@ -3803,6 +3923,17 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step28-baseline.json  Hashes of all 427 pre-Step-28 tracked files
+results/step28-baseline-tests.txt  Passing 401-test baseline transcript
+results/step28-tests.txt  Passing 428-test verification transcript
+results/step28-focused-tests.txt  Focused simulator and packaging verification transcript
+results/step28-integration.json  Seven-mode replay/export, native interaction, job pipeline, and preservation checks
+results/step28-audit.json  Final source, test, dataset, visualization, and release-candidate audit
+results/step28-workbench.png  Workbench rendering of the native continuous-ecosystem record
+results/step28-lineages.png  Complete ancestry rendering of that recorded run
+results/step28-research.png  Integrated published-study catalog
+results/step28-demos/  Complete verified/replayed export bundles for all seven worlds
+results/step28-native/  Verified native interaction and automatic-archiving records
 results/step27-baseline.json  Hashes of all 384 pre-Step-27 tracked files
 results/step27-baseline-tests.txt  Passing 382-test baseline transcript
 results/step27-protocol.json  Pre-test model/source hashes, conditions, inference, and failure rules

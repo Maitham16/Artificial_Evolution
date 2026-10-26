@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Artificial Evolution research run</title>
+<style>body{font:16px system-ui;margin:40px auto;max-width:1050px;padding:0 24px;color:#173344;background:#f5f8fa}pre{background:white;padding:20px;overflow:auto;border-radius:12px}img{width:100%}a{color:#087f76}section{margin:28px 0}</style>
+<h1>Artificial Evolution / research run</h1><p>Version 1.0.0 · Run bf7a9cf6d938 · 2026-10-26T18:07:08.240913+00:00</p>
+<img src="population.svg" alt="Population, fitness, founder families, and food history"><section><h2>Interpretation</h2><ul><li>Live curves are descriptive, not independent scientific replications.</li><li>Generational scores reset each cohort; continuous scores average all recorded lifetimes.</li><li>Predator/prey scores remain separate; social fitness is survival age.</li><li>Founder labels are genealogy, not species. Random/greedy placeholder weights have no diversity score.</li><li>Genomes are birth parameters; configuration plus tick/control replay reproduces this run, not an arbitrary resume checkpoint.</li></ul></section>
+<section><h2>Observed metrics</h2><pre>{
+  &quot;time&quot;: 2.0,
+  &quot;generation&quot;: 2,
+  &quot;population&quot;: 100,
+  &quot;mean_fitness&quot;: 1.0000000000000016,
+  &quot;best_fitness&quot;: 1.0000000000000013,
+  &quot;living_mean_fitness&quot;: 1.0000000000000016,
+  &quot;mean_meals&quot;: 0.21,
+  &quot;food&quot;: 150,
+  &quot;births&quot;: 200,
+  &quot;deaths&quot;: 0,
+  &quot;families&quot;: 20,
+  &quot;effective_families&quot;: 19.999999999999996,
+  &quot;neural_rms&quot;: 0.35678716626031465,
+  &quot;predators&quot;: 0,
+  &quot;prey&quot;: 0,
+  &quot;predator_mean_fitness&quot;: null
+}</pre></section><section><h2>Reproducible configuration</h2><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;mode&quot;: &quot;social&quot;,
+  &quot;environment&quot;: &quot;uniform&quot;,
+  &quot;algorithm&quot;: &quot;group&quot;,
+  &quot;seed&quot;: 2801,
+  &quot;population&quot;: 100,
+  &quot;food_count&quot;: null,
+  &quot;mutation_rate&quot;: 0.1,
+  &quot;mutation_scale&quot;: 0.1,
+  &quot;generations&quot;: 2,
+  &quot;duration&quot;: 600.0,
+  &quot;fixed_speed&quot;: 60.0,
+  &quot;body_mutation_rate&quot;: 0.0,
+  &quot;body_mutation_scale&quot;: 0.0,
+  &quot;population_cap&quot;: 300,
+  &quot;regrowth_rate&quot;: 30.0,
+  &quot;maturity_age&quot;: 15.0,
+  &quot;birth_cooldown&quot;: 20.0,
+  &quot;season_length&quot;: 1,
+  &quot;season_food&quot;: [
+    150,
+    200,
+    75,
+    25
+  ],
+  &quot;cluster_shift&quot;: 120.0,
+  &quot;reproductive_age&quot;: 60.0,
+  &quot;predators&quot;: 20,
+  &quot;episode_seconds&quot;: 1.0,
+  &quot;groups&quot;: 10,
+  &quot;food_access&quot;: &quot;restricted&quot;,
+  &quot;signaling&quot;: true,
+  &quot;sharing&quot;: true,
+  &quot;signals_hidden&quot;: false,
+  &quot;risk_sensors&quot;: &quot;intact&quot;,
+  &quot;prey_sensors&quot;: &quot;intact&quot;,
+  &quot;predator_sensors&quot;: &quot;intact&quot;,
+  &quot;sample_interval&quot;: 1.0
+}</pre></section>
+<p><a href="run.json">Complete run and controls</a> · <a href="population.csv">Population dataset</a> · <a href="individuals.csv">Lifetimes</a> · <a href="lineage.csv">Ancestry</a> · <a href="genomes.npz">Numeric genomes</a> · <a href="population.pdf">PDF figure</a></p>
+<p>Replay from the project: <code>python simulator.py --replay PATH/TO/run.json --headless</code></p></html>

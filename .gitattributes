@@ -1,0 +1,4 @@
+# Preserve CSV bytes for exported SHA-256 manifests, including standard CRLF.
+*.csv -text whitespace=cr-at-eol
+# Matplotlib SVG paths contain intentional trailing spaces; preserve hashed output.
+*.svg -text whitespace=-blank-at-eol
