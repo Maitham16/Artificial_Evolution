@@ -3,8 +3,8 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **25 — Cooperation and social behavior**. Creatures sense neighbors,
-signal, and share stored food energy under individual or group survival selection.
+Current step: **26 — Continuous evolution and artificial ecosystems**. Births,
+deaths, and mutations occur in one persistent habitat with recorded ancestry.
 Earlier experiments and saved results remain available.
 
 ## Run the world
@@ -40,6 +40,221 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Continuous evolution and artificial ecosystems
+
+Step 26 adds an **optional continuous ecosystem**. Creatures feed, age, reproduce,
+and die on independent schedules in the same habitat. There is no synchronized
+cohort replacement, top-fitness parent ranking, creature immigration, or automatic
+rescue after extinction. Existing generational experiments remain available.
+
+```sh
+python main.py --continuous --seed 2601 --duration 600 --speed 20
+python main.py --headless --continuous --seed 2601 --duration 600 --speed 20 \
+  --report .cache/ecosystem-run.json --plot .cache/ecosystem-run.png
+```
+
+`--population` specifies initial founders, while `--population-cap` limits the
+number simultaneously alive (default 300). `--food-count` is the maximum standing
+food stock; `--regrowth-rate` is the maximum replacement rate in pellets/second.
+`--duration` sets a positive whole-tick horizon instead of `--generations`.
+`--no-reproduction` disables births; `--maturity-age`, `--birth-cooldown`,
+`--sample-interval`, and `--lineage-threshold` expose the corresponding controls.
+Neural and body mutation options remain available. A clonal reproduction run uses
+`--mutation-rate 0 --body-mutation-rate 0`.
+
+Press **A** to toggle births during an interactive run, **F** for living founder
+families, and **T** for time-based population/diversity history. Birth switches
+are recorded. **R** explicitly starts a new ecosystem; extinction never does so
+automatically. Click an actor to inspect its unique ID, parent, founder family,
+ancestry depth, birth time, and inherited body. Descendants inherit their founder
+family's color. Ancestry depth is not a synchronized generation number.
+Continuous mode is separate from the previous experimental world modes and uses
+neural steering at each body's inherited cruise speed; neural throttle is unused.
+
+### Paid reproduction and overlapping lifetimes
+
+The 100 declared founders start with random **8–8–2 brains (90 neural parameters)**
+and reference body genes (speed 60, radius 8, sensory range 160). Brain and body
+weights inherit together from a single living parent. Mutation retains the
+Step 23 neural probability/scale 0.1/0.1 and body probability/log scale 0.25/0.08.
+Body maintenance, movement, sensing, capacity, and founder reserves retain that
+step's explicitly stylized 2D model. Lifespan is redrawn uniformly from 60 to 120
+seconds at birth; it is not inherited or reset for a reproducing parent.
+
+A parent becomes eligible when its age reaches **15 seconds**, at least **20
+seconds** have passed since its last attempt, and energy reaches **80% of its
+own capacity**. A seeded per-tick lottery orders eligible parents when spatial
+or population limits create competition. For candidate child capacity `C_child`:
+
+```text
+child starting energy = 0.40 × C_child
+child development cost = 0.10 × C_child
+reproductive overhead = 0.05 × C_child
+parent pays = 0.55 × C_child
+parent must retain at least 0.25 × its own capacity
+```
+
+For reference bodies, a successful birth costs the parent 55 energy, gives the
+child 40, and dissipates 15 through development/overhead. Newborn energy is paid
+from the parent rather than injected as another free 90-unit founder reserve.
+Mutation can make a candidate too expensive for its parent; that attempt fails
+without creating a child. Failed attempts consume the cooldown but have no
+additional energy charge in this model. All energy, space, and capacity failures
+are retained in the event log.
+
+Birth placement tries up to 32 positions 20–60 pixels from the parent, inside the
+walls and clear of bodies/food. Each successful child receives a never-reused ID.
+Parents continue living at their current age, and newborns first act on the next
+fixed tick. Other actors, food, and the habitat are not reset. Dead actors are
+removed before they can eat or reproduce. Death removal ticks and biological
+ages are recorded separately. Actors still alive at the horizon remain censored
+survivors; reaching the horizon does not kill them.
+
+Food provides 20 energy units per pellet. A finite regrowth credit supplies new
+pellets up to the standing-stock limit; credit is discarded when the stock is
+full. There is no accumulated future burst from unused production. A crowded
+failed food placement is recorded. Dead bodies' remaining energy is discarded
+without scavenging. Renewable food is an **external energy input**, so this is
+not a thermodynamically closed ecosystem.
+
+Individual records balance birth endowment, assimilated food, movement/basal/
+sensing costs, and outgoing reproductive investment. Global energy accounting
+counts only founder reserves and assimilated food as input: child endowments
+are transfers, while development/overhead and discarded corpse reserves are
+losses. The population cap blocks births without killing existing actors or
+funding new ones; it is an imposed density constraint that can affect dynamics.
+
+### Ancestry and genetic diversity
+
+Every founder and child retains a numeric genome, birth record, parent link,
+founder ID, ancestral depth, lifespan, and full lifetime energy ledger. Every
+attempt retains its outcome, parent energy, candidate body, mutation seeds,
+recorded random-draw hashes, and child link where successful. Extinct branches
+remain in the archive. Natural selection acts through actual survival and
+energy-funded reproductive success, without a post-cohort score filter.
+
+Time samples record population, food, births/deaths, living founders, founder
+family sizes, effective family count (the exponential of family Shannon entropy),
+unique genomes, genetic RMS distance, within-family RMS distance, and operational
+clusters. Neural alleles are standardized by their initial distribution scales;
+body speed and range use logarithmic bounds and radius uses linear bounds.
+Neural and body blocks contribute equal total weight to squared genetic distance.
+RMS is the square root of mean squared pairwise distance, not mean Euclidean
+distance. Pair metrics remain missing when no applicable pairs exist.
+
+Clusters are connected components linking genomes within distance **0.25**, with
+final counts also evaluated at **0.15 and 0.5**. Losing an intermediate actor can
+split a connected component without a new mutation at that moment. Founder
+families are genealogy, and these threshold-dependent clusters are snapshot
+genetic neighborhoods. Neither establishes reproductive isolation, ecological
+specialization, a new species, or adaptive value of every changed allele.
+Some neural alleles belong to the unused throttle output.
+
+### Declared repeated ecosystem experiment
+
+Before changes, all **363 tests passed**. `results/step26-baseline.json` records
+the preceding commit and hashes of all **307 tracked files**, with the baseline
+transcript alongside it. Prior experiment artifacts remain unchanged. The new
+protocol and Python source hashes are written before production runs.
+
+Eight independent source seeds (2601–2608) each run four conditions for up to
+**600 simulated seconds**, stopping early only on extinction:
+
+| Resource condition | Food stock limit | Regrowth / second | Mutation arms |
+| --- | ---: | ---: | --- |
+| Abundant | 150 | 30 pellets | Neural/body mutation; clonal reproduction |
+| Scarce | 50 | 6 pellets | Neural/body mutation; clonal reproduction |
+
+All conditions begin with 100 founders and cap living population at 300.
+Mutation and clonal arms share exact founder genotypes and initial habitat
+within each resource setting. Clonal reproduction switches both mutation
+probabilities to zero while preserving energetic costs, maturity, cooldown,
+food, lifespan draws, and the same underlying rules. Later births and deaths
+can diverge. There are **32 complete runs**, with ten-second time samples;
+the independent replication unit is the source seed, not descendants.
+
+A run meets the declared **finite-window renewal** criterion only if it reaches
+the horizon with living actors, has no living founders, has achieved ancestry
+depth at least three, and has births in the final 120 seconds. The duration must
+also be at least 240 seconds. Six hundred seconds is five maximum founder
+lifespans, so surviving original adults cannot explain renewal at that horizon.
+This supports a finite-window persistence observation under the specified food
+input and population cap; it does not prove indefinite self-sustainability.
+
+Analysis reports descriptive persistence/extinction counts and equal-seed means,
+with explicit available denominators for genetic metrics after extinction.
+There are no confirmatory p-values or selection-versus-drift claims. No genetic
+cluster result is treated as speciation, and the clonal control does not by itself
+isolate the effect of natural selection from genetic drift.
+
+```sh
+python experiment_ecosystem.py --workers 8 --duration 600 --runs-dir results/step26-runs \
+  --output results/step26-ecosystems.json --protocol-output results/step26-protocol.json
+python plot_ecosystem.py results/step26-ecosystems.json \
+  --output results/step26-ecosystems.png --ancestry-output results/step26-ancestry.png \
+  --world-output results/step26-world.png
+```
+
+Use new output paths for reruns. The compact study JSON retains summaries and
+time series, while each run has a lossless `.json.gz` event/lifetime report and
+an `allow_pickle=False` numeric genome archive. Checksums link the files. The
+ancestry figure uses the first declared seed's abundant/mutating run, includes
+all parent edges, and displays its eight largest final families with all others
+pooled (cumulative size breaks ties). The arena image replays that same run to a
+predetermined 120 seconds, or its earlier endpoint, and selects its first living
+actor if one is available.
+
+### Observed Step 26 results
+
+All **32 declared runs completed**. Each row below averages eight independent
+source seeds; births exclude the 100 initial founders.
+
+| Resources / reproduction | Renewed at 600 s | Extinct | Mean final population | Mean births | Mean maximum ancestry depth |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Abundant / mutating | 8/8 | 0/8 | 143.25 | 1,767.50 | 24.00 |
+| Abundant / clonal | 8/8 | 0/8 | 102.88 | 1,470.63 | 22.75 |
+| Scarce / mutating | 0/8 | 8/8 | 0 | 3.38 | 1.00 |
+| Scarce / clonal | 0/8 | 8/8 | 0 | 3.38 | 1.00 |
+
+Abundant mutating runs finished with **130–159 living descendants**, reached
+ancestry depths **22–25**, and retained **2–7 founder families** (mean four).
+Every abundant run replaced its founders and continued producing offspring in
+the final 120 seconds. Scarce-food populations produced only 1–6 offspring each
+and went extinct within **43.57–77.88 seconds** across both arms. No extinction
+was rescued or restarted.
+
+Mutation generated within-family genetic variation: abundant runs' mean final
+within-family RMS was **0.4345**, versus **zero** in every abundant clonal run.
+The mean final effective family count was 2.60 with mutation and 2.07 without.
+These are descriptive outcomes of the complete mutation regimes; higher final
+population alone does not establish which mutations were adaptive or isolate
+natural selection from drift.
+
+The genetic-neighborhood result depends strongly on the distance threshold.
+Abundant mutating runs had **46–66 clusters at 0.15**, **17–29 at 0.25**, and
+**2–7 at 0.5**. Clonal runs had 1–5 clusters at all three thresholds, matching
+their surviving founder families. The experiment demonstrates genealogical
+turnover and mutation-driven genetic divergence in a continuously reproducing
+population. It does not establish distinct species or indefinite sustainability.
+Final genetic pair metrics are undefined after extinction, rather than counted
+as zero diversity.
+
+The saved [population/diversity figure](results/step26-ecosystems.png),
+[complete ancestry figure](results/step26-ancestry.png), and
+[120-second arena snapshot](results/step26-world.png) accompany the
+[study results](results/step26-ecosystems.json) and
+[declared protocol](results/step26-protocol.json). Full event histories and
+all-lifetime genomes are retained in `results/step26-runs/`.
+
+All **382 tests passed**. The [saved audit](results/step26-audit.json) verifies
+29,159 individual lifetimes, 25,959 funded descendant births, all 26,531
+reproduction attempts, and 1,090 population/diversity snapshots. It independently
+replays candidate mutations, checks genealogy and individual/global energy
+balances, and reproduces the first declared 600-second abundant/mutating run
+bit for bit. All **305 earlier files other than README/main** and all **236 prior
+result artifacts** retain their baseline hashes. Ordinary-world behavior also
+matches the preceding commit in the recorded regression checks.
 
 ## Cooperation and social behavior
 
@@ -3058,7 +3273,12 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **363 checks**, including local social snapshots, signaling costs, lossy
+Verified: **382 checks**, including funded continuous births, cooldown/reserves,
+capacity and placement failures, absorbing extinction, finite regrowth, ancestry,
+mutation controls, lifetime archives, population accounting, and exports.
+The 363-test baseline was saved before Step 26.
+
+The checks also cover local social snapshots, signaling costs, lossy
 capacity-limited transfers, no same-tick forwarding, access restrictions, whole-team
 inheritance, matched mutations, founder-adjusted sharing inference, and exports.
 The 342-test baseline was saved before Step 25.
@@ -3166,6 +3386,10 @@ included.
 ## Project structure
 
 ```text
+ecosystem.py          Paid continuous births, ancestry, finite regrowth, and genetic diversity
+experiment_ecosystem.py  Repeated resource/mutation conditions and lossless lifetime archives
+plot_ecosystem.py     Population/diversity time series, ancestry tree, and persistent-world replay
+test_ecosystem.py     Continuous lifecycle, energy, absorbing extinction, controls, and exports
 social.py             Isolated groups, neighbor sensing, costly signals, and conservative sharing
 experiment_social.py  Paired individual/group selection and founder-adjusted sharing tests
 plot_social.py        Survival/transfer contrasts, frozen interventions, and arena replay
@@ -3266,6 +3490,16 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step26-baseline.json  Hashes of all 307 pre-Step-26 tracked files
+results/step26-baseline-tests.txt  Passing 363-test baseline transcript
+results/step26-protocol.json  Pre-trial reproductive costs, renewal criteria, diversity, and conditions
+results/step26-ecosystems.json  Complete repeated-run summaries and population/diversity histories
+results/step26-ecosystems.png  Abundant/scarce population, ancestry-family, and genetic dynamics
+results/step26-ancestry.png  Every birth/parent edge and founder-family trajectories for seed 2601
+results/step26-world.png  Predetermined 120-second abundant/mutating arena replay
+results/step26-runs/   Thirty-two lossless raw reports and all-lifetime numeric genome archives
+results/step26-audit.json  Ancestry, mutation, diversity, energy, raw/archive, and preservation audit
+results/step26-tests.txt  Passing 382-test verification transcript
 results/step25-baseline.json  Hashes of all 286 pre-Step-25 tracked files
 results/step25-baseline-tests.txt  Passing 342-test baseline transcript
 results/step25-protocol.json  Pre-trial social mechanics, access, selection, budgets, and inference

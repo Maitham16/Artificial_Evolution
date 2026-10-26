@@ -104,6 +104,7 @@ def draw_trend(
     series: list[tuple[list[float | None], tuple[int, int, int]]],
     generations: list[int], font: pygame.font.Font,
     ceiling: float | None = None,
+    label_prefix: str = "G",
 ) -> None:
     screen.blit(font.render(title, True, MUTED), (rect.left, rect.top - 22))
     available = [value for values, _ in series for value in values if value is not None]
@@ -133,9 +134,9 @@ def draw_trend(
     if not available:
         label = font.render("N/A", True, MUTED)
         screen.blit(label, label.get_rect(center=plot.center))
-    screen.blit(font.render(f"G{generations[0]}", True, MUTED), (plot.left, rect.bottom + 5))
+    screen.blit(font.render(f"{label_prefix}{generations[0]}", True, MUTED), (plot.left, rect.bottom + 5))
     if len(generations) > 1:
-        label = font.render(f"G{generations[-1]}", True, MUTED)
+        label = font.render(f"{label_prefix}{generations[-1]}", True, MUTED)
         screen.blit(label, (plot.right - label.get_width(), rect.bottom + 5))
 
 
@@ -252,6 +253,10 @@ def draw_interface(
     screen: pygame.Surface, world: World, fonts: dict[str, pygame.font.Font],
     simulation: EvolutionSimulation | None = None,
 ) -> None:
+    if hasattr(world, "continuous_report"):
+        from plot_ecosystem import draw_continuous_interface
+        draw_continuous_interface(screen, world, fonts, simulation)
+        return
     if hasattr(world, "social_history"):
         from social import draw_social_interface
         draw_social_interface(screen, world, fonts, simulation)
@@ -465,12 +470,23 @@ def run(
     signaling: bool = True,
     sharing: bool = True,
     signals_hidden: bool = False,
+    continuous: bool = False,
+    duration: float = 600.,
+    regrowth_rate: float = 30.,
+    population_cap: int = 300,
+    reproduction: bool = True,
+    maturity_age: float = 15.,
+    birth_cooldown: float = 20.,
+    sample_interval: float = 10.,
+    lineage_threshold: float = .25,
 ) -> int:
-    if sum((obstacles, seasons, traits, predator_prey, social)) > 1:
+    if sum((obstacles, seasons, traits, predator_prey, social, continuous)) > 1:
         raise ValueError("Choose one experimental world mode.")
-    if (traits or predator_prey or social) and fixed_speed is not None:
+    if (traits or predator_prey or social or continuous) and fixed_speed is not None:
         raise ValueError("Body-trait mode derives speed from inherited genes, not --fixed-speed.")
-    if headless and frames is None and (generations is None or manual):
+    if continuous and (generations is not None or manual):
+        raise ValueError("Continuous mode uses --duration; generations/manual breeding do not apply.")
+    if headless and frames is None and not continuous and (generations is None or manual):
         raise ValueError("Headless mode needs frames or an automatic generation limit.")
     if headless:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -505,15 +521,25 @@ def run(
             world_type = SocialWorld
             seasonal_options = dict(groups=groups, selection_level=selection_level, access=food_access,
                 signaling=signaling, sharing=sharing, signals_hidden=signals_hidden, episode_seconds=episode_seconds)
+        if continuous:
+            from ecosystem import ContinuousWorld
+            world_type = ContinuousWorld
+            seasonal_options = dict(regrowth_rate=regrowth_rate, population_cap=population_cap, reproduction=reproduction,
+                maturity_age=maturity_age, birth_cooldown=birth_cooldown, sample_interval=sample_interval,
+                lineage_threshold=lineage_threshold, body_mutation_rate=body_mutation_rate, body_mutation_scale=body_mutation_scale)
         world = world_type(seed=seed, controller=controller, population_size=population_size,
                       mutation_rate=mutation_rate, mutation_scale=mutation_scale, food_count=food_count,
                       fixed_speed=fixed_speed, food_distribution=food_distribution, **seasonal_options)
-        simulation = EvolutionSimulation(world, generation_limit=generations,
-                                         speed=speed, auto_advance=not manual)
+        if continuous:
+            from ecosystem import ContinuousSimulation
+            simulation = ContinuousSimulation(world, duration=duration, speed=speed)
+        else:
+            simulation = EvolutionSimulation(world, generation_limit=generations,
+                                             speed=speed, auto_advance=not manual)
         screen = pygame.display.set_mode(
             (world.width + 2 * PADDING, HEADER_HEIGHT + world.height + FOOTER_HEIGHT)
         )
-        pygame.display.set_caption("Artificial Evolution | Social behavior" if social else
+        pygame.display.set_caption("Artificial Evolution | Continuous ecosystem" if continuous else "Artificial Evolution | Social behavior" if social else
                                    f"Artificial Evolution | Fixed-speed study | {controller.title()}")
         fonts = {
             "title": pygame.font.Font(None, 38),
@@ -528,7 +554,8 @@ def run(
             f"food: {len(world.food)}; "
             f"controller: {world.controller}; "
             f"mutation: {world.mutation_rate:g}; "
-            f"speed: {simulation.speed}x; generations: {generations or 'unlimited'}; "
+            f"speed: {simulation.speed}x; "
+            f"{('duration: ' + str(duration) + 's') if continuous else ('generations: ' + str(generations or 'unlimited'))}; "
             f"display driver: {pygame.display.get_driver()}",
             flush=True,
         )
@@ -585,7 +612,11 @@ def run(
             report.write_text(json.dumps(simulation.report(), indent=2, allow_nan=False) + "\n")
             print(f"Report saved: {report}")
         if plot is not None:
-            if world.generation_stats:
+            if continuous:
+                from plot_ecosystem import save_run_plot
+                save_run_plot(simulation.report(), plot)
+                print(f"Ecosystem plot saved: {plot}")
+            elif world.generation_stats:
                 if social:
                     from plot_social import save_lineage_plot
                     save_lineage_plot(simulation.report(), plot)
@@ -642,6 +673,15 @@ def main() -> int:
     parser.add_argument("--traits", action="store_true", help="evolve linked brains, cruise speed, radius, and sensory range")
     parser.add_argument("--predator-prey", action="store_true", help="coevolve two separate neural/body gene pools in one arena")
     parser.add_argument("--social", action="store_true", help="local neighbor sensing, optional signaling/sharing, and survival selection")
+    parser.add_argument("--continuous", action="store_true", help="persistent ecosystem with funded births, deaths, and no cohort resets")
+    parser.add_argument("--duration", type=mutation_scale, default=600., help="continuous-mode simulated seconds")
+    parser.add_argument("--regrowth-rate", type=mutation_scale, default=30., help="continuous food regrowth in pellets per second")
+    parser.add_argument("--population-cap", type=positive_integer, default=300, help="maximum simultaneously living ecosystem actors")
+    parser.add_argument("--no-reproduction", action="store_true", help="disable continuous births; founders still consume food and die")
+    parser.add_argument("--maturity-age", type=mutation_scale, default=15., help="minimum continuous reproductive age")
+    parser.add_argument("--birth-cooldown", type=mutation_scale, default=20., help="time between a parent's reproduction attempts")
+    parser.add_argument("--sample-interval", type=mutation_scale, default=10., help="continuous population/diversity sampling interval")
+    parser.add_argument("--lineage-threshold", type=mutation_scale, default=.25, help="operational genetic-distance clustering threshold")
     parser.add_argument("--groups", type=positive_integer, default=10, help="equal isolated birth groups in social mode")
     parser.add_argument("--selection-level", choices=("individual", "group"), default="group", help="social survival selection and offspring assortment")
     parser.add_argument("--food-access", choices=("restricted", "open"), default="restricted", help="half or all group members may eat plant food")
@@ -673,9 +713,9 @@ def main() -> int:
         parser.error("--fixed-speed must be positive")
     if args.seasons and args.reproductive_age <= 0:
         parser.error("--reproductive-age must be positive")
-    if sum((args.seasons, args.obstacles, args.traits, args.predator_prey, args.social)) > 1:
+    if sum((args.seasons, args.obstacles, args.traits, args.predator_prey, args.social, args.continuous)) > 1:
         parser.error("choose one experimental world mode")
-    if (args.traits or args.predator_prey or args.social) and args.fixed_speed is not None:
+    if (args.traits or args.predator_prey or args.social or args.continuous) and args.fixed_speed is not None:
         parser.error("body genes derive speed; omit --fixed-speed")
     if args.predator_prey and (args.predators >= args.population or args.controller != "neural" or args.episode_seconds <= 0):
         parser.error("predator–prey mode requires neural control, a positive episode, and fewer predators than total births")
@@ -688,7 +728,12 @@ def main() -> int:
         parser.error("social action switches require --social")
     if args.risk_sensors != "intact" and not args.obstacles:
         parser.error("--risk-sensors requires --obstacles")
-    if args.headless and args.frames is None and (args.generations is None or args.manual):
+    if args.continuous and (args.generations is not None or args.manual or args.controller != "neural" or args.duration <= 0
+                           or args.population_cap < args.population or min(args.maturity_age,args.birth_cooldown,args.sample_interval,args.lineage_threshold)<=0):
+        parser.error("continuous mode needs neural control, positive timing/thresholds and capacity; use --duration instead of generations/manual")
+    if args.no_reproduction and not args.continuous:
+        parser.error("--no-reproduction requires --continuous")
+    if args.headless and args.frames is None and not args.continuous and (args.generations is None or args.manual):
         parser.error("--headless requires --frames or automatic --generations")
     return run(
         headless=args.headless,
@@ -729,6 +774,15 @@ def main() -> int:
         signaling=not args.no_signaling,
         sharing=not args.no_sharing,
         signals_hidden=args.hide_signals,
+        continuous=args.continuous,
+        duration=args.duration,
+        regrowth_rate=args.regrowth_rate,
+        population_cap=args.population_cap,
+        reproduction=not args.no_reproduction,
+        maturity_age=args.maturity_age,
+        birth_cooldown=args.birth_cooldown,
+        sample_interval=args.sample_interval,
+        lineage_threshold=args.lineage_threshold,
     )
 
 
