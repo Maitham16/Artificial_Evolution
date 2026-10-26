@@ -3,10 +3,10 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **18 — Test natural selection against random-parent reproduction**.
-Train fresh paired lineages with identical founders, mutation draws, population
-size, and budget. Change only which parents reproduce, then test frozen cohorts
-in matched new worlds. Preserve all earlier source and results.
+Current step: **19 — Evolutionary specialization**. Train uniform, clustered,
+and sparse-food specialists alongside a balanced domain-cycling generalist,
+then cross-test frozen populations to measure niche advantages and transfer.
+Preserve earlier source and results.
 
 ## Run the world
 
@@ -41,6 +41,209 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Evolutionary specialization and transfer
+
+Step 19 trains three specialists and a **domain-cycling generalist**, then tests
+every population in all three habitats. Earlier code and results remain
+unchanged. Before this step, all **242 tests passed**. The baseline manifest
+`results/step19-baseline.json` records the preceding commit and hashes of all
+131 tracked files, including 87 prior result artifacts. Its test transcript is
+`results/step19-baseline-tests.txt`.
+
+Run the fixed-protocol study:
+
+```sh
+python experiment_specialization.py --workers 8 --models-dir .cache/specialization-models \
+  --output .cache/specialization.json --protocol-output .cache/specialization-protocol.json \
+  --plot .cache/specialization.png
+```
+
+All habitats use a **1000 × 600** arena, population **100**, neural control,
+truthful sensors, and fixed **60 pixels/second** with **5 energy units per living
+second**. Mutation probability stays 0.1 per parameter, Gaussian mutation scale
+0.1, and selection uses the best 20 parents with five offspring each and neutral
+parent-ID ordering. The existing physics, sensing, food replenishment, lifespan,
+and fitness formula (`survival_seconds + 10 × meals`) are unchanged.
+
+| Habitat | Food distribution | Maintained pellets |
+| --- | --- | ---: |
+| Uniform | Uniform across the arena | 150 |
+| Clustered | Existing four seeded clusters, Gaussian spread 55 pixels | 150 |
+| Sparse | Uniform across the same arena | 50 |
+
+There are **18 new matched seed groups (1901–1918)**. Each starts all four
+regimes with identical founder genomes and bodies. Training food differs as
+intended; bodies match across all regimes each round, and regimes visiting the
+same habitat in the same round also match their initial food layouts. Mutation
+masks, Gaussian draws, and birth-slot shuffles share the same streams across
+all four regimes, with recorded draw hashes and complete parent-choice traces.
+
+Each specialist receives nine scored rounds in its home habitat. Generalists
+receive nine scored rounds in three blocks, with every habitat appearing once
+in each block. The six possible orders are counterbalanced: each order appears
+three times per block across the 18 seeds, and six generalists end on each
+habitat. Schedules are deterministic and declared before outcomes are observed.
+This is **cycling between environments**, not simultaneous optimization of a
+three-environment average fitness. Curriculum and recency effects can remain
+despite counterbalancing; conclusions are conditional on this generalist design.
+
+Every scored round is followed by selection and mutation, **including the last
+round**. Testing freezes all 100 unscored offspring born at generation 10.
+Consequently all three habitats contribute exactly three selection events to
+each generalist's ancestry. Freezing the already-scored generation 9 instead
+would omit its last environment's contribution. All regimes get the same nine
+evaluations and nine reproductions, for **900 creature evaluations each**. The
+unscored newborn cohort adds no training evaluation. Founder weights are saved
+for genetic provenance, not as an additional test row.
+
+The study includes **648 scored training cohorts** and **216 test cohorts**,
+totaling **864 evaluated cohorts**. Its 72 trained populations are frozen and
+tested on **54 new layouts**: one layout per habitat and source seed group, shared
+by all four training regimes. The `step19:test` namespace separates test seeds;
+hashes exclude all current training layouts and previous Step 16–18 training/test
+layouts. No selection, mutation, weight updates, tuning, or choosing test winners
+occurs during testing. Complete cohorts include creatures that die early.
+
+The result is a **4 × 3 performance matrix**:
+
+- Rows: uniform specialist, clustered specialist, sparse specialist, generalist.
+- Columns: unseen uniform, clustered, and sparse test layouts.
+- Entries: mean fitness, meals per creature, and survival to 60 simulated seconds.
+
+The independent unit is **one matched source seed group (n = 18)**. Repeats, if
+requested for another declared study, are averaged within seed group and habitat.
+The primary family comprises **nine fitness contrasts**: within each test habitat,
+its home specialist is compared with the generalist and each of the two other
+specialists. All use two-sided exact paired sign tests with Holm correction over
+all nine, and the existing numerical-tie tolerance of `1e-10`. Mean-difference
+intervals use 20,000 paired percentile bootstrap resamples with approximate
+pointwise 95% coverage. A higher/lower decision requires adjusted p < 0.05 and
+an interval excluding zero in the same direction.
+
+**Reciprocal specialization** requires both members of a specialist pair to win
+in their own habitat after correction. A globally stronger population that wins
+everywhere does not satisfy this crossover criterion. Likewise, the claim that
+all specialists beat generalists requires all three home-versus-generalist
+contrasts to pass. Inconclusive tests do not establish equivalence or absence
+of specialization.
+
+Sparse food changes task difficulty, so **compare training regimes within the
+same test column**. Raw home-versus-away scores, or a visually high diagonal,
+cannot establish specialization. The figure shows the raw fitness matrix,
+within-column differences from the generalist, and all nine primary contrasts.
+Gold borders identify matching training/test habitats, not significant winners.
+
+Meals, survival, and generalist-minus-specialist fitness across an equally
+weighted mixture of the three test habitats are descriptive secondary results
+with pointwise intervals and no confirmatory p-values. The mixture score means
+expected raw fitness under one-third probability per habitat; it is not a
+difficulty-normalized score or a search for an optimal generalist. All findings
+concern this architecture, selection rule, speed, training budget, and habitat
+family. Specialization and broad transfer are empirical possibilities, not
+outcomes enforced by the program.
+
+`results/step19-protocol.json` records settings, curricula, contrasts, excluded
+layouts, UTC declaration time, and source hashes before trials begin. This is a
+local declaration, not an externally registered study. Partial reports stay
+`running` and cannot be plotted. Numeric archives use `allow_pickle=False` and
+contain four final evolved banks, their original founder bank, all scored
+episodes, and parent/mutation traces. Existing archives are preserved.
+
+Replay the same held-out tests without retraining:
+
+```sh
+python experiment_specialization.py --workers 8 --reuse-models \
+  --models-dir results/step19-models --output .cache/replayed-specialization.json
+python plot_specialization.py results/step19-specialization.json --output .cache/specialization.png
+```
+
+Replaying deterministic tests does not create new independent seed groups.
+`--seeds`, `--rounds`, and `--repeats` allow future studies; rounds must be divisible
+by three to retain equal generalist exposure. Keep their budgets and decisions
+fixed before inspecting results.
+
+
+### Recorded Step 19 results
+
+The declared study completed all **18 independent seed groups**, 72 evolved
+populations, 648 scored training cohorts, and 216 frozen test cohorts on 54 unseen
+layouts. **Reciprocal specialization was not established, and no home specialist
+conclusively outperformed the generalist.** These inconclusive results do not
+establish equivalence. There are two corrected within-habitat advantages among
+specialists, described below.
+
+Mean fitness across matched unseen environments (compare rows within each column):
+
+| Training regime | Uniform test | Clustered test | Sparse test |
+| --- | ---: | ---: | ---: |
+| Uniform specialist | 350.16 | 344.30 | 74.38 |
+| Clustered specialist | 260.85 | 469.57 | 63.74 |
+| Sparse specialist | 349.92 | 360.99 | 75.82 |
+| Cycling generalist | 345.74 | 403.12 | 75.91 |
+
+All nine primary fitness contrasts are shown below. Differences are home
+specialist minus the named comparison population in the **same test habitat**.
+Intervals are pointwise paired 95% bootstrap intervals; p-values use the declared
+nine-test Holm correction. A positive mean or interval alone does not override
+the corrected paired sign test.
+
+| Test habitat | Comparison | Mean difference | 95% interval | Holm p | Decision |
+| --- | --- | ---: | --- | ---: | --- |
+| Uniform | Home − cycling generalist | +4.43 | [-10.10, +21.79] | 1 | Inconclusive |
+| Uniform | Home − clustered specialist | +89.31 | [+68.25, +112.76] | 6.86646e-05 | Higher |
+| Uniform | Home − sparse specialist | +0.25 | [-11.39, +11.35] | 1 | Inconclusive |
+| Clustered | Home − cycling generalist | +66.45 | [+8.87, +126.89] | 1 | Inconclusive |
+| Clustered | Home − uniform specialist | +125.27 | [+74.37, +180.30] | 0.0527649 | Inconclusive |
+| Clustered | Home − sparse specialist | +108.58 | [+68.99, +152.37] | 0.010498 | Higher |
+| Sparse | Home − cycling generalist | -0.09 | [-4.05, +3.93] | 1 | Inconclusive |
+| Sparse | Home − uniform specialist | +1.44 | [-2.07, +4.82] | 1 | Inconclusive |
+| Sparse | Home − clustered specialist | +12.08 | [+7.93, +16.51] | 0.0527649 | Inconclusive |
+
+The uniform specialist beat the clustered specialist on uniform food in all
+18 seed groups. The clustered specialist beat the sparse specialist on clustered
+food in 16 of 18 groups. The reciprocal comparisons needed to confirm a crossover
+did not pass correction: clustered versus uniform at its own home and sparse
+versus clustered at its own home both had adjusted p = 0.052765. Consequently
+**none of the three specialist pairs satisfies the declared reciprocal criterion**.
+The clustered mean advantage over generalists (+66.45) is suggestive, with a
+positive pointwise interval, but only 12 of 18 seed groups favor it and its
+corrected sign-test p-value is 1.0.
+
+Descriptive food consumption and survival to 60 simulated seconds:
+
+| Training regime | Uniform: meals / survival | Clustered: meals / survival | Sparse: meals / survival |
+| --- | ---: | ---: | ---: |
+| Uniform specialist | 26.91 / 85.7% | 28.61 / 49.6% | 4.02 / 4.6% |
+| Clustered specialist | 19.16 / 65.4% | 40.46 / 61.4% | 3.25 / 2.7% |
+| Sparse specialist | 26.89 / 85.4% | 30.14 / 51.6% | 4.14 / 6.2% |
+| Cycling generalist | 26.52 / 85.3% | 34.03 / 58.4% | 4.13 / 5.9% |
+
+On an equally weighted mixture of the three habitats, the generalist has mean
+raw fitness **274.92**, versus 256.28 (uniform), 264.72 (clustered), and 262.24
+(sparse). Its descriptive paired differences are +18.64 [−5.29, 38.39], +10.20
+[−15.02, 32.89], and +12.68 [−6.10, 30.13], respectively. All intervals include
+zero; this does not establish that the cycling generalist is superior. Uniform
+and sparse training show similar observed transfer to each other, while
+clustered training has a larger observed cost on uniform and sparse food.
+Those patterns motivate further study; they are not confirmed reciprocal
+specialization. Conclusions remain conditional on this finite training budget
+and cycling curriculum.
+
+![Step 19 cross-environment matrices and primary contrasts](results/step19-specialization.png)
+
+`results/step19-audit.json` records reconstruction of all 648 reproduction steps
+from original founder genomes and recorded parent/mutation traces, validation of
+all 18 model archives, matching physical conditions and mutation schedules, and
+preservation of all 87 earlier result artifacts. The complete **256-test**
+verification transcript is saved in `results/step19-tests.txt`.
+
+One presentation-only change followed the completed trials: duplicate row labels
+were hidden on the right heatmap to prevent overlap with the left colorbar.
+The original source hashes remain in the sealed declaration; the audit records
+the exact one-line plotting change and verifies that removing it reproduces the
+declared plotting source hash. All experiment, analysis, and other source files
+match their pre-trial hashes. No data, inference, or experiment settings changed.
 
 ## Test the causal contribution of parent selection
 
@@ -1500,7 +1703,14 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **242 checks**, including fitness-independent random-parent sampling,
+Verified: **256 checks**, including balanced curriculum exposure and ordering,
+matched bodies and mutation schedules, final-round genetic contributions,
+frozen 4 × 3 test matrices, within-column paired inference, reciprocal crossover
+detection, rejection of false specialization from a globally stronger policy,
+model replay, source preservation, and plot exports. The 242-test baseline was
+saved before Step 19.
+
+The checks also cover fitness-independent random-parent sampling,
 neutral parent ordering, inheritance instead of brain replacement, matched
 mutation traces, balanced offspring counts, equal paired starting conditions,
 founder controls, complete training/test budgets, six-test inference, model
@@ -1586,6 +1796,8 @@ experiment_strategy.py  Saved-brain sensor interventions, ancestral controls, an
 plot_strategy.py      Food-bearing benefits and residual evolutionary-history comparisons
 experiment_selection.py  Matched fitness selection versus random-parent inheritance
 plot_selection.py     Training curves and paired held-out selection effects
+experiment_specialization.py  Habitat specialists, cycling generalists, and cross-environment tests
+plot_specialization.py  Performance matrices and corrected home-advantage contrasts
 creature.py           Creature state, motor controls, survival, drawing, and spawning
 brain.py              NumPy network, inference, independent copies, and mutation
 reproduction.py       Balanced selected-parent reproduction and offspring records
@@ -1607,6 +1819,7 @@ test_intelligence.py  Sensor truth, positive controls, archives, repeated trials
 test_speed.py         Speed/energy fairness, greedy guidance, clustered food, and study inference
 test_strategy.py      Source preservation, factorial controls, paired interactions, and probes
 test_parent_selection.py  Fitness independence, matched mutations, inheritance, and causal controls
+test_specialization.py  Balanced exposure, full matrix tests, and reciprocal specialization
 results/step11-seed42.json  Observations from one seeded ten-generation run
 results/step12-seed42.json  Repeated seed-42 trajectory with checkpoint survival rates
 results/step12-evolution.png  Exported fitness, survival, and food-consumption figure
@@ -1642,6 +1855,14 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step19-baseline.json  Hashes of every pre-Step-19 tracked file
+results/step19-baseline-tests.txt  Passing 242-test baseline transcript
+results/step19-protocol.json  Pre-trial specialization protocol, schedules, and source hashes
+results/step19-specialization.json  Cross-environment fitness/meals/survival matrices and inference
+results/step19-specialization.png  Raw fitness, generalist-relative fitness, and home effects
+results/step19-models/  Eighteen specialist/generalist/founder archives
+results/step19-audit.json  Preservation, genome reconstruction, layouts, and plotting provenance
+results/step19-tests.txt  Passing 256-test verification transcript
 check_environment.py  Numerical and graphics dependency check
 requirements.txt      Pinned Python dependencies
 .python-version       Python version selection
