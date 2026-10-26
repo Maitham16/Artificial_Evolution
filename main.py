@@ -1,4 +1,4 @@
-"""Launch Step 14: explore mutation, population size, and food scarcity."""
+"""Launch the world, with optional Step 21 seasons and lineage extinction."""
 
 import argparse
 import json
@@ -149,6 +149,8 @@ def draw_history_panel(
     x, y = panel.left + 28, panel.top
     screen.blit(fonts["title"].render("Evolution across generations", True, TEXT), (x, y + 20))
     note = f"{len(world.generation_stats)} completed / fitness: mean (mint), best (gold)"
+    if hasattr(world, "season_food"):
+        note = f"{len(world.generation_stats)} completed / food and locations change; raw fitness is habitat-dependent"
     screen.blit(fonts["small"].render(note, True, ACCENT), (x, y + 61))
     stats = world.generation_stats
     if stats:
@@ -267,8 +269,10 @@ def draw_interface(
     screen.blit(fonts["small"].render(controller_label, True, ACCENT), (400, 31))
     screen.blit(fonts["small"].render(controller_note, True, MUTED), (400, 55))
 
-    if not world.creatures:
-        activity, status_color = "EXTINCT", (238, 115, 127)
+    if getattr(world, "lineage_extinct", False):
+        activity, status_color = "LINEAGE EXTINCT", (238, 115, 127)
+    elif not world.creatures:
+        activity, status_color = "COHORT COMPLETE", MUTED
     elif world.paused:
         activity, status_color = "PAUSED", MUTED
     else:
@@ -279,7 +283,11 @@ def draw_interface(
     status_x = screen.get_width() - PADDING - status.get_width()
     pygame.draw.circle(screen, status_color, (status_x - 15, 38), 4)
     screen.blit(status, (status_x, 30))
-    stage = fonts["small"].render("STEP 14 / PARAMETERS", True, MUTED)
+    stage_text = "STEP 14 / PARAMETERS"
+    if hasattr(world, "season_food"):
+        context = world.environment_history[-1]
+        stage_text = f"{context['season'].upper()} / FOOD {world.food_count}"
+    stage = fonts["small"].render(stage_text, True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
         f"FOOD {len(world.food)}  /  EATEN {world.total_food_eaten}",
@@ -326,7 +334,8 @@ def draw_interface(
         panel.center = (PADDING + world.width // 2, HEADER_HEIGHT + world.height // 2)
         pygame.draw.rect(screen, BACKGROUND, panel, border_radius=12)
         pygame.draw.rect(screen, MUTED, panel, width=1, border_radius=12)
-        title = fonts["title"].render(f"Generation {world.generation} complete", True, TEXT)
+        title_text = "Lineage extinct" if getattr(world, "lineage_extinct", False) else f"Generation {world.generation} complete"
+        title = fonts["title"].render(title_text, True, TEXT)
         summary = (
             f"Best #{evaluation.best.creature_id:03d}: {evaluation.best.fitness:.1f} points"
             if evaluation.best is not None else "No creatures evaluated"
@@ -334,7 +343,9 @@ def draw_interface(
         summary += f" / {len(evaluation.selected_ids)} selected"
         result = fonts["small"].render(summary, True, TEXT)
         hint_text = "N  Next generation    /    T  History    /    R  Restart"
-        if simulation is not None and simulation.finished:
+        if getattr(world, "lineage_extinct", False):
+            hint_text = "No eligible parents    /    T  History    /    R  Restart"
+        elif simulation is not None and simulation.finished:
             hint_text = "Run complete    /    T  History    /    R  Restart"
         elif simulation is not None and simulation.auto_advance:
             hint_text = "Next generation starts automatically    /    T  History"
@@ -401,6 +412,11 @@ def run(
     food_count: int = FOOD_COUNT,
     fixed_speed: float | None = None,
     food_distribution: str = "uniform",
+    seasons: bool = False,
+    season_length: int = 1,
+    season_food: tuple = (150, 200, 75, 25),
+    cluster_shift: float = 120.0,
+    reproductive_age: float = 60.0,
 ) -> int:
     if headless and frames is None and (generations is None or manual):
         raise ValueError("Headless mode needs frames or an automatic generation limit.")
@@ -410,9 +426,16 @@ def run(
     try:
         pygame.display.init()
         pygame.font.init()
-        world = World(seed=seed, controller=controller, population_size=population_size,
+        world_type, seasonal_options = World, {}
+        if seasons:
+            from seasons import SeasonalWorld
+            world_type = SeasonalWorld
+            seasonal_options = dict(season_length=season_length, season_food=season_food,
+                                    cluster_shift=cluster_shift, reproductive_age=reproductive_age)
+            fixed_speed = 60.0 if fixed_speed is None else fixed_speed
+        world = world_type(seed=seed, controller=controller, population_size=population_size,
                       mutation_rate=mutation_rate, mutation_scale=mutation_scale, food_count=food_count,
-                      fixed_speed=fixed_speed, food_distribution=food_distribution)
+                      fixed_speed=fixed_speed, food_distribution=food_distribution, **seasonal_options)
         simulation = EvolutionSimulation(world, generation_limit=generations,
                                          speed=speed, auto_advance=not manual)
         screen = pygame.display.set_mode(
@@ -449,10 +472,16 @@ def run(
             for stats in world.generation_stats[reported_generations:]:
                 facing = stats.food_facing_fraction
                 facing_label = "N/A" if facing is None else f"{facing:.1%}"
+                seasonal_note = ""
+                if seasons:
+                    context = world.environment_history[stats.generation - 1]
+                    seasonal_note = (f"; {context['season']}, food {context['food_count']}, "
+                                     f"eligible parents {context['eligible_parent_count']}"
+                                     + ("; LINEAGE EXTINCT" if world.lineage_extinct else ""))
                 print(
                     f"Generation {stats.generation}: mean fitness {stats.mean_fitness:.2f}; "
                     f"best {stats.best_fitness:.2f}; meals/creature {stats.mean_food_eaten:.2f}; "
-                    f"mean age {stats.mean_survival_seconds:.2f}s; facing food {facing_label}",
+                    f"mean age {stats.mean_survival_seconds:.2f}s; facing food {facing_label}{seasonal_note}",
                     flush=True,
                 )
                 if simulation.finished:
@@ -475,8 +504,12 @@ def run(
             print(f"Report saved: {report}")
         if plot is not None:
             if world.generation_stats:
-                from plot_evolution import save_evolution_plot
-                save_evolution_plot(simulation.report(), plot)
+                if seasons:
+                    from plot_seasons import save_lineage_plot
+                    save_lineage_plot(simulation.report(), plot)
+                else:
+                    from plot_evolution import save_evolution_plot
+                    save_evolution_plot(simulation.report(), plot)
                 print(f"Evolution plot saved: {plot}")
             else:
                 print("Plot not saved: no completed generations.")
@@ -510,6 +543,12 @@ def main() -> int:
                         help="positive pixels/second shared by all bodies; overrides neural throttle")
     parser.add_argument("--food-distribution", choices=("uniform", "clustered"), default="uniform")
     parser.add_argument("--generations", type=positive_integer, help="stop after N complete generations")
+    parser.add_argument("--seasons", action="store_true", help="enable seasonal clustered food and maturity-gated reproduction")
+    parser.add_argument("--season-length", type=positive_integer, default=1, help="generations per season")
+    parser.add_argument("--season-food", type=nonnegative_integer, nargs=4, default=(150, 200, 75, 25),
+                        metavar=("SPRING", "SUMMER", "AUTUMN", "WINTER"), help="maintained pellets by season")
+    parser.add_argument("--cluster-shift", type=mutation_scale, default=120.0, help="cluster displacement before bounded reflection")
+    parser.add_argument("--reproductive-age", type=mutation_scale, default=60.0, help="minimum age for seasonal parent eligibility")
     parser.add_argument("--speed", type=int, choices=SPEEDS, default=1, help="simulation speed multiplier")
     parser.add_argument("--manual", action="store_true", help="wait for N between generations")
     parser.add_argument("--report", type=Path, help="save completed-generation observations as JSON")
@@ -521,6 +560,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.fixed_speed is not None and args.fixed_speed <= 0:
         parser.error("--fixed-speed must be positive")
+    if args.seasons and args.reproductive_age <= 0:
+        parser.error("--reproductive-age must be positive")
     if args.headless and args.frames is None and (args.generations is None or args.manual):
         parser.error("--headless requires --frames or automatic --generations")
     return run(
@@ -540,6 +581,11 @@ def main() -> int:
         food_count=args.food_count,
         fixed_speed=args.fixed_speed,
         food_distribution=args.food_distribution,
+        seasons=args.seasons,
+        season_length=args.season_length,
+        season_food=args.season_food,
+        cluster_shift=args.cluster_shift,
+        reproductive_age=args.reproductive_age,
     )
 
 

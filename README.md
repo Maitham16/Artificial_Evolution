@@ -3,8 +3,9 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **20 — Understand evolved brains**. Inspect frozen neural decisions,
-hidden activations, sensory influences, and individual food-seeking trajectories.
+Current step: **21 — Environmental changes**. Cycle food availability through
+seasons, move clusters between generations, and track lineage viability and
+archived-controller performance.
 Preserve earlier source and results.
 
 ## Run the world
@@ -40,6 +41,223 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Seasons, moving habitats, and lineage extinction
+
+Step 21 adds an **opt-in seasonal world**. The default constant-environment mode
+and its movement, sensing, energy, eating, and fitness rules remain available.
+All **269 tests passed** before implementation. `results/step21-baseline.json`
+records the preceding commit and hashes of all 187 tracked files; its test
+transcript is `results/step21-baseline-tests.txt`. Earlier result artifacts are
+preserved. This step extends `main.py` and `simulation.py` and introduces new
+seasonal modules; the original `world.py` physics is unchanged.
+
+Run the interactive seasonal simulation:
+
+```sh
+python main.py --seasons --seed 2101 --generations 8 --speed 20
+```
+
+Run the same mode without a window and export its observations:
+
+```sh
+python main.py --headless --seasons --seed 2101 --generations 8 --speed 20 \
+  --report .cache/seasonal-run.json --plot .cache/seasonal-run.png
+```
+
+The seasonal mode uses four food clusters and defaults to fixed 60 pixels/second,
+which costs 5 energy units per living second. The normal eight-input neural
+network receives no explicit season or generation label. Newborns start with the
+existing full energy and random physical traits. Season changes occur **between
+generations**, not within a cohort's lifetime:
+
+| Season | Maintained food pellets | Role |
+| --- | ---: | --- |
+| Spring | 150 | Recovery / standard availability |
+| Summer | 200 | Abundance |
+| Autumn | 75 | Contraction |
+| Winter | 25 | Scarcity |
+
+The four-season cycle repeats. `--season-length` controls generations per season
+(default 1); `--season-food SPRING SUMMER AUTUMN WINTER` changes the four counts,
+including zero. Seasonal counts and clustered placement take precedence over
+`--food-count` and `--food-distribution`, which configure ordinary worlds.
+Pellets continue to replenish after eating: these counts control instantaneous
+availability, **not a finite seasonal energy budget**.
+
+Each cluster center takes a deterministic seeded step before a new generation,
+with a default step length of 120 pixels and reflection at the central 20–80%
+rectangle of the arena. Net displacement can be smaller after reflection. Food
+spread stays at the existing Gaussian standard deviation of 55 pixels. Centers
+are installed **before the first food spawn**, and remain fixed throughout that
+cohort, including replenishment. `--cluster-shift 0` holds centers stationary;
+positive values enable bounded movement every generation, including transitions
+within a multi-generation season. Initial centers and subsequent directions use
+independent seed namespaces, so mutation and food RNG streams are unaffected.
+
+### What extinction means here
+
+Ordinary generations end when all creatures eventually die, and previously even
+starved creatures could contribute archived weights to the next cohort. In
+seasonal mode, a candidate must have reached **reproductive age 60 simulated
+seconds**. Up to 20% of the full birth cohort are chosen by the existing fitness
+score from among eligible candidates (at most 20 parents for population 100).
+Parents are ordered by neutral ID before balanced offspring assignment, and
+brains receive the existing Gaussian mutations. Fewer eligible candidates can
+produce a genetic bottleneck; if only one qualifies it supplies all offspring.
+
+**Zero eligible candidates ends the lineage.** Automatic and manual generation
+advancement stop, reports record the extinction generation, and improved food
+in a future season does not resurrect it. Pressing **R** explicitly starts a new
+experiment with new founders. `--reproductive-age` allows a different positive
+age threshold for future runs; the declared study fixes it at 60 seconds.
+
+This remains a **generational breeding experiment** using archived parental
+weights after a cohort ends. Every viable generation has a fixed 100 births;
+it does not model continuous reproduction, offspring energy costs, or emergent
+population growth. The age rule is a declared modeling choice, not evidence that
+60 seconds is a universal biological threshold. The UI distinguishes **cohort
+complete** from **lineage extinct** and shows the current season and food supply.
+Its history note and seasonal plots identify habitat-dependent fitness. Headless
+runs stop early at lineage extinction, even when a larger horizon was requested.
+
+### Declared seasonal study
+
+```sh
+python experiment_seasons.py --workers 8 --models-dir .cache/seasonal-models \
+  --output .cache/seasons.json --protocol-output .cache/seasons-protocol.json
+python plot_seasons.py .cache/seasons.json --output .cache/seasons.png \
+  --clusters-output .cache/cluster-paths.png
+```
+
+The study declares **eight independent random-founder seeds (2101–2108)** and a
+horizon of **eight generations**, or two full seasonal cycles. It fixes population
+100, arena 1000 × 600, intact sensors, neural control, speed 60, mutation probability
+0.1 and Gaussian scale 0.1, age threshold 60, one generation per season, the food
+schedule above, and cluster shift 120. These settings and source hashes are saved
+in `results/step21-protocol.json` **before rollouts**. This is a local declaration,
+not an externally registered study. No food or threshold tuning follows outcomes.
+
+There are at most **64 seasonal training cohorts**, with fewer if lineages end.
+Every seed's exact original founder bank and **all 100 brains of its last evaluated
+birth cohort** are saved, including extinct lineages and failed creatures. There
+is no extra reproduction after the final scored cohort at the horizon, so an
+archive born at generation G has G−1 inheritance events; its last score does not
+create another unobserved generation. If a lineage ends in generation 1, its last
+cohort bank equals the founders. All candidate ages, scores, eligible counts,
+parent choices, mutation draw hashes, offspring slots, initial layouts, body
+hashes, and birth-cohort genome hashes are recorded.
+
+To separate changed inherited performance from changing seasonal difficulty,
+each seed also receives **four complete frozen diagnostic cohorts**: last birth
+cohort versus founders, each on a new matched **standard (150 food)** and **scarce
+(25 food)** clustered world. These 32 cohorts cover all eight seeds, even those
+whose lineages went extinct. The `step21:test` namespace and physical hashes
+exclude previous Step 16–20 layouts and every current training start. Tests use
+unmodified physics, speed, and neural inputs and never evolve the archived
+brains. These are **shadow evaluations of saved weights**, not resumed living
+lineages or demographic rescues. A last cohort can perform well in a new arena
+after its real lineage has already failed the reproduction gate.
+
+The plots report food availability, lineages eligible to continue after each
+generation, raw fitness with the number of cohorts actually reached, and paired
+archive-minus-founder fitness differences. Post-extinction unborn cohorts are
+**absent**, not invented zero-fitness observations. Lineage retention always uses
+all eight original seeds as denominator; raw cohort means after extinctions are
+explicitly conditional on reaching that generation. The cluster-path illustration
+uses the **first declared seed**, not a selected survivor, and only realized
+cohorts are drawn. A run still eligible at the horizon is right-censored; it has
+not demonstrated indefinite persistence.
+
+All statistics are **exploratory and descriptive**. Archive differences use 20,000
+paired bootstrap resamples of the eight independent seed groups and pointwise
+95% intervals, without new confirmatory p-values. Raw seasonal fitness changes
+mix food availability, cluster locations, genetic changes, and survivor selection;
+comparing different seasons cannot by itself demonstrate adaptation. Fresh
+archive tests measure changed inherited capacity relative to founders under those
+specific conditions. They do not isolate selection from genetic drift (Step 18
+addresses that), compare seasonal evolution with a static-environment training
+control, or prove an optimal response to season changes. The chosen maturity
+threshold and finite horizon materially affect extinction risk.
+
+Seasonal model archives use numeric arrays with `allow_pickle=False`; existing
+models and output paths are preserved. `plot_seasons.py` accepts either a complete
+study report or an individual seasonal simulation report. The former rejects
+partial studies; the latter plots completed cohorts and includes any terminal
+extinction outcome.
+
+### Recorded Step 21 findings
+
+The unchanged declared study completed **56 realized seasonal training cohorts**
+and all **32 frozen diagnostic cohorts**, totaling **88 complete cohorts** and
+8,800 creature lifetimes. **Four of eight lineages went extinct**: seeds 2102 and
+2104 at the first winter (generation 4), then 2106 and 2108 at the second winter
+(generation 8). The remaining four retained eligible parents at the horizon;
+this is finite-horizon viability, not demonstrated indefinite persistence.
+
+| Generation | Season | Food | Cohorts reached | Lineages eligible to continue | Mean fitness among reached cohorts |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 1 | Spring | 150 | 8 | 8 | 206.45 |
+| 2 | Summer | 200 | 8 | 8 | 361.32 |
+| 3 | Autumn | 75 | 8 | 8 | 151.40 |
+| 4 | Winter | 25 | 8 | 6 | 48.22 |
+| 5 | Spring | 150 | 6 | 6 | 371.42 |
+| 6 | Summer | 200 | 6 | 6 | 510.87 |
+| 7 | Autumn | 75 | 6 | 6 | 196.27 |
+| 8 | Winter | 25 | 6 | 4 | 47.02 |
+
+The winter reproduction gate became a strong bottleneck. At generation 8, the
+four viable lineages had only **3, 1, 2, and 1** eligible individuals out of their
+100 births (seeds 2101, 2103, 2105, and 2107). The two other lineages reaching that
+winter had none. Their age-60 survival rate averaged **1.17% across the six reached
+cohorts**; the first winter averaged 2.50% across eight cohorts. Having 100 births
+therefore did not imply a broad breeding pool. No children were created after
+the final generation, and no extinct lineage was restarted by later abundance.
+
+Spring and summer raw mean scores were higher in year two, but cluster locations
+and the set of surviving lineages had also changed. Those raw trends alone do
+not establish genetic adaptation. The standardized archive tests give a separate
+comparison on matched new layouts:
+
+| Fresh diagnostic | Last-cohort mean fitness | Founder mean fitness | Paired difference | Pointwise 95% interval |
+| --- | ---: | ---: | ---: | --- |
+| Standard: 150 food | 370.49 | 206.10 | +164.40 | [110.62, 226.07] |
+| Scarce: 25 food | 50.84 | 37.63 | +13.21 | [7.10, 20.08] |
+
+All **eight independent seed groups** favored their last-cohort archive on both
+fitness comparisons, including the four extinct lineages. These are descriptive
+paired results with pointwise intervals and no new confirmatory significance
+claim. They support **improved inherited controller performance under the tested
+conditions**, while not demonstrating that seasonal training is superior to
+static training or attributing the changes exclusively to selection.
+
+The archived cohorts also consumed more food and reached age 60 more often:
+
+| Diagnostic | Meals: archive / founders | Survival to 60 s: archive / founders |
+| --- | ---: | ---: |
+| Standard | 30.97 / 16.25 | 54.63% / 27.75% |
+| Scarce | 2.33 / 1.33 | 4.00% / 0.63% |
+
+**Controller improvement and lineage extinction can coexist.** A better average
+policy can still fail to produce even one mature individual in a particular
+scarce, shifted habitat. Evaluating an extinct lineage's saved weights in a new
+arena measures a counterfactual capacity; it does not undo its actual extinction.
+The four remaining lineages were still near severe winter bottlenecks at the
+observation limit, so their long-term fate remains unknown.
+
+![Step 21 seasonal food supply, lineage retention, fitness, and archive diagnostics](results/step21-seasons.png)
+
+![Realized food-cluster paths for predetermined seed 2101](results/step21-clusters.png)
+
+`results/step21-audit.json` independently reconstructs all **48 reproduction
+steps** from founders, parent choices, and recorded mutation streams, reproduces
+all **56 training starts** and **16 distinct held-out starts**, validates maturity
+eligibility and balanced offspring, and recomputes the full analysis. All declared
+source hashes match. All **184 earlier files other than README, main, and
+simulation**, including **136 prior result artifacts**, remain unchanged;
+`world.py` retains its original physics source. The complete **284-test**
+transcript is saved in `results/step21-tests.txt`. The seasonal UI, overview,
+and cluster-path figures were rendered and visually checked.
 
 ## Understand evolved brains
 
@@ -1920,7 +2138,13 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **269 checks**, including passive recording equivalence, exact input
+Verified: **284 checks**, including seasonal timing, pre-spawn cluster placement,
+bounded drift, food replenishment, maturity-gated parent choice, permanent
+extinction without automatic rescue, restart behavior, censored histories,
+complete frozen diagnostics, numeric archives, and seasonal plot exports. The
+269-test baseline was saved before Step 21.
+
+The checks also cover passive recording equivalence, exact input
 Jacobians, known-path sensory and neuron effects, saturation versus finite
 ablations, complete-cohort observations, numeric trace integrity, and viewer
 exports. The 256-test baseline was saved before Step 20.
@@ -2018,6 +2242,9 @@ experiment_strategy.py  Saved-brain sensor interventions, ancestral controls, an
 plot_strategy.py      Food-bearing benefits and residual evolutionary-history comparisons
 experiment_selection.py  Matched fitness selection versus random-parent inheritance
 plot_selection.py     Training curves and paired held-out selection effects
+seasons.py  Generation seasons, moving food clusters, maturity gates, and lineage extinction
+experiment_seasons.py  Independent seasonal lineages and matched frozen archive diagnostics
+plot_seasons.py  Seasonal food, retention, fitness, archive effects, and cluster-path plots
 inspect_brains.py  Frozen-network activations, sensory diagnostics, and passive recordings
 plot_brains.py  Scientific overview and self-contained playback export
 brain_viewer.html  Offline trajectory and neural-decision playback template
@@ -2044,6 +2271,7 @@ test_intelligence.py  Sensor truth, positive controls, archives, repeated trials
 test_speed.py         Speed/energy fairness, greedy guidance, clustered food, and study inference
 test_strategy.py      Source preservation, factorial controls, paired interactions, and probes
 test_parent_selection.py  Fitness independence, matched mutations, inheritance, and causal controls
+test_seasons.py  Season timing, food placement, maturity, extinction, archives, and CLI exports
 test_brain_inspection.py  Passive physics, exact derivatives, trace integrity, and viewer exports
 test_specialization.py  Balanced exposure, full matrix tests, and reciprocal specialization
 results/step11-seed42.json  Observations from one seeded ten-generation run
@@ -2081,6 +2309,15 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step21-baseline.json  Hashes of all pre-Step-21 tracked files
+results/step21-baseline-tests.txt  Passing 269-test baseline transcript
+results/step21-protocol.json  Pre-rollout seasonal settings, sources, and excluded layouts
+results/step21-seasons.json  Realized lineages, extinction records, and frozen diagnostics
+results/step21-seasons.png  Food supply, retention, raw fitness, and archive test effects
+results/step21-clusters.png  Realized cluster paths for the first declared seed
+results/step21-models/  Eight founder and last-cohort numeric model archives
+results/step21-audit.json  Genetic replay, seasonal starts, frozen testing, and preservation
+results/step21-tests.txt  Passing 284-test verification transcript
 results/step20-baseline.json  Hashes of every pre-Step-20 tracked file
 results/step20-baseline-tests.txt  Passing 256-test baseline transcript
 results/step20-protocol.json  Declared sources, probes, recording choices, and layout exclusions

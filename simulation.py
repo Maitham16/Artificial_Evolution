@@ -30,7 +30,8 @@ class EvolutionSimulation:
     @property
     def finished(self) -> bool:
         return (
-            self.generation_limit is not None
+            getattr(self.world, "lineage_extinct", False)
+            or self.generation_limit is not None
             and len(self.world.generation_history) >= self.generation_limit
         )
 
@@ -78,7 +79,7 @@ class EvolutionSimulation:
     def report(self) -> dict:
         """Return serializable observations; incomplete generations are excluded."""
         world = self.world
-        return {
+        report = {
             "format_version": 2,
             "seed": world.seed,
             "controller": world.controller,
@@ -102,3 +103,6 @@ class EvolutionSimulation:
                 for stats in world.generation_stats
             ],
         }
+        if hasattr(world, "environment_report"):
+            report["seasonal_environment"] = world.environment_report()
+        return report
