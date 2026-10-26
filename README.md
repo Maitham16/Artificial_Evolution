@@ -3,10 +3,9 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **21 — Environmental changes**. Cycle food availability through
-seasons, move clusters between generations, and track lineage viability and
-archived-controller performance.
-Preserve earlier source and results.
+Current step: **22 — Obstacles and hazards**. Add solid barriers, dangerous regions,
+expanded sensing, and matched tests of evolved avoidance while foraging.
+Earlier experiments and saved results remain available.
 
 ## Run the world
 
@@ -41,6 +40,255 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Obstacles, hazards, and evolved avoidance
+
+Step 22 adds an **opt-in obstacle world**, with solid internal barriers and
+energy-draining regions. Before implementation, all **284 tests passed**;
+`results/step22-baseline.json` records the preceding commit and hashes of all
+207 tracked files, with the test transcript in `results/step22-baseline-tests.txt`.
+Earlier saved results are preserved. The original eight-input neural model remains
+the default for ordinary and seasonal worlds; obstacle worlds use **16–8–2
+networks with 154 parameters**. Existing eight-input model archives are unchanged.
+
+```sh
+python main.py --obstacles --seed 2201 --generations 8 --speed 20
+```
+
+The view shows grey barriers, red dangerous regions, and five yellow obstacle
+rays for the selected creature. The footer displays its collision count, dangerous
+exposure, and risk-sensor mode. Headless runs can export completed-cohort plots:
+
+```sh
+python main.py --headless --obstacles --seed 2201 --generations 8 --speed 20 \
+  --report .cache/obstacle-run.json --plot .cache/obstacle-run.png
+```
+
+`--risk-sensors hidden` masks the eight new inputs while preserving food, hunger,
+and outer-wall sensing. This is a diagnostic intervention, not removal of the
+physical obstacles or damage. Ordinary controller and population/food/mutation
+options remain available. Obstacle mode defaults to fixed 60 pixels/second;
+neural throttle remains unused at fixed speed. **Seasonal and obstacle modes are
+separate experiments** and cannot be combined in this step. Obstacle mode uses
+the ordinary fixed-birth-cohort breeding rule, not Step 21's reproductive-age gate.
+All cohorts eventually die; this step does not report permanent lineage extinction.
+
+### Geometry, physical costs, and inputs
+
+The default 1000 × 600 arena has two partial vertical walls and one horizontal
+barrier, with open routes around every end. Each generation receives a new seeded
+layout from the same family: barrier sizes stay fixed relative to arena size,
+while their positions vary within declared ranges. Two circular danger regions
+have radius 51 pixels in this arena. They remain fixed during a cohort. This is
+local obstacle navigation, not an arbitrary maze generator.
+
+Bodies and replenished food are rejection-sampled outside barriers and danger
+regions; body placement also preserves separation between creatures. Barriers
+use **radius-expanded axis-aligned boxes** for conservative body clearance:
+the same geometry controls spawning, obstacle rays, and motion. This treats
+corners conservatively rather than using exact rounded circle/rectangle contact.
+Motion sweeps to the nearest barrier or outer-wall contact, reflects the heading,
+and processes remaining travel. It cannot jump through a thin wall at high speed.
+A safety cap stops extreme calls after 16 impacts at the last safe position;
+normal one-pixel ticks never require that many. Outer boundary reflections remain
+unpenalized. Internal barrier impacts are counted per reflected contact, not per
+frame spent near a wall.
+
+Each internal impact costs **2 energy units**. Body overlap with a dangerous disk
+adds **12 energy units per living second** to the ordinary movement/basal cost
+(5 units/second at fixed speed 60). Exposure is evaluated at each fixed tick's
+starting position, with actual lived time clipped at energy or lifespan limits.
+At the study speed, a tick moves at most one pixel; danger exposure therefore has
+the usual fixed-step entry/exit approximation. Continuous swept collision tests
+apply to solid barriers, not to integrated danger exposure at extreme speeds.
+Collision depletion and hazard depletion have distinct death causes. Dead bodies
+are removed before they can eat, including deaths caused during movement.
+
+The **selection score** also explicitly penalizes risk:
+
+```text
+fitness = survival_seconds + 10 × meals
+          − 2 × internal_barrier_impacts − 5 × dangerous_seconds
+```
+
+Negative fitness is allowed. Physical energy loss and these score deductions are
+both deliberate: the former affects survival; the latter supplies explicit
+selection pressure. A larger penalized score alone does not establish effective
+avoidance or improved food seeking.
+
+The original eight inputs remain food proximity, signed food bearing, food
+visibility, hunger, and four outer-wall clearances. The eight additions are:
+
+| Added input | Encoding |
+| --- | --- |
+| Obstacle left, front-left, forward, front-right, right | Radius-aware clearance / 160 pixels at −90°, −45°, 0°, +45°, +90°; 1 means no barrier within range |
+| Hazard proximity | 1 − nearest danger-boundary clearance / 160, clipped at zero; includes body radius |
+| Hazard direction | Signed center bearing / π; zero when undetected or exactly at its center |
+| Hazard inside | 1 when the body overlaps a dangerous region; otherwise 0 |
+
+Food sensing retains the original non-occluded nearest-food signal: a pellet can
+be sensed behind a barrier. No route, avoidance turn, or food-seeking action is
+programmed into the neural controller. Contact reflections are shared world
+physics. In hidden-risk tests, the five new clearances become 1 and the hazard
+triple becomes 0. The original eight signals remain truthful, so hunger can still
+carry indirect information about damage. Such masks can cause input-distribution
+shift and do not isolate the roles of individual risk channels.
+
+### Declared avoidance study
+
+```sh
+python experiment_obstacles.py --workers 8 --models-dir .cache/obstacle-models \
+  --output .cache/obstacles.json --protocol-output .cache/obstacle-protocol.json
+python plot_obstacles.py .cache/obstacles.json --output .cache/obstacles.png \
+  --layout-output .cache/obstacle-layout.png
+```
+
+The fixed study declares **12 independent random-founder seeds (2201–2212)**,
+**eight scored training generations**, population 100, uniform maintained food
+150, fixed speed 60, intact food/risk sensors, and unchanged mutation probability
+0.1 with Gaussian scale 0.1. Selection uses the top 20 penalized-fitness parents,
+neutral ID ordering, and five offspring per parent. All 100 final birth-cohort
+brains and original founders are archived. There are seven inheritance events;
+the last scored cohort is frozen without an extra unobserved birth generation.
+The study includes **96 training cohorts**.
+
+Every seed then receives **two new held-out layouts**, both from the training
+geometry family. On each, three complete frozen cohorts are tested:
+
+- Evolved brains with intact inputs.
+- The same evolved brains with only the eight added risk inputs hidden.
+- Exact original unselected founders with all inputs intact.
+
+That is **72 test cohorts**, **24 distinct new layouts**, and **168 complete
+cohorts / 16,800 creature lifetimes** in total. Body traits, placements, initial
+food, obstacles, and hazard locations match across the three conditions on each
+layout. Test namespaces and physical hashes exclude every recorded Step 16–21
+layout and every current training start. There is no test-time selection,
+mutation, or best-individual filtering. These new 16-input founders provide a
+matched architectural baseline; this is not a comparison against the earlier
+eight-input controllers or a fresh random-motor baseline.
+
+Metrics include penalized fitness, meals per original creature, age-60 survival,
+**barrier collisions per living creature-minute**, and **dangerous seconds / total
+living creature-seconds**. The risk ratios pool actual exposure within each cohort;
+repeat ratios are then averaged within seed. Lower raw counts caused merely by
+early death cannot establish avoidance. All early deaths remain in the cohort.
+
+The five primary paired comparisons are declared before trials:
+
+| Primary comparison | Direction supporting improvement |
+| --- | --- |
+| Evolved intact − founders: penalized fitness | Higher |
+| Evolved intact − founders: meals | Higher |
+| Evolved intact − founders: collision rate | Lower |
+| Evolved intact − founders: hazard exposure fraction | Lower |
+| Evolved intact − same brains with risk inputs hidden: fitness | Higher |
+
+Repeats are averaged **within each independent training seed** before inference,
+so n = 12, not 24 layouts or 1,200 related creatures. Tests use two-sided exact
+paired sign tests, numerical-tie tolerance 1e−10, Holm correction across all five,
+and paired percentile bootstrap intervals (20,000 resamples; pointwise 95%).
+Higher/lower requires adjusted p < 0.05 and a mean-difference interval excluding
+zero in the same direction. The joint claim of **avoidance with improved
+foraging** requires higher fitness **and** higher meals **and** at least one
+corrected reduction in collision rate or hazard fraction. Benefit from the added
+risk sensors is a separate fifth test; lower risk without a sensor benefit can
+reflect general movement changes rather than demonstrated use of the new cues.
+A trade-off improving one risk while worsening the other must still be reported.
+
+`results/step22-protocol.json` records settings, sensors, primary decisions,
+excluded starts, and source hashes before rollouts. It is a local declaration,
+not an external preregistration. All candidate outcomes and mutation traces are
+saved. Numeric model archives load with `allow_pickle=False`; existing model and
+study output paths cannot be overwritten. The overview refuses partial studies.
+The layout illustration uses the first declared seed's first held-out repeat,
+chosen before outcomes. It shows initial bodies and food, not trajectories or a
+selected success. Standalone lineage plots also support custom runtime settings.
+
+Conclusions concern this architecture, finite budget, penalty weights, fixed
+speed, and layout family. Training trends alone mix changing geometry and
+ancestry. Held-out founder comparisons test changed inherited performance, while
+the risk-mask comparison tests usefulness of the added input group; neither
+isolates selection from genetic drift (Step 18 addresses that). They do not
+establish planning, maze generalization, or usefulness of every sensor channel.
+
+### Recorded Step 22 findings
+
+The fixed study completed **12 independent training seeds**, **96 training
+cohorts**, and **72 frozen held-out cohorts** on **24 new matched layouts**:
+168 complete cohorts and 16,800 creature lifetimes. **Foraging and penalized
+fitness improved, but the declared joint criterion for evolved avoidance was
+not met.** Benefit from the eight added risk inputs was also inconclusive.
+No penalty, architecture, seed, or training-budget changes followed these outcomes.
+
+Held-out means (each seed first averages its two layouts):
+
+| Frozen condition | Penalized fitness | Meals / creature | Survival to 60 s | Barrier impacts / living minute | Dangerous share of living time |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Evolved, intact | 274.04 | 22.08 | 68.08% | 2.975 | 2.826% |
+| Same evolved brains, risk inputs hidden | 274.75 | 22.17 | 67.54% | 2.760 | 2.985% |
+| Unselected founders, intact | 245.79 | 19.71 | 59.63% | 3.366 | 2.834% |
+
+All five declared primary comparisons are retained below. The first four are
+evolved intact minus founders; the last holds evolved genomes fixed and changes
+only the added risk inputs. Hazard differences are in **percentage points of
+living time**. Intervals are pointwise paired 95% bootstrap intervals, while the
+p-values apply the five-test Holm correction:
+
+| Primary comparison | Mean difference | 95% interval | Holm p | Decision |
+| --- | ---: | --- | ---: | --- |
+| Penalized fitness | +28.25 | [14.05, 40.80] | 0.031738 | Higher |
+| Meals per creature | +2.374 | [1.247, 3.406] | 0.031738 | Higher |
+| Barrier impacts per living minute | −0.391 | [−0.743, −0.029] | 1.0 | Inconclusive |
+| Dangerous-time share (percentage points) | −0.008 | [−0.281, 0.274] | 1.0 | Inconclusive |
+| Fitness: evolved intact − risk-hidden | −0.71 | [−6.88, 5.12] | 1.0 | Inconclusive |
+
+Fitness and food consumption each improved in **11 of 12 source seed groups**.
+The mean collision rate was about 11.6% lower, and its pointwise mean interval
+excluded zero, but only **8 of 12 seed groups** had lower collision rates. Its
+corrected paired sign test did not pass. The declared decision requires **both**
+the corrected test and interval, so a negative mean interval alone does not
+establish avoidance. Hazard exposure favored each side in six seed groups and
+was nearly unchanged on average.
+
+Removing the added obstacle/hazard inputs produced a small mean fitness
+increase, but the paired difference interval includes zero and only seven seeds
+favored intact inputs. This does **not** establish equivalence, harmful sensors,
+or that the inputs are unused. It establishes that this study did not demonstrate
+a fitness benefit from those inputs at this training budget. The original eight
+inputs and indirect hunger feedback remained available under the mask.
+
+The supported finding is **improved foraging in the obstacle environment**.
+Evidence for obstacle avoidance is suggestive in the mean collision rate but
+insufficient under the declared rule; hazard avoidance and useful added risk
+sensing were not demonstrated. General movement changes, food sensing, and
+penalty trade-offs remain possible explanations. There is no basis here for a
+claim of learned planning, broad maze navigation, or successful avoidance of
+both risk types. These results are conditional on the specified layouts,
+154-parameter architecture, costs, and seven inheritance events.
+
+![Step 22 held-out foraging, normalized risk, and sensor-intervention results](results/step22-obstacles.png)
+
+![Actual first declared held-out obstacle and hazard layout](results/step22-layout.png)
+
+`results/step22-audit.json` reconstructs all **84 reproduction steps** from the
+saved founders and mutation traces, validates all **12 numeric archives / 24
+brain banks**, reproduces **96 training starts** and **24 held-out starts**, and
+checks all actual living-time risk denominators. It also records 2,000 seeded
+swept-motion stress cases and the backward-compatibility comparison against the
+exact pre-Step-22 commit: five seconds of ordinary foraging and two full zero-food
+generations, including inheritance, are bitwise identical in ordinary mode.
+All **202 earlier files other than README, brain, world, main, and simulation**,
+including **152 prior result artifacts**, remain unchanged. The complete current
+**303-test** transcript is saved in `results/step22-tests.txt`.
+
+After declaration, display/export corrections updated the leaderboard's formula
+text and made partial-run plots ignore an unfinished next cohort; the export
+regression check was supplemented. The audit records the exact replacements and
+verifies that reversing them reproduces the declared source hashes. All
+experiment, geometry, brain, and statistical-analysis sources match their
+pre-rollout hashes; no experimental data or settings changed. The overview,
+held-out layout, live geometry, and corrected leaderboard were visually checked.
 
 ## Seasons, moving habitats, and lineage extinction
 
@@ -2138,7 +2386,12 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **284 checks**, including seasonal timing, pre-spawn cluster placement,
+Verified: **303 checks**, including legacy eight-input draws, 16-input inheritance,
+swept barriers, fatal damage timing, safe spawning/replenishment, oriented sensing,
+matched interventions, normalized risk denominators, joint statistical decisions,
+and obstacle plots. The 284-test baseline was saved before Step 22.
+
+The checks also cover seasonal timing, pre-spawn cluster placement,
 bounded drift, food replenishment, maturity-gated parent choice, permanent
 extinction without automatic rescue, restart behavior, censored histories,
 complete frozen diagnostics, numeric archives, and seasonal plot exports. The
@@ -2242,6 +2495,9 @@ experiment_strategy.py  Saved-brain sensor interventions, ancestral controls, an
 plot_strategy.py      Food-bearing benefits and residual evolutionary-history comparisons
 experiment_selection.py  Matched fitness selection versus random-parent inheritance
 plot_selection.py     Training curves and paired held-out selection effects
+obstacles.py  Solid barriers, dangerous regions, 16-input sensing, physical costs, and penalties
+experiment_obstacles.py  Matched frozen avoidance, foraging, and risk-sensor tests
+plot_obstacles.py  Avoidance metrics, corrected comparisons, and held-out layout figures
 seasons.py  Generation seasons, moving food clusters, maturity gates, and lineage extinction
 experiment_seasons.py  Independent seasonal lineages and matched frozen archive diagnostics
 plot_seasons.py  Seasonal food, retention, fitness, archive effects, and cluster-path plots
@@ -2271,6 +2527,7 @@ test_intelligence.py  Sensor truth, positive controls, archives, repeated trials
 test_speed.py         Speed/energy fairness, greedy guidance, clustered food, and study inference
 test_strategy.py      Source preservation, factorial controls, paired interactions, and probes
 test_parent_selection.py  Fitness independence, matched mutations, inheritance, and causal controls
+test_obstacles.py  Geometry, damage, expanded brains, normalized risk, inference, and exports
 test_seasons.py  Season timing, food placement, maturity, extinction, archives, and CLI exports
 test_brain_inspection.py  Passive physics, exact derivatives, trace integrity, and viewer exports
 test_specialization.py  Balanced exposure, full matrix tests, and reciprocal specialization
@@ -2309,6 +2566,15 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step22-baseline.json  Hashes of every pre-Step-22 tracked file
+results/step22-baseline-tests.txt  Passing 284-test baseline transcript
+results/step22-protocol.json  Declared geometry, sensing, costs, budgets, and five primary tests
+results/step22-obstacles.json  Training histories, frozen comparisons, and risk/foraging inference
+results/step22-obstacles.png  Training, held-out performance, risk rates, and sensor benefit
+results/step22-layout.png  Actual first declared held-out geometry and initial bodies/food
+results/step22-models/  Twelve 16-input founder and evolved numeric brain archives
+results/step22-audit.json  Genetic replay, physical starts, backward compatibility, and preservation
+results/step22-tests.txt  Passing 303-test verification transcript
 results/step21-baseline.json  Hashes of all pre-Step-21 tracked files
 results/step21-baseline-tests.txt  Passing 269-test baseline transcript
 results/step21-protocol.json  Pre-rollout seasonal settings, sources, and excluded layouts

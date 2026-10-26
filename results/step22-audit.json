@@ -1,0 +1,106 @@
+{
+  "audited_at_utc": "2026-10-26T03:23:20.607378+00:00",
+  "status": "passed",
+  "independent_founder_seeds": 12,
+  "complete_training_cohorts": 96,
+  "complete_frozen_test_cohorts": 72,
+  "complete_creature_lifetimes": 16800,
+  "distinct_training_starts_and_geometries": 96,
+  "distinct_unseen_test_starts_and_geometries": 24,
+  "reproduction_steps_independently_reconstructed": 84,
+  "validated_numeric_archives": 12,
+  "frozen_brain_banks": 24,
+  "parameter_count_per_brain": 154,
+  "all_parent_choices_mutations_and_birth_cohort_hashes_reconstructed": true,
+  "all_spawns_safe_and_all_physical_starts_reproduced": true,
+  "all_test_sensor_modes_and_geometries_matched": true,
+  "all_risk_metrics_use_observed_living_time": true,
+  "all_declared_source_hashes_match": false,
+  "all_experiment_geometry_brain_and_analysis_sources_match": true,
+  "post_declaration_presentation_changes": {
+    "main.py": {
+      "declared_sha256": "1a1248202d214f076f0672232df0a5712532c9270836c0ff1433c50dccdf0c4e",
+      "current_sha256": "020b6b29feb15d41d62f58c429605c96dfc6de5555a94980c19912bccff87a05",
+      "exact_replacements": [
+        {
+          "old": "",
+          "new": "    if hasattr(world, \"barriers\"):\n        rule = \"Fitness = age + 10 x food - 2 x impacts - 5 x danger seconds\"\n"
+        }
+      ],
+      "reason": "Post-declaration display/export corrections: show the implemented fitness penalties, plot completed cohorts when a next cohort is unfinished, and verify that export case.",
+      "only_these_display_export_and_test_changes_differ_from_the_declared_source": true
+    },
+    "plot_obstacles.py": {
+      "declared_sha256": "aa68c6fdc8aaf9a699f201cee956e2e9f1ffa2732cea2730564891add4b591ff",
+      "current_sha256": "e9dc8189dc1052ed20fbace0d36d06e4a09e1c1b987efac81c17f929b75f8950",
+      "exact_replacements": [
+        {
+          "old": "import argparse\n",
+          "new": "import argparse\nimport copy\n"
+        },
+        {
+          "old": "",
+          "new": "    # A frame-limited run may have started an unfinished next birth cohort.\n    report=copy.deepcopy(report)\n    report['obstacle_environment']['history']=[r for r in report['obstacle_environment']['history'] if r['complete']]\n"
+        }
+      ],
+      "reason": "Post-declaration display/export corrections: show the implemented fitness penalties, plot completed cohorts when a next cohort is unfinished, and verify that export case.",
+      "only_these_display_export_and_test_changes_differ_from_the_declared_source": true
+    },
+    "test_obstacles.py": {
+      "declared_sha256": "d125c317c7b419f73a40d39c0d4d33cbca0ce26de762fe355cd60966c538f3e4",
+      "current_sha256": "d9744992340dfc8a78e97a9bb77374f17ecfe684c226f05a382760d289f3d933",
+      "exact_replacements": [
+        {
+          "old": "",
+          "new": "        partial=copy.deepcopy(self.report['trials'][0]['training'])\n        partial['obstacle_environment']['history'].append({'generation':3,'complete':False})\n        save_lineage_plot(partial,self.root/'partial-lineage.png')\n"
+        }
+      ],
+      "reason": "Post-declaration display/export corrections: show the implemented fitness penalties, plot completed cohorts when a next cohort is unfinished, and verify that export case.",
+      "only_these_display_export_and_test_changes_differ_from_the_declared_source": true
+    }
+  },
+  "stored_analysis_matches_recomputation": true,
+  "swept_movement_stress_cases": 2000,
+  "stress_cases_seed": 220022,
+  "legacy_mode_regression": {
+    "status": "passed",
+    "reference_commit": "7391438da87fc2ae477279ed7042f66094c45235",
+    "normal_food_seconds_bitwise_matched": 5,
+    "zero_food_generations_and_inheritance_bitwise_matched": 2,
+    "default_eight_input_brains_physics_scores_and_reports_identical": true
+  },
+  "preserved_preexisting_files_except_brain_world_main_simulation_README": 202,
+  "unchanged_prior_result_artifacts": 152,
+  "baseline_tests_passed": 284,
+  "current_tests_passed": 303,
+  "maximum_absolute_mean_speed_error": 2.2792789877712494e-10,
+  "training_hazard_deaths": 881,
+  "training_collision_deaths": 119,
+  "runtime": {
+    "python": "3.13.17",
+    "numpy": "2.5.4",
+    "pygame": "2.6.1",
+    "matplotlib": "3.11.2"
+  },
+  "artifact_sha256": {
+    "results/step22-models/seed-2201.npz": "2a9cec8a507f95a3e58dc43d73ea1c4c3a3986b5c445d7e80471a1074569a36d",
+    "results/step22-models/seed-2202.npz": "d48ea2dba3c62ae7658832621e55769a093ac439faf6f0297190f0f3fcb4318b",
+    "results/step22-models/seed-2203.npz": "2fe285feb951a9ebf0c8fdcb20c3c3b4e474d71b6ff83cec80bb43b6da383ecd",
+    "results/step22-models/seed-2204.npz": "b09e2c180c7aec45700f1d9c9e15c5472aa59f6d5c943b78f9a328a9ae4571cd",
+    "results/step22-models/seed-2205.npz": "94913226fad2b42fd278b63eed9437e239513022e990a2078bff951700b9b807",
+    "results/step22-models/seed-2206.npz": "aaf3814da3f05fa9030351b30efabf716007636e8748377daeb5424d44002c56",
+    "results/step22-models/seed-2207.npz": "34e5719cd19f0150e0d1f9638c1b09e22a89d8b8248e175242ef0d6ea4948458",
+    "results/step22-models/seed-2208.npz": "ea0f42554684bc27eb0f91919efe2188198dd337050a7f7487a91e90fa080a7b",
+    "results/step22-models/seed-2209.npz": "0bac0d72e070a4f5e28a33087247b7b08cbacb0b521247ad4af6d8b165ac578a",
+    "results/step22-models/seed-2210.npz": "91affcbc97dc96591aef9e5d3e5a18520791599d221d9898a173c804fd3c2995",
+    "results/step22-models/seed-2211.npz": "f8ac821ffe8ddef54e3d4561bfe494398a84e3604fd4682ba19d96b9a942b82d",
+    "results/step22-models/seed-2212.npz": "bf1847265ed8178f324fca7dfdf325787bb0fc03698b5797fc303bbb8d9af1a1",
+    "results/step22-baseline.json": "064e6860a8cf43a0543b0f5af61c0d320a81853453c5951387bf17e2957dce5a",
+    "results/step22-baseline-tests.txt": "fe58b32202b261ecff6e49e2b2babef61d4c9802f2c428ffd81dfdfdbc7eefc8",
+    "results/step22-protocol.json": "78be107c60dfb3c9e692f17661fac3f5315f4c9f727a70c9b75926d805610583",
+    "results/step22-obstacles.json": "6390f31628847240343ecee0d58d8b76abec79177fa98b968524d658727a1430",
+    "results/step22-obstacles.png": "192e1c90943f6a8daa50325e7e151010a79ffdccf28e004a912c8e5be1b12983",
+    "results/step22-layout.png": "5e701ca66d6547948ba4645772b19789eb72e6ad4477316524d56d096a5415f7",
+    "results/step22-tests.txt": "5d4036d360f5fc237b8190292959c57c54da1c6a63097e36870704b11d4af330"
+  }
+}

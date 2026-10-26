@@ -151,6 +151,8 @@ def draw_history_panel(
     note = f"{len(world.generation_stats)} completed / fitness: mean (mint), best (gold)"
     if hasattr(world, "season_food"):
         note = f"{len(world.generation_stats)} completed / food and locations change; raw fitness is habitat-dependent"
+    if hasattr(world, "barriers"):
+        note = f"{len(world.generation_stats)} completed / fitness subtracts barrier impacts and danger exposure"
     screen.blit(fonts["small"].render(note, True, ACCENT), (x, y + 61))
     stats = world.generation_stats
     if stats:
@@ -204,6 +206,8 @@ def draw_fitness_panel(
     )
     screen.blit(fonts["small"].render(state, True, ACCENT), (x, panel.top + 61))
     rule = "Fitness = seconds alive + 10 x food eaten"
+    if hasattr(world, "barriers"):
+        rule = "Fitness = age + 10 x food - 2 x impacts - 5 x danger seconds"
     screen.blit(fonts["small"].render(rule, True, MUTED), (x, panel.top + 86))
 
     columns = (x, x + 65, x + 175, x + 315, x + 420, x + 540)
@@ -287,6 +291,8 @@ def draw_interface(
     if hasattr(world, "season_food"):
         context = world.environment_history[-1]
         stage_text = f"{context['season'].upper()} / FOOD {world.food_count}"
+    if hasattr(world, "barriers"):
+        stage_text = "STEP 22 / OBSTACLES"
     stage = fonts["small"].render(stage_text, True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
@@ -309,6 +315,11 @@ def draw_interface(
         f"HUNGRY {hungry}  /  DEAD {len(world.dead_creatures)} "
         f"(starved {starved}, aged {aged})", True, MUTED,
     )
+    if hasattr(world, "barriers"):
+        hazard_dead = sum(c.death_cause == "hazard" for c in world.dead_creatures)
+        impact_dead = sum(c.death_cause == "collision" for c in world.dead_creatures)
+        survival_label = fonts["small"].render(
+            f"DEAD {len(world.dead_creatures)} / HAZARD {hazard_dead} / HIT {impact_dead} / STARVED {starved}", True, MUTED)
     screen.blit(survival_label, (PADDING, 81))
     if world.selected_creature is None:
         perception_text = "Select a creature to view senses"
@@ -383,6 +394,10 @@ def draw_interface(
             f"Radius {creature.radius} px    Facing {math.degrees(creature.heading):.0f} deg    "
             f"Turn {math.degrees(creature.turn_rate):+.0f} deg/s"
         )
+        if hasattr(world, "barriers"):
+            traits = (f"Position ({creature.x:.0f}, {creature.y:.0f}) / Speed {creature.speed:.1f} / "
+                      f"Impacts {creature.collisions} / Danger {creature.hazard_seconds:.2f}s / "
+                      f"16 inputs / Risk sensors {world.risk_sensor_mode}")
     screen.blit(fonts["small"].render(details, True, TEXT), (PADDING, footer_y + 24))
     screen.blit(fonts["small"].render(traits, True, MUTED), (PADDING, footer_y + 46))
     seed_label = fonts["small"].render(
@@ -417,7 +432,11 @@ def run(
     season_food: tuple = (150, 200, 75, 25),
     cluster_shift: float = 120.0,
     reproductive_age: float = 60.0,
+    obstacles: bool = False,
+    risk_sensors: str = "intact",
 ) -> int:
+    if obstacles and seasons:
+        raise ValueError("Choose seasonal or obstacle mode for this experiment.")
     if headless and frames is None and (generations is None or manual):
         raise ValueError("Headless mode needs frames or an automatic generation limit.")
     if headless:
@@ -432,6 +451,11 @@ def run(
             world_type = SeasonalWorld
             seasonal_options = dict(season_length=season_length, season_food=season_food,
                                     cluster_shift=cluster_shift, reproductive_age=reproductive_age)
+            fixed_speed = 60.0 if fixed_speed is None else fixed_speed
+        if obstacles:
+            from obstacles import ObstacleWorld
+            world_type = ObstacleWorld
+            seasonal_options = dict(risk_sensor_mode=risk_sensors)
             fixed_speed = 60.0 if fixed_speed is None else fixed_speed
         world = world_type(seed=seed, controller=controller, population_size=population_size,
                       mutation_rate=mutation_rate, mutation_scale=mutation_scale, food_count=food_count,
@@ -504,7 +528,10 @@ def run(
             print(f"Report saved: {report}")
         if plot is not None:
             if world.generation_stats:
-                if seasons:
+                if obstacles:
+                    from plot_obstacles import save_lineage_plot
+                    save_lineage_plot(simulation.report(), plot)
+                elif seasons:
                     from plot_seasons import save_lineage_plot
                     save_lineage_plot(simulation.report(), plot)
                 else:
@@ -544,6 +571,8 @@ def main() -> int:
     parser.add_argument("--food-distribution", choices=("uniform", "clustered"), default="uniform")
     parser.add_argument("--generations", type=positive_integer, help="stop after N complete generations")
     parser.add_argument("--seasons", action="store_true", help="enable seasonal clustered food and maturity-gated reproduction")
+    parser.add_argument("--obstacles", action="store_true", help="enable barriers, dangerous regions, and 16-input brains")
+    parser.add_argument("--risk-sensors", choices=("intact", "hidden"), default="intact", help="control the eight added obstacle/hazard inputs")
     parser.add_argument("--season-length", type=positive_integer, default=1, help="generations per season")
     parser.add_argument("--season-food", type=nonnegative_integer, nargs=4, default=(150, 200, 75, 25),
                         metavar=("SPRING", "SUMMER", "AUTUMN", "WINTER"), help="maintained pellets by season")
@@ -562,6 +591,10 @@ def main() -> int:
         parser.error("--fixed-speed must be positive")
     if args.seasons and args.reproductive_age <= 0:
         parser.error("--reproductive-age must be positive")
+    if args.seasons and args.obstacles:
+        parser.error("choose --seasons or --obstacles")
+    if args.risk_sensors != "intact" and not args.obstacles:
+        parser.error("--risk-sensors requires --obstacles")
     if args.headless and args.frames is None and (args.generations is None or args.manual):
         parser.error("--headless requires --frames or automatic --generations")
     return run(
@@ -586,6 +619,8 @@ def main() -> int:
         season_food=args.season_food,
         cluster_shift=args.cluster_shift,
         reproductive_age=args.reproductive_age,
+        obstacles=args.obstacles,
+        risk_sensors=args.risk_sensors,
     )
 
 

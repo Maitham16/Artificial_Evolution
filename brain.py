@@ -34,8 +34,8 @@ def food_inputs_for_control(sensors: np.ndarray, mode: str) -> np.ndarray:
     if mode not in FOOD_SENSOR_MODES:
         raise ValueError(f"Food sensor mode must be one of {FOOD_SENSOR_MODES}.")
     values = np.asarray(sensors, dtype=np.float64)
-    if values.shape != (INPUT_SIZE,) or not np.all(np.isfinite(values)):
-        raise ValueError("Food interventions require eight finite inputs.")
+    if values.ndim != 1 or values.size < INPUT_SIZE or not np.all(np.isfinite(values)):
+        raise ValueError("Food interventions require at least eight finite inputs.")
     if mode == "intact":
         return values
     values = values.copy()
@@ -48,11 +48,13 @@ def food_inputs_for_control(sensors: np.ndarray, mode: str) -> np.ndarray:
 
 
 class NeuralNetwork:
-    """An 8–8–2 network whose forward pass leaves parameters unchanged."""
+    """A default 8–8–2 network, with optional added inputs and frozen inference."""
 
-    def __init__(self, rng: np.random.Generator) -> None:
+    def __init__(self, rng: np.random.Generator, *, input_size: int = INPUT_SIZE) -> None:
+        if type(input_size) is not int or input_size < INPUT_SIZE:
+            raise ValueError("A brain needs an integer input size of at least eight.")
         self.input_weights = rng.normal(
-            0.0, 1.0 / math.sqrt(INPUT_SIZE), (INPUT_SIZE, HIDDEN_SIZE)
+            0.0, 1.0 / math.sqrt(input_size), (input_size, HIDDEN_SIZE)
         )
         self.hidden_bias = rng.normal(0.0, 0.1, HIDDEN_SIZE)
         self.output_weights = rng.normal(
@@ -102,8 +104,8 @@ class NeuralNetwork:
     def forward(self, sensors: np.ndarray) -> np.ndarray:
         """Return signed turn and throttle commands in [-1, 1]."""
         sensors = np.asarray(sensors, dtype=np.float64)
-        if sensors.shape != (INPUT_SIZE,) or not np.all(np.isfinite(sensors)):
-            raise ValueError("A brain requires eight finite sensory inputs.")
+        if sensors.shape != (self.input_weights.shape[0],) or not np.all(np.isfinite(sensors)):
+            raise ValueError(f"A brain requires {self.input_weights.shape[0]} finite sensory inputs.")
         hidden = np.tanh(sensors @ self.input_weights + self.hidden_bias)
         outputs = np.tanh(hidden @ self.output_weights + self.output_bias)
         if not np.all(np.isfinite(outputs)):

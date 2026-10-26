@@ -93,9 +93,7 @@ class World:
         """Create newborn bodies and a fresh environment for one generation."""
         suffix = "" if generation == 1 else f":generation:{generation}"
         population_seed = self.seed if generation == 1 else f"population:{self.seed}{suffix}"
-        creatures = create_population(
-            self.width, self.height, random.Random(population_seed), self.population_size,
-        )
+        creatures = self._create_population(random.Random(population_seed))
         if inherited is not None and len(inherited) != len(creatures):
             raise ValueError("Every newborn must receive one inherited brain.")
         for index, creature in enumerate(creatures):
@@ -130,6 +128,10 @@ class World:
         self._speed_time = 0.0
         self._food_visible_time = 0.0
         self._food_facing_time = 0.0
+
+    def _create_population(self, rng):
+        """Default body/brain factory; specialized worlds can extend it."""
+        return create_population(self.width, self.height, rng, self.population_size)
 
     def advance_generation(self) -> bool:
         """Advance a completed generation, breeding or resampling its brains."""
@@ -304,6 +306,9 @@ class World:
                 survivors.append(creature)
                 creature.rotate(creature.turn_rate * SIMULATION_STEP)
                 creature.move(SIMULATION_STEP, self.width, self.height)
+                if not creature.alive:
+                    survivors.pop()
+                    self.dead_creatures.append(creature)
                 if not uses_brain:
                     creature.turn_time_remaining -= SIMULATION_STEP
             self.creatures = survivors
@@ -361,6 +366,7 @@ class World:
                 color = self.MAJOR_GRID if y % 200 == 0 else self.GRID
                 pygame.draw.line(self.surface, color, (0, y), (self.width - 1, y))
 
+        self._draw_environment(self.surface)
         observation = None
         if (
             self.show_perception and self.selected_creature is not None
@@ -394,3 +400,6 @@ class World:
 
         pygame.draw.rect(self.surface, self.BORDER, self.surface.get_rect(), width=2)
         screen.blit(self.surface, origin)
+
+    def _draw_environment(self, surface):
+        """Optional static geometry beneath food and creatures."""
