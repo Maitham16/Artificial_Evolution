@@ -1,0 +1,76 @@
+{
+  "audited_at_utc": "2026-10-26T04:26:46.124422+00:00",
+  "status": "passed",
+  "independent_founder_seeds": 12,
+  "complete_training_cohorts": 96,
+  "complete_frozen_test_cohorts": 96,
+  "complete_creature_lifetimes": 19200,
+  "distinct_training_shared_layouts": 96,
+  "distinct_unseen_shared_test_layouts": 24,
+  "reproduction_steps_independently_reconstructed": 84,
+  "validated_numeric_archives": 12,
+  "brain_parameters": 90,
+  "body_genes": 3,
+  "all_linked_parent_choices_and_two_mutation_streams_replayed": true,
+  "all_birth_genomes_and_actual_physical_training_starts_reproduced": true,
+  "all_frozen_components_and_maximum_envelope_start_scenarios_reconstructed": true,
+  "all_19200_individual_energy_ledgers_independently_recomputed": true,
+  "maximum_absolute_energy_conservation_error": 1.8403056856186595e-10,
+  "maximum_absolute_integrated_component_power_error": 1.5847945178393275e-10,
+  "all_declared_source_hashes_match": false,
+  "all_experiment_genetic_physics_and_analysis_sources_match": true,
+  "post_declaration_presentation_changes": {
+    "plot_traits.py": {
+      "declared_sha256": "8889c6205f8aede865c2ab44634dfb1cce71c0ec0dc9d03f6adf4f6255037454",
+      "current_sha256": "97578271d29682e77a6ef06301f11e47f1892a4fd9fc695a189546a6918e004e",
+      "exact_replacements": [
+        {
+          "old": "    figure.subplots_adjust(left=.08, right=.96, top=.82, bottom=.17, wspace=.38, hspace=.65)",
+          "new": "    figure.subplots_adjust(left=.11, right=.96, top=.82, bottom=.17, wspace=.38, hspace=.65)"
+        }
+      ],
+      "reason": "Widen the exported figure left margin after visual inspection found clipped real-result significance labels. No data, inference, or simulation change."
+    }
+  },
+  "stored_analysis_matches_recomputation": true,
+  "four_exact_sign_tests_and_holm_family_independently_recomputed": true,
+  "legacy_mode_regression": {
+    "status": "passed",
+    "reference_commit": "2071049ae3c91e0495dcf8f45abddafe3ed2a339",
+    "normal_food_seconds_bitwise_matched": 5,
+    "zero_food_generations_and_inheritance_bitwise_matched": 2,
+    "default_eight_input_brains_physics_scores_and_reports_identical": true
+  },
+  "preserved_preexisting_files_except_five_declared_changes": 226,
+  "unchanged_prior_result_artifacts": 172,
+  "baseline_tests_passed": 303,
+  "current_tests_passed": 321,
+  "runtime": {
+    "python": "3.13.17",
+    "numpy": "2.5.4",
+    "pygame": "2.6.1",
+    "matplotlib": "3.11.2"
+  },
+  "artifact_sha256": {
+    "results/step23-models/seed-2301.npz": "47fb8ca369fcce08ee788f29c75da83ed5bead0a08bb326406e3edf45209076e",
+    "results/step23-models/seed-2302.npz": "5d7c5ce47e8851c35797be9160754f035781accb026f7956fae1b3642e8576e8",
+    "results/step23-models/seed-2303.npz": "e468e27c04c2c756be8fb9aca5c30b198c3fbf858be83346e74ecbe89cd7f190",
+    "results/step23-models/seed-2304.npz": "3fafef35cb09b5fec3d012af597290666a6c4c80c21246798fffd254d1f71749",
+    "results/step23-models/seed-2305.npz": "1299fe73146a5226b2598a01b29729f2d832993b3d11bf7bd8bc6dd0ca4d737b",
+    "results/step23-models/seed-2306.npz": "2bac45954a870c123b1872cae73dfdb454ade1e69dde9ff341270c3329861eca",
+    "results/step23-models/seed-2307.npz": "9844fda84ea7c80041ebedfa3207b69ca0d96c3b7640456a458df3ee7a9fe090",
+    "results/step23-models/seed-2308.npz": "386331fe0e1a5ec05da05ba04bd70a1f735190e7b806e17ae44928be55d9a91d",
+    "results/step23-models/seed-2309.npz": "c3a7f2af8a7dff3183780a27bd55aa0f3a92fc47158d7bb70e432d9e90c3c4f3",
+    "results/step23-models/seed-2310.npz": "4aa4ba9def876437f7e7d5cf5a218c42025637450e44f659327ccb00377c6b63",
+    "results/step23-models/seed-2311.npz": "211f25ff104a81c640cf3c041010c3358fdec17165c33dc8faea47c66ece983c",
+    "results/step23-models/seed-2312.npz": "928c127a838a17a5861ec7735b9f3697acfa0e4bc1cc0ec707a7232fc6417db3",
+    "results/step23-baseline.json": "0d307ba2a99439d516d9fa9778172333643f87fd925b0f34513e87bae600ff91",
+    "results/step23-baseline-tests.txt": "165766cf09fea06bb56a5c574054f6b6e93f7ce416a41003055754d0109b363a",
+    "results/step23-protocol.json": "6788db6bbd77a3d4390db5a4ca209febada6d1317b207de4b500bf81608fd959",
+    "results/step23-traits.json": "bcc36a2d6668e460ce3851ae7b26e34649399a59e4ee018dd382c0388da3f8de",
+    "results/step23-traits.png": "e56baa1f6f2aa5d126ac73be73fc3a987af9deee8432d899de1247f6d789425b",
+    "results/step23-costs.png": "6bbfd67026cb6689b6344fedddbc4c68c501e6569b91127ba2d09344c2942744",
+    "results/step23-bodies.png": "144d34d59050affb345cc50475779769ef9daac79abe53049efb7e02599936d3",
+    "results/step23-tests.txt": "bba2ca520529aa9a3341bbdfa1e36336e22d40f47bfcc70270e10b122cd08c15"
+  }
+}

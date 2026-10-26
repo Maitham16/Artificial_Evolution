@@ -153,6 +153,8 @@ def draw_history_panel(
         note = f"{len(world.generation_stats)} completed / food and locations change; raw fitness is habitat-dependent"
     if hasattr(world, "barriers"):
         note = f"{len(world.generation_stats)} completed / fitness subtracts barrier impacts and danger exposure"
+    if hasattr(world, "trait_history"):
+        note = f"{len(world.generation_stats)} completed / brains and body genes evolve together; energy costs are physical"
     screen.blit(fonts["small"].render(note, True, ACCENT), (x, y + 61))
     stats = world.generation_stats
     if stats:
@@ -293,6 +295,8 @@ def draw_interface(
         stage_text = f"{context['season'].upper()} / FOOD {world.food_count}"
     if hasattr(world, "barriers"):
         stage_text = "STEP 22 / OBSTACLES"
+    if hasattr(world, "trait_history"):
+        stage_text = "STEP 23 / BODY TRAITS"
     stage = fonts["small"].render(stage_text, True, MUTED)
     screen.blit(stage, (screen.get_width() - PADDING - stage.get_width(), 57))
     food_label = fonts["small"].render(
@@ -332,7 +336,7 @@ def draw_interface(
                 f"Nearby {observation.nearby_count}"
             )
         else:
-            perception_text = f"No food within {VISION_RANGE:.0f} px"
+            perception_text = f"No food within {observation.vision_range:.0f} px"
     screen.blit(fonts["small"].render(perception_text, True, MUTED), (400, 81))
 
     world.draw(screen, (PADDING, HEADER_HEIGHT))
@@ -381,7 +385,7 @@ def draw_interface(
     else:
         details = (
             f"G{creature.generation} #{creature.creature_id:03d}    "
-            f"Energy {creature.energy:.1f}/{MAX_ENERGY:.0f}    "
+            f"Energy {creature.energy:.1f}/{creature.energy_capacity:.0f}    "
             f"Hunger {creature.hunger:.0%} ({creature.hunger_state})    "
             f"Age {creature.age:.1f}/{creature.lifespan:.1f} s    Eaten {creature.food_eaten}    "
             f"Fitness {creature.fitness:.1f}"
@@ -398,6 +402,10 @@ def draw_interface(
             traits = (f"Position ({creature.x:.0f}, {creature.y:.0f}) / Speed {creature.speed:.1f} / "
                       f"Impacts {creature.collisions} / Danger {creature.hazard_seconds:.2f}s / "
                       f"16 inputs / Risk sensors {world.risk_sensor_mode}")
+        if hasattr(world, "trait_history"):
+            basal, movement, sensing = creature.body.powers()
+            traits = (f"Genes v{creature.body.cruise_speed:.1f} / r{creature.radius} / sight {creature.body.sensory_range:.0f} | "
+                      f"Costs B{basal:.2f} M{movement:.2f} S{sensing:.2f}/s | Body mut {creature.body_mutation_count}")
     screen.blit(fonts["small"].render(details, True, TEXT), (PADDING, footer_y + 24))
     screen.blit(fonts["small"].render(traits, True, MUTED), (PADDING, footer_y + 46))
     seed_label = fonts["small"].render(
@@ -434,9 +442,14 @@ def run(
     reproductive_age: float = 60.0,
     obstacles: bool = False,
     risk_sensors: str = "intact",
+    traits: bool = False,
+    body_mutation_rate: float = .25,
+    body_mutation_scale: float = .08,
 ) -> int:
-    if obstacles and seasons:
-        raise ValueError("Choose seasonal or obstacle mode for this experiment.")
+    if sum((obstacles, seasons, traits)) > 1:
+        raise ValueError("Choose one of seasonal, obstacle, or body-trait mode.")
+    if traits and fixed_speed is not None:
+        raise ValueError("Body-trait mode derives speed from inherited genes, not --fixed-speed.")
     if headless and frames is None and (generations is None or manual):
         raise ValueError("Headless mode needs frames or an automatic generation limit.")
     if headless:
@@ -457,6 +470,10 @@ def run(
             world_type = ObstacleWorld
             seasonal_options = dict(risk_sensor_mode=risk_sensors)
             fixed_speed = 60.0 if fixed_speed is None else fixed_speed
+        if traits:
+            from body_traits import TraitWorld
+            world_type = TraitWorld
+            seasonal_options = dict(body_mutation_rate=body_mutation_rate, body_mutation_scale=body_mutation_scale)
         world = world_type(seed=seed, controller=controller, population_size=population_size,
                       mutation_rate=mutation_rate, mutation_scale=mutation_scale, food_count=food_count,
                       fixed_speed=fixed_speed, food_distribution=food_distribution, **seasonal_options)
@@ -528,7 +545,10 @@ def run(
             print(f"Report saved: {report}")
         if plot is not None:
             if world.generation_stats:
-                if obstacles:
+                if traits:
+                    from plot_traits import save_lineage_plot
+                    save_lineage_plot(simulation.report(), plot)
+                elif obstacles:
                     from plot_obstacles import save_lineage_plot
                     save_lineage_plot(simulation.report(), plot)
                 elif seasons:
@@ -572,6 +592,9 @@ def main() -> int:
     parser.add_argument("--generations", type=positive_integer, help="stop after N complete generations")
     parser.add_argument("--seasons", action="store_true", help="enable seasonal clustered food and maturity-gated reproduction")
     parser.add_argument("--obstacles", action="store_true", help="enable barriers, dangerous regions, and 16-input brains")
+    parser.add_argument("--traits", action="store_true", help="evolve linked brains, cruise speed, radius, and sensory range")
+    parser.add_argument("--body-mutation-rate", type=mutation_probability, default=.25, help="mutation probability per physical trait")
+    parser.add_argument("--body-mutation-scale", type=mutation_scale, default=.08, help="Gaussian log-scale physical-trait mutation")
     parser.add_argument("--risk-sensors", choices=("intact", "hidden"), default="intact", help="control the eight added obstacle/hazard inputs")
     parser.add_argument("--season-length", type=positive_integer, default=1, help="generations per season")
     parser.add_argument("--season-food", type=nonnegative_integer, nargs=4, default=(150, 200, 75, 25),
@@ -591,8 +614,10 @@ def main() -> int:
         parser.error("--fixed-speed must be positive")
     if args.seasons and args.reproductive_age <= 0:
         parser.error("--reproductive-age must be positive")
-    if args.seasons and args.obstacles:
-        parser.error("choose --seasons or --obstacles")
+    if sum((args.seasons, args.obstacles, args.traits)) > 1:
+        parser.error("choose one of --seasons, --obstacles, or --traits")
+    if args.traits and args.fixed_speed is not None:
+        parser.error("--traits derives speed from inherited genes; omit --fixed-speed")
     if args.risk_sensors != "intact" and not args.obstacles:
         parser.error("--risk-sensors requires --obstacles")
     if args.headless and args.frames is None and (args.generations is None or args.manual):
@@ -621,6 +646,9 @@ def main() -> int:
         reproductive_age=args.reproductive_age,
         obstacles=args.obstacles,
         risk_sensors=args.risk_sensors,
+        traits=args.traits,
+        body_mutation_rate=args.body_mutation_rate,
+        body_mutation_scale=args.body_mutation_scale,
     )
 
 

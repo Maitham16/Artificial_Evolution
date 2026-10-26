@@ -107,4 +107,6 @@ class EvolutionSimulation:
             report["seasonal_environment"] = world.environment_report()
         if hasattr(world, "hazard_report"):
             report["obstacle_environment"] = world.hazard_report()
+        if hasattr(world, "traits_report"):
+            report["physical_traits"] = world.traits_report()
         return report

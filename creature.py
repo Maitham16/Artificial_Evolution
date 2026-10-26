@@ -74,7 +74,12 @@ class Creature:
     @property
     def hunger(self) -> float:
         """Energy deficit, from 0 (full) to 1 (empty)."""
-        return max(0.0, min(1.0, 1.0 - self.energy / MAX_ENERGY))
+        return max(0.0, min(1.0, 1.0 - self.energy / self.energy_capacity))
+
+    @property
+    def energy_capacity(self) -> float:
+        """Ordinary creatures retain the original fixed energy capacity."""
+        return MAX_ENERGY
 
     @property
     def hunger_state(self) -> str:
@@ -112,9 +117,9 @@ class Creature:
 
     def eat(self, food: Food) -> bool:
         """Receive a meal after the world resolves ownership of a food collision."""
-        if not self.alive or self.energy >= MAX_ENERGY:
+        if not self.alive or self.energy >= self.energy_capacity:
             return False
-        self.energy = min(MAX_ENERGY, self.energy + food.energy)
+        self.energy = min(self.energy_capacity, self.energy + food.energy)
         self.food_eaten += 1
         return True
 

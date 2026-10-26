@@ -197,7 +197,7 @@ class World:
             eater = min(
                 (
                     creature for creature in self.creatures
-                    if creature.alive and creature.energy < MAX_ENERGY
+                    if creature.alive and creature.energy < creature.energy_capacity
                     and food.overlaps_circle(creature.x, creature.y, creature.radius)
                 ),
                 key=lambda creature: (
@@ -225,7 +225,12 @@ class World:
         if food_positions is None:
             food_positions = np.array([(food.x, food.y) for food in self.food],
                                       dtype=np.float64).reshape(-1, 2)
-        return sense_food(creature.x, creature.y, creature.heading, food_positions)
+        return sense_food(creature.x, creature.y, creature.heading, food_positions,
+                          vision_range=self.vision_range_for(creature))
+
+    def vision_range_for(self, creature):
+        """Default sensory range; body-evolution worlds can specialize it."""
+        return VISION_RANGE
 
     def get_sensory_inputs(
         self, creature: Creature, food_positions: np.ndarray | None = None
@@ -241,7 +246,8 @@ class World:
 
     def _wall_clearance(self, creature: Creature, dx: float, dy: float) -> float:
         """Return a normalized ray distance to the nearest center-position limit."""
-        distances = [VISION_RANGE]
+        vision_range = self.vision_range_for(creature)
+        distances = [vision_range]
         if dx > 1e-12:
             distances.append((self.width - creature.radius - creature.x) / dx)
         elif dx < -1e-12:
@@ -250,7 +256,7 @@ class World:
             distances.append((self.height - creature.radius - creature.y) / dy)
         elif dy < -1e-12:
             distances.append((creature.radius - creature.y) / dy)
-        return max(0.0, min(distances)) / VISION_RANGE
+        return max(0.0, min(distances)) / vision_range
 
     def update(self, dt: float) -> None:
         """Advance survival, living creatures' motion, and eating in fixed steps."""
@@ -375,7 +381,7 @@ class World:
             selected = self.selected_creature
             observation = self.perceive_food(selected)
             center = (round(selected.x), round(selected.y))
-            pygame.draw.circle(self.surface, (46, 83, 97), center, round(VISION_RANGE), width=1)
+            pygame.draw.circle(self.surface, (46, 83, 97), center, round(self.vision_range_for(selected)), width=1)
             forward = (
                 round(selected.x + math.cos(selected.heading) * 28),
                 round(selected.y + math.sin(selected.heading) * 28),

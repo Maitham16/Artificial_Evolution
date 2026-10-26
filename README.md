@@ -3,8 +3,8 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **22 — Obstacles and hazards**. Add solid barriers, dangerous regions,
-expanded sensing, and matched tests of evolved avoidance while foraging.
+Current step: **23 — Evolve physical characteristics**. Speed, body size, and sensory
+range now evolve alongside neural-network weights, with explicit energy costs.
 Earlier experiments and saved results remain available.
 
 ## Run the world
@@ -40,6 +40,204 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Joint evolution of brains and bodies
+
+Step 23 adds an opt-in trait world. Its 100 founders have random **8–8–2 brains
+(90 weights/biases)** and the same reference body. Selection keeps the top 20 by
+`fitness = survival_seconds + 10 × meals`; each supplies five shuffled offspring.
+A child inherits its brain and all three body genes from the **same parent**.
+Neural mutation remains probability 0.1 and additive Gaussian scale 0.1. Each body
+allele mutates independently with probability 0.25 and Gaussian log scale 0.08,
+then clips to its bounds; radius rounds to an integer. Separate recorded random
+streams keep body mutation from changing the neural mutation sequence.
+
+| Heritable trait | Founder | Bounds | Consequences |
+| --- | --- | --- | --- |
+| Cruise speed, pixels/second | 60 | 25–100 | More travel, quadratic locomotion cost |
+| Body radius, pixels | 8 | 4–12, integer | Larger eating contact and reserves, higher development and maintenance costs |
+| Sensory range, pixels | 160 | 60–280 | Longer food detection and wall sensing, quadratic sensing cost |
+
+```sh
+python main.py --traits --seed 2301 --generations 8 --speed 20
+python main.py --headless --traits --seed 2301 --generations 8 \
+  --report .cache/body-run.json --plot .cache/body-run.png
+```
+
+Click a creature to inspect its inherited genes, energy capacity, three running
+costs, and body mutation count. `--body-mutation-rate` and
+`--body-mutation-scale` control body mutation. Each creature cruises at its own
+inherited speed; brains choose turning and their throttle output is unused.
+`--fixed-speed` is rejected with `--traits`. Trait, seasonal, and obstacle modes
+are separate experiments and cannot be combined. Ordinary simulation behavior
+and earlier model archives remain unchanged.
+
+### Energetic trade-offs
+
+These are explicit **stylized 2D assumptions, not calibrated biological laws**.
+With area-based mass proxy `m = (radius / 8)²`, speed `v`, and range `R`:
+
+```text
+capacity = 100 × m
+one-off body development = 10 × m
+initial energy = min(capacity, 100 − development)
+basal power = 2 × m
+movement power = 2.5 × m × (v / 60)²
+sensing power = 0.5 × (R / 160)²
+```
+
+Every newborn receives the same 100-unit allocation before development and
+storage limits; larger bodies do not receive free starting reserves. Reference
+bodies start at 90 energy and spend 5 units per living second. Small bodies are
+cheaper but have limited storage and eating contact. Large bodies can store more
+food, but pay more to develop, move, and survive. Sensing costs run continuously.
+Food provides 20 units, clipped to each body's capacity. Reports retain actual
+assimilated energy and wasted food energy, plus separate integrated cost ledgers.
+Expenditure stops at the actual starvation or lifespan time.
+
+Fitness still rewards meals even when some energy is wasted at capacity. There
+is no parental reproductive budget, growth, acceleration cost, or inherited color
+or lifespan. This is a fixed birth-cohort selection experiment, not a complete
+population ecology or evidence of a biological optimum.
+
+### Declared experiment
+
+Before changes, **303 tests passed**. `results/step23-baseline.json` records all
+231 pre-step tracked file hashes and the preceding commit; its accompanying
+baseline transcript preserves that check. Previous saved results are unchanged.
+The new protocol and all Python source hashes are written **before trials**.
+
+Twelve independent seeds (2301–2312) each train eight evaluated cohorts of 100
+creatures on uniform food. After seven reproduction events, the final evaluated
+birth cohort is frozen without an extra selection or reproduction. Each seed is
+tested on two new resource environments: standard (150 pellets) and scarce (50).
+Four frozen combinations use every individual, including unsuccessful ones:
+
+| Condition | Brain | Body |
+| --- | --- | --- |
+| Joint | Evolved | Evolved |
+| Brain only | Evolved | Reference founder body |
+| Body only | Founder | Evolved |
+| Founder | Founder | Reference founder body |
+
+“Brain only” is a frozen intervention on the jointly trained genome, **not a
+separately trained fixed-body population**. The body-only case likewise replaces
+brains without retraining. Matched conditions share initial positions, headings,
+colors, lifespans, and food. Positions and initial food clearance use the same
+maximum-body envelope, preventing genes from changing the starting layout.
+Actual radius, speed, range, capacity, initial reserves, and costs differ as
+intended. Food replenishment subsequently follows each condition's behavior.
+Shared-layout hashes exclude treated body characteristics; these new hashes
+should not be equated with previous experiments' physical-state hashes.
+
+The study comprises **96 training and 96 test cohorts**, 19,200 creature lives,
+and 24 fresh shared test scenarios. Each scenario is excluded from the current
+training layouts. The independent unit is the training seed, **n = 12**. Four
+primary fitness comparisons test joint minus founder and joint minus brain only
+in each environment. Exact paired sign tests use a 1e−10 tie tolerance and Holm
+correction across all four; 20,000 paired bootstrap resamples provide pointwise
+95% intervals. A directional conclusion requires adjusted p < 0.05 and an
+interval excluding zero. Meals, survival, visibility, energy, trait trajectories,
+and the factorial brain/body interaction are descriptive. There is no new drift
+control or separately trained static-body control in this step. The body
+intervention replaces all three traits together, including their energetic and
+sensory scaling effects. It cannot isolate the causal contribution of one gene,
+and a changed trait mean alone does not distinguish selection from drift.
+
+```sh
+python experiment_traits.py --workers 8 --models-dir results/step23-models \
+  --output results/step23-traits.json --protocol-output results/step23-protocol.json
+python plot_traits.py results/step23-traits.json \
+  --output results/step23-traits.png --costs-output results/step23-costs.png \
+  --bodies-output results/step23-bodies.png
+```
+
+Use new output paths for reruns; existing reports and archives are protected.
+The analytic cost plot varies one trait at a time with the others at reference;
+its endurance curve assumes no food. The body map uses the first declared test
+seed, with actual radii, speed colors, and sensory circles for predetermined ID 1.
+
+### Observed Step 23 results
+
+The complete declared run finished all **192 cohorts and 19,200 lives**. The
+final generation's equal-seed birth-cohort means changed as follows; these include
+all 100 offspring per lineage, rather than just its successful parents:
+
+| Trait | Founder | Generation 8 | Range of final seed means |
+| --- | --- | --- | --- |
+| Cruise speed | 60.00 | 67.14 | 62.68–78.19 |
+| Radius | 8.00 | 8.41 | 8.03–8.97 |
+| Sensory range | 160.00 | 160.89 | 152.72–168.12 |
+
+All twelve final seed means increased in speed and radius. Sensory range showed
+little net change, with variation in both directions. These are descriptive gene
+trajectories, not separate tests of selection against genetic drift.
+
+The held-out means below weight each independent training seed equally. Survival
+means the proportion of all newborns reaching 60 seconds; power is total actual
+expenditure divided by observed living time within each seed, then averaged.
+
+| Food condition | Frozen combination | Fitness | Meals | Survival at 60 s | Energy / living second |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Standard | Joint | 376.60 | 30.03 | 80.25% | 6.17 |
+| Standard | Brain only | 358.80 | 27.73 | 88.17% | 5.00 |
+| Standard | Body only | 309.08 | 24.04 | 68.08% | 6.14 |
+| Standard | Founder | 301.53 | 22.67 | 77.25% | 5.00 |
+| Scarce | Joint | 58.79 | 3.34 | 1.58% | 5.97 |
+| Scarce | Brain only | 71.61 | 3.92 | 4.92% | 5.00 |
+| Scarce | Body only | 50.93 | 2.76 | 0.67% | 6.00 |
+| Scarce | Founder | 59.07 | 2.99 | 2.00% | 5.00 |
+
+| Primary fitness contrast | Paired difference | Pointwise 95% interval | Holm-adjusted p | Declared verdict |
+| --- | ---: | --- | ---: | --- |
+| Standard: joint − founder | +75.07 | [63.42, 87.85] | 0.00195 | Higher |
+| Standard: joint − brain only | +17.80 | [8.40, 28.04] | 0.11572 | Inconclusive |
+| Scarce: joint − founder | −0.28 | [−4.61, 4.23] | 0.77441 | Inconclusive |
+| Scarce: joint − brain only | −12.82 | [−17.70, −7.75] | 0.11572 | Inconclusive |
+
+**Joint evolution improved fitness over founders in the standard environment.**
+A distinct fitness benefit from the evolved body bundle is **not confirmed**
+under the declared four-test correction. Both body contrasts have pointwise
+intervals excluding zero, but their adjusted sign-test p-values exceed 0.05.
+The complete evolved genomes also show no established advantage over founders
+under scarcity. All four outcomes are retained in `results/step23-traits.json`.
+
+The descriptive trade-off is clear in the observations: faster, larger bodies
+ate more meals under standard supply, while spending about 23% more energy per
+living second than reference bodies. With the same evolved brains, the joint
+bodies had more meals but lower checkpoint survival than the reference bodies.
+Under scarce food, the joint bodies had lower observed meals, survival, and
+fitness than the reference-body intervention. These secondary observations are
+consistent with a movement/storage/maintenance trade-off; they do not isolate
+speed from size or establish a confirmed scarcity penalty after correction.
+The meal-weighted fitness objective also rewards some food that cannot be stored.
+
+Joint creatures could see food during 99.99% of their living time in standard
+tests and 98.82% in scarce tests. Little mean range change therefore occurred in
+settings with near-continuous food detection; this does not identify an optimal
+sensory range. The descriptive brain/body interaction was +10.25 fitness units
+in standard food (interval −7.31 to 29.20) and −4.68 under scarcity (−8.77 to
+−0.43), without confirmatory interaction tests. Co-adaptation, changed sensory
+normalization, and energetic effects remain bundled in the body intervention.
+
+![Heritable traits and held-out fitness](results/step23-traits.png)
+
+[Energy-cost curves](results/step23-costs.png) and the
+[matched body example](results/step23-bodies.png) show the specified mechanical
+trade-offs and actual first declared held-out phenotype. All twelve founder and
+evolved brain/body banks are preserved in `results/step23-models/`.
+
+The independent audit reconstructs **84 linked reproduction events**, both
+mutation streams, every training physical start and every matched test layout.
+It independently checks all 19,200 energy ledgers, exact sign tests, and Holm
+correction, and recomputes the stored analysis. All **226 preexisting files**
+outside the five intended source/document changes remain byte-identical,
+including **172 prior result artifacts**. Default-mode compatibility checks match
+the preceding simulation bit-for-bit. The only post-declaration Python change
+widens a figure margin to prevent real-result labels from clipping; the audit
+records its exact reversal and verifies the original source hash. Simulation,
+genetics, and analysis code stayed unchanged throughout the study.
+The complete **321-test** transcript is saved in `results/step23-tests.txt`.
 
 ## Obstacles, hazards, and evolved avoidance
 
@@ -2386,7 +2584,13 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **303 checks**, including legacy eight-input draws, 16-input inheritance,
+Verified: **321 checks**, including linked brain/body inheritance, independent
+mutation streams, gene bounds, individual energy conservation, capacity-aware
+eating above 100 energy, personalized perception, matched starts, frozen factorial
+interventions, deterministic archives, inference, and exports. The 303-test
+baseline was saved before Step 23.
+
+The checks also cover legacy eight-input draws, 16-input inheritance,
 swept barriers, fatal damage timing, safe spawning/replenishment, oriented sensing,
 matched interventions, normalized risk denominators, joint statistical decisions,
 and obstacle plots. The 284-test baseline was saved before Step 22.
@@ -2478,6 +2682,10 @@ included.
 ## Project structure
 
 ```text
+body_traits.py        Linked body genes, trait physics, independent mutation, and energy ledgers
+experiment_traits.py  Twelve-seed frozen brain/body factorial study and paired inference
+plot_traits.py        Gene trajectories, cost curves, held-out comparisons, and body map
+test_body_traits.py   Linked inheritance, energy conservation, matching, frozen factors, and exports
 main.py               Window, controls, simulation timing, and launch options
 world.py              One-generation physics, observation, survival, food, and fitness
 simulation.py         Automatic cycles, speed, generation limits, restart, and reports
@@ -2566,6 +2774,16 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step23-baseline.json  Hashes of all 231 pre-Step-23 tracked files
+results/step23-baseline-tests.txt  Passing 303-test baseline transcript
+results/step23-protocol.json  Pre-trial gene, cost, matching, budget, and inference declaration
+results/step23-traits.json  Full training and four frozen brain/body combinations
+results/step23-traits.png  Body gene trajectories and primary fitness effects
+results/step23-costs.png  Analytic one-trait energy and no-food endurance curves
+results/step23-bodies.png  Matched founder and evolved body example
+results/step23-models/  Twelve numeric founder and evolved brain/body archives
+results/step23-audit.json  Linked genetic replay, energy, matching, source, and preservation audit
+results/step23-tests.txt  Passing 321-test verification transcript
 results/step22-baseline.json  Hashes of every pre-Step-22 tracked file
 results/step22-baseline-tests.txt  Passing 284-test baseline transcript
 results/step22-protocol.json  Declared geometry, sensing, costs, budgets, and five primary tests
