@@ -3,9 +3,8 @@
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
-Current step: **19 — Evolutionary specialization**. Train uniform, clustered,
-and sparse-food specialists alongside a balanced domain-cycling generalist,
-then cross-test frozen populations to measure niche advantages and transfer.
+Current step: **20 — Understand evolved brains**. Inspect frozen neural decisions,
+hidden activations, sensory influences, and individual food-seeking trajectories.
 Preserve earlier source and results.
 
 ## Run the world
@@ -41,6 +40,224 @@ a 40-pixel grid, with a stronger line every 200 pixels. Its coordinates start at
 `(0, 0)` in the top-left corner, with x increasing right and y increasing down.
 The surrounding header and footer are outside the arena. The border marks the
 reflective walls; the grid is a visual guide.
+
+## Understand evolved brains
+
+Step 20 extends Step 17's whole-run sensor interventions with **passive trajectory
+recordings and single-decision network diagnostics**. It reuses all 16 fixed-speed
+evolved populations from Step 16 and their exact unselected founder controls
+saved in Step 17. No retraining, selection, or mutation occurs. Published genome
+hashes are checked before the new study. Step 19's specialists and generalists
+remain a separate preserved experiment; this study explains the original
+Step 17 controller comparison, not every later specialist.
+
+Before implementation, all **256 tests passed**. `results/step20-baseline.json`
+records the previous commit and hashes of all 159 tracked files; the baseline
+transcript is `results/step20-baseline-tests.txt`.
+
+Run recordings and export the visualizations:
+
+```sh
+python inspect_brains.py --workers 8 --trace-dir .cache/brain-traces \
+  --output .cache/brain-analysis.json --protocol-output .cache/brain-protocol.json
+python plot_brains.py .cache/brain-analysis.json \
+  --plot .cache/brain-overview.png --viewer .cache/brain-viewer.html
+```
+
+The declared study uses **seeds 1601–1616**, two frozen banks (evolved and
+unselected), and two fresh test habitats (uniform and clustered, both 1000 × 600,
+150 maintained pellets). All 100 brains in each population are tested until the
+cohort dies: **64 complete test cohorts**, zero training cohorts, 32 new layouts,
+and 6,400 creature lifetimes. Physical starts are matched across the two banks.
+The `step20:test` namespace and initial-condition hashes exclude all recorded
+Step 16–19 training and test layouts. Source weights and archives remain frozen.
+Speed stays at 60 pixels/second and energy expenditure at 5 units/living second.
+The neural throttle output is visible for completeness but has no movement effect.
+
+The recorder subclasses the existing world and observes its existing sensory
+calls. It does not replace the controller, advance time, consume simulation
+randomness, or alter physics. All 100 creatures contribute decision summaries
+sampled at one-second intervals while alive. Within each creature, samples are
+averaged before averaging the 100 creature summaries within a seed; seed groups
+then have equal weight. These samples describe encountered living states, not a
+continuous-time integral. Food-directed turning pools eligible off-axis visible
+states within each seed (absolute normalized bearing > 0.02), then reports all
+16 seed ratios and denominators; it is not a measure of actual capture success.
+
+**IDs 1, 34, and 67** are chosen before outcomes for detailed recordings every
+0.2 simulated seconds, including their position, heading, energy, meals, target,
+all eight inputs, eight hidden activations, both outputs, eight turn derivatives,
+and eight immediate neuron-ablation effects. Every recorded meal is also logged,
+including those between decision samples. All 16 numeric archives retain these
+192 individual traces (16 seeds × 2 habitats × 2 banks × 3 IDs), including deaths
+and poor performers. The figure and standalone viewer use **seed 1601**, fixed in
+advance; the figure uses ID 1 and the viewer allows all three recorded IDs.
+These illustrations are not selected winners. Reproduction preserves weights,
+not physical bodies, so matching ID numbers are birth slots, not the same agent
+or proof of direct individual ancestry across banks.
+
+The network computation is exposed directly:
+
+```text
+hidden = tanh(inputs @ input_weights + hidden_bias)
+outputs = tanh(hidden @ output_weights + output_bias)
+turn_rate = outputs[0] × π/2 radians/second
+```
+
+The Jacobian computes exact local derivatives of each output with respect to
+each encoded input. Central numerical perturbations verify it. These are
+**per encoded input unit**, not standardized feature importance: bearing spans
+[-1, 1], other inputs span [0, 1], and visibility is binary. A derivative at a
+binary input describes the mathematical network extension, not a realizable
+infinitesimal change in visibility. Small derivatives can arise from tanh
+saturation even when a finite intervention has a large effect.
+
+Single-decision interventions hold the remaining inputs fixed:
+
+- Hide all three food inputs together (proximity, bearing, visibility → zero).
+- Mirror visible food bearing, preserving the angular wrap convention.
+- Clamp hunger to 0.5.
+- Set all four wall clearances to 1 (open space).
+- Independently zero each hidden unit's post-tanh activation.
+
+Effects are **original command minus counterfactual command**. Population bars
+show mean absolute turn changes, while the viewer preserves signed effects.
+Clamp magnitudes differ, and hiding food or opening walls can produce states
+outside the naturally observed input distribution. These manipulations reveal
+how the network's immediate computation depends on inputs or units; they do
+**not** estimate food consumption or fitness under those interventions. Step 17's
+complete-run interventions remain the evidence for those outcome effects.
+A unit's activity alone does not establish that it detects a named concept;
+hidden-unit indices are specific to each network and may be redundant.
+
+A common controlled probe grid tests every brain on the same **222 states**:
+37 food bearings from −162° to +162°, three proximities (0.25, 0.5, 0.75), two
+hunger values (0.25, 0.75), food visible, and open walls. Turn curves average the
+six proximity/hunger combinations per bearing. Input derivatives and command
+effects are also summarized on this common grid. Opening walls has zero effect
+on this grid by construction; the overview instead shows finite-intervention
+bars on **observed uniform-world states**, where wall clearances vary. Observed
+states differ between policies, so their sensitivities are not a controlled
+between-policy mechanism comparison. The common grid supplies the matched
+input comparison but represents only those specified sensory states.
+
+All Step 20 statistics are **exploratory and descriptive**. Whole-run performance
+and common-probe differences have paired pointwise 95% bootstrap intervals using
+20,000 resamples of the 16 source seeds. No confirmatory p-values, multiplicity
+adjustment, or significance decisions are added. Creatures are related within
+lineages; frames, brains, and test habitats do not increase the independent seed
+count. Existing Step 17 inference is unchanged. Population mean turn curves can
+hide heterogeneous policies, so per-brain results and individual traces are saved.
+
+`results/step20-protocol.json` records settings, source model hashes, chosen IDs,
+probe inputs, excluded layouts, source/template hashes, and UTC declaration time
+before new rollouts. It is a local declaration, not an externally registered
+study. Running reports cannot be visualized. Numeric archives load with
+`allow_pickle=False`; existing recordings cannot be overwritten.
+
+The generated HTML is self-contained: open it locally, choose a recorded creature,
+then use **Play** or the time slider. The trajectory, neural graph, local input
+sensitivity, and hidden-unit ablation panels refer to the same pre-control state.
+Grey food dots show **initial** pellets only; the gold target is the food actually
+sensed at that sample. Meal markers show creature positions when it ate. Last
+recorded decisions precede death by at most one sampling interval; full-run death
+and survival information is shown separately. These feed-forward networks have
+no recurrent hidden memory. Their trajectories cannot establish planning,
+semantic understanding, or an exclusive food-seeking strategy.
+
+### Recorded Step 20 findings
+
+The declared study completed **64 full cohorts**, 6,400 creature lifetimes, and
+192 individual recordings across 16 source seed groups and 32 new matched layouts.
+All 32 source brain banks remained unchanged. The results support an explanation
+combining **food-bearing responses with gentler general turning**, rather than
+one universal strategy shared by every evolved creature.
+
+| Fresh test habitat | Bank | Mean fitness | Meals per creature | Survival to 60 s |
+| --- | --- | ---: | ---: | ---: |
+| Uniform | Evolved | 357.49 | 27.55 | 87.25% |
+| Uniform | Unselected | 288.66 | 21.51 | 72.31% |
+| Clustered | Evolved | 350.37 | 29.31 | 48.13% |
+| Clustered | Unselected | 191.19 | 14.97 | 24.44% |
+
+The evolved-minus-unselected fitness differences are +68.83 [56.89, 81.58] on
+uniform food and +159.18 [121.79, 202.31] on clustered food. These are descriptive
+paired pointwise 95% intervals, not new confirmatory tests.
+
+**Food direction changes decisions.** On the identical controlled probe grid,
+evolved mean turn changes from −0.313 at a −162° bearing to +0.277 at +162°;
+the unselected population mean stays near zero (+0.007 to −0.004), although its
+individual policies need not be near zero. Mean absolute bearing sensitivity is
+0.336 versus 0.149 per encoded bearing unit; the paired difference is +0.187
+[0.123, 0.253]. Mirroring bearing changes the turn command by a mean absolute
+0.328 versus 0.139 on those same inputs; all 16 source seed groups show a larger
+mean change for evolved banks, with descriptive paired difference +0.188
+[0.123, 0.257]. These common-state effects demonstrate changed input-to-command
+computation, not by themselves successful food capture.
+
+The passive trajectories provide a complementary observation: mean seed-level
+fractions of eligible sampled states turning toward the visible target are
+**69.4% versus 47.1%** on uniform food and **73.2% versus 53.1%** in clusters.
+A turn toward the current nearest pellet can still miss it, switch targets,
+reflect off a wall, or lose food to another creature. These ratios therefore
+describe decisions and do not establish an exclusive pursuit strategy.
+
+**Food inputs are influential, while hunger and wall inputs also matter.**
+On observed uniform-world states, the following immediate changes occur:
+
+| Diagnostic clamp | Evolved mean absolute turn change | Unselected mean absolute turn change |
+| --- | ---: | ---: |
+| Hide all food channels | 0.314 | 0.216 |
+| Mirror food bearing | 0.312 | 0.141 |
+| Hunger → 0.5 | 0.065 | 0.044 |
+| All walls → open | 0.070 | 0.065 |
+
+The food clamps produce larger observed mean changes under these specific
+manipulations, but clamp sizes and input support differ. This is not a universal
+importance ranking or a claim that wall sensing is dispensable. Common-grid
+mean absolute derivatives for evolved brains are 0.229 (food proximity), 0.336
+(bearing), 0.200 (visibility), 0.206 (hunger), and 0.144/0.185/0.186/0.180
+(forward/right/back/left walls). Interpret these on their encoded scales.
+
+**Movement also differs.** On the common probe grid, evolved mean absolute turn
+is 0.281 versus 0.389, with paired difference −0.108 [−0.138, −0.075]. In recorded
+uniform runs it is 0.259 versus 0.375, and in clusters 0.268 versus 0.359. Evolved
+controllers issue gentler turns on average while remaining responsive to food;
+this is consistent with Step 17's evidence for both food guidance and residual
+movement benefits. It does not attribute all improved fitness to one input.
+
+**Hidden units combine opposing effects.** In the predetermined clustered
+example (seed 1601, ID 1), at 40 seconds the turn command is approximately +0.312.
+Zeroing h0 reduces the command to about +0.054, while zeroing h3 increases it to
+about +0.547, even though both units have positive activations. Their output
+weights make their influences oppose each other. The activation heatmap and
+viewer show state-dependent activity; a positive activation is not synonymous
+with a right-turn role, a food detector, or a named strategy.
+
+**Individual failures remain visible.** In clusters, the displayed evolved ID 1
+ate 73 meals and lived 90.12 seconds, compared with 5 meals and 34.42 seconds for
+the matched unselected slot. However, evolved ID 34 ate nothing and starved at
+20 seconds, while its matched unselected slot ate 36 meals and lived 64.38
+seconds. These examples were fixed before testing, and both are available in
+the viewer. Population improvement does not mean every creature improves.
+
+![Step 20 decisions, sensory influence, trajectories, and activations](results/step20-brains.png)
+
+Open [the standalone playback](results/step20-brains.html) locally in a browser.
+It contains all 12 examples for seed 1601; numeric archives retain the remaining
+180 traces. The full exploratory analysis and per-brain summaries are in
+`results/step20-brains.json`.
+
+`results/step20-audit.json` verifies all **61,685 decision frames**, reproduces
+activations and outputs exactly, and compares every recorded turn derivative
+against finite input perturbations (maximum absolute error below 3 × 10⁻¹⁰).
+It independently reproduces neuron-zeroing effects, target geometry, meal events,
+all 3,200 brain probes, and the stored statistical analysis. All 158 preexisting
+files other than README, including **112 previous result artifacts**, are
+unchanged. All declared source and viewer-template hashes match. The saved
+`results/step20-tests.txt` records **269 passing tests**. A headless Chromium
+check exercised every viewer choice, keyboard scrubbing, play/pause, and desktop
+and mobile layouts without page errors or horizontal overflow.
 
 ## Evolutionary specialization and transfer
 
@@ -1703,7 +1920,12 @@ Run all checks with the standard Python test runner:
 python -m unittest discover -v
 ```
 
-Verified: **256 checks**, including balanced curriculum exposure and ordering,
+Verified: **269 checks**, including passive recording equivalence, exact input
+Jacobians, known-path sensory and neuron effects, saturation versus finite
+ablations, complete-cohort observations, numeric trace integrity, and viewer
+exports. The 256-test baseline was saved before Step 20.
+
+The checks also cover balanced curriculum exposure and ordering,
 matched bodies and mutation schedules, final-round genetic contributions,
 frozen 4 × 3 test matrices, within-column paired inference, reciprocal crossover
 detection, rejection of false specialization from a globally stronger policy,
@@ -1796,6 +2018,9 @@ experiment_strategy.py  Saved-brain sensor interventions, ancestral controls, an
 plot_strategy.py      Food-bearing benefits and residual evolutionary-history comparisons
 experiment_selection.py  Matched fitness selection versus random-parent inheritance
 plot_selection.py     Training curves and paired held-out selection effects
+inspect_brains.py  Frozen-network activations, sensory diagnostics, and passive recordings
+plot_brains.py  Scientific overview and self-contained playback export
+brain_viewer.html  Offline trajectory and neural-decision playback template
 experiment_specialization.py  Habitat specialists, cycling generalists, and cross-environment tests
 plot_specialization.py  Performance matrices and corrected home-advantage contrasts
 creature.py           Creature state, motor controls, survival, drawing, and spawning
@@ -1819,6 +2044,7 @@ test_intelligence.py  Sensor truth, positive controls, archives, repeated trials
 test_speed.py         Speed/energy fairness, greedy guidance, clustered food, and study inference
 test_strategy.py      Source preservation, factorial controls, paired interactions, and probes
 test_parent_selection.py  Fitness independence, matched mutations, inheritance, and causal controls
+test_brain_inspection.py  Passive physics, exact derivatives, trace integrity, and viewer exports
 test_specialization.py  Balanced exposure, full matrix tests, and reciprocal specialization
 results/step11-seed42.json  Observations from one seeded ten-generation run
 results/step12-seed42.json  Repeated seed-42 trajectory with checkpoint survival rates
@@ -1855,6 +2081,15 @@ results/step18-protocol.json  Pre-trial paired-selection protocol and source has
 results/step18-selection.json  Training, parent/mutation traces, frozen tests, and inference
 results/step18-selection.png  Matched training curves and causal selection comparisons
 results/step18-models/  Sixteen paired selected/drift/founder brain archives
+results/step20-baseline.json  Hashes of every pre-Step-20 tracked file
+results/step20-baseline-tests.txt  Passing 256-test baseline transcript
+results/step20-protocol.json  Declared sources, probes, recording choices, and layout exclusions
+results/step20-brains.json  Full-cohort decisions, input effects, and descriptive analysis
+results/step20-brains.png  Decision curves, sensory effects, trajectories, and activations
+results/step20-brains.html  Self-contained interactive playback for the declared example seed
+results/step20-traces/  Sixteen numeric archives containing all 192 individual recordings
+results/step20-audit.json  Source preservation and decision/activation replay checks
+results/step20-tests.txt  Passing 269-test verification transcript
 results/step19-baseline.json  Hashes of every pre-Step-19 tracked file
 results/step19-baseline-tests.txt  Passing 242-test baseline transcript
 results/step19-protocol.json  Pre-trial specialization protocol, schedules, and source hashes
