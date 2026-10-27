@@ -1,118 +1,177 @@
+<div align="center">
+
 # Artificial Evolution 2.0
 
-**A 3D desktop observatory for the original Artificial Evolution Python engine.** Explore evolving populations in a living landscape, inspect animals and their neural activity, and export reproducible experiments.
+### 3D Living World
 
-Python controls decisions, movement, food, energy, survival, reproduction and ecological interactions. Godot displays that state with detailed deer and wolves, skeletal animation, terrain, vegetation, atmospheric lighting and smooth cameras. The original [V1 application and README](../README.md), [V1 user guide](../docs/USER_GUIDE.md), tests and published results remain unchanged.
+Watch evolving populations inhabit a natural landscape.<br>
+Inspect the animals. Follow their lives. Keep the science reproducible.
 
-![Artificial Evolution 2.0 with the optional physical habitat](docs/screenshots/habitat-physical-foraging.png)
+[![Python engine CI](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml) [![Godot](https://img.shields.io/badge/Godot-4.7.2-478cbf?style=flat-square&logo=godotengine&logoColor=white)](project.godot) [![Python](https://img.shields.io/badge/Python-powered-527d60?style=flat-square&logo=python&logoColor=white)](backend/engine_bridge.py) [![MIT License](https://img.shields.io/badge/License-MIT-64766a?style=flat-square)](LICENSE)
 
-**[Complete documentation](docs/README.md)** · [Installation](docs/INSTALLATION.md) · [User guide](docs/USER_GUIDE.md) · [Simulation modes](docs/SIMULATION_MODES.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+**[Get started](#start-the-application)** · **[All guides](docs/README.md)** · **[Controls](#controls-at-a-glance)** · **[Original 2D simulator](../docs/USER_GUIDE.md)**
+
+</div>
+
+![Living World with detailed deer, vegetation, atmospheric lighting and real-time creature inspection](docs/screenshots/habitat-metal-seed-2801.png)
+
+<p align="center"><sub>Real Python identities and decisions · Godot rendering · Detailed skeletal animals · An inspectable ecosystem</sub></p>
+
+## A new view of artificial life
+
+Artificial Evolution 2.0 brings the project's original Python simulation into a standalone 3D desktop application. Deer and wolves move through a forested landscape while the engine controls food, energy, brains, survival, reproduction and evolution.
+
+Explore the world with smooth cameras, follow an individual, inspect its state and neural preview, or return to the research workbench for settings, plots and ancestry. Original simulation rules are the default. An optional physical habitat adds explicitly separate Python terrain, river and climate effects.
+
+**The original 2D simulator remains available.** V2 adds a new interface and visual world without replacing V1's models, documentation or published research. [Project overview](../README.md) · [V1 guide](../docs/USER_GUIDE.md)
+
+## Implemented capabilities
+
+| **Living animals** | **Natural environments** | **Observable evolution** |
+| --- | --- | --- |
+| Detailed deer, stags and wolves | Rolling terrain, grass and forests | Seven original Python modes |
+| Eleven skeletal actions and smooth blends | Flowers, rocks, mountains and water | Selection, mutation and heritable traits |
+| Nearby terrain foot IK | Wind, clouds, daylight and weather | Continuous births and recorded ancestry |
+| Stable source identities and appearance | Optional physical habitat rules | Configurations, datasets and numerical replay |
+
+| **Interaction** | **Research tools** | **Desktop experience** |
+| --- | --- | --- |
+| Creature/edible-plant inspection | Population, fitness and meal curves | Standalone Apple Silicon application |
+| Focus, follow, orbit, pan and zoom | Current-state neural previews | Bundled Python, dependencies and art |
+| Confirmed event navigation | Mode-specific energy/interaction telemetry | Offline runtime and three quality profiles |
+| Pause, 1×/5×/20× and fixed-tick stepping | JSON/CSV, numeric genomes, plots and HTML | Native Metal rendering and distant-animal batching |
+
+## Inside the Living World
+
+| Predators and prey | Terrain, water and source climate |
+| --- | --- |
+| ![Wolves and deer in a Python-controlled predator–prey run](docs/screenshots/habitat-legacy-predator_prey.png) | ![Optional physical habitat with river, rain and inspected animals](docs/screenshots/habitat-physical-foraging.png) |
+| Separate evolving gene pools, confirmed captures and observed pursuit/escape. | Explicitly enabled slope/wading/climate costs; manual visual overrides remain cosmetic. |
+
+Screenshots show actual application runs. Art galleries and synthetic IK fixtures are labeled separately in the [animation documentation](docs/ANIMALS_AND_ANIMATION.md).
 
 ## Start the application
 
-On the prepared Mac, open **Finder → Go → Home → Applications**, then double-click **Artificial Evolution 2.0.app**. From Terminal:
+### Installed desktop app
+
+Open **Finder → Go → Home → Applications**, then double-click **Artificial Evolution 2.0.app**. Or:
 
 ```bash
 open "$HOME/Applications/Artificial Evolution 2.0.app"
 ```
 
-The installed app includes Python, dependencies, the numerical engine and art. It runs offline without Godot, Blender, Homebrew or the checkout. It opens in the immersive landscape; click **Research** for settings and plots.
+The installed app runs offline with its bundled Python, engine, dependencies and art. It needs no checkout, `.venv`, Godot, Blender or Homebrew at runtime.
 
-To run from a prepared source checkout, use this command **from the repository root**:
+### Run from source
+
+From the repository root, prepare Python if no working `.venv` exists:
 
 ```bash
+python3.13 -m venv .venv
+./.venv/bin/python -m pip install -r requirements.txt
+./v2/tools/setup_macos.sh
 ./"v2/Run Artificial Evolution 2.command" -- --immersive --ground-view
 ```
 
-To run the original 2D application independently:
+The Mac setup requires Homebrew when Godot/Blender is missing. Keep an existing prepared environment rather than recreating it. Godot options go before `--`; application options go after it. [Complete installation guide →](docs/INSTALLATION.md)
+
+### Build and install the Mac app
+
+With the source toolchain prepared:
+
+```bash
+./v2/tools/build_macos.sh
+python3 v2/tools/install_macos.py
+open "$HOME/Applications/Artificial Evolution 2.0.app"
+```
+
+### Keep using V1
 
 ```bash
 ./.venv/bin/python simulator.py
 ```
 
-**Research → Connection → Open original 2D** can also launch the unchanged original interface with the bundled interpreter. It has its own process and remains open when the 3D viewer closes.
+Or select **Research → Connection → Open original 2D** to launch the unchanged interface with the bundled interpreter. It runs independently when the 3D viewer closes.
 
 ## Installation and distribution
 
-The desktop package is **Apple Silicon / arm64**, locally ad-hoc signed and not Apple notarized. Native validation used macOS 27.0.1 on an M3. The bundle declares macOS 13 as its minimum, but its pinned NumPy wheel is tagged macOS 14; full macOS 13 compatibility is **not established**. See [compatibility](docs/INSTALLATION.md#requirements-and-compatibility).
+The current desktop package targets **Apple Silicon / arm64**, is locally ad-hoc signed and is not Apple notarized. Native validation used macOS 27.0.1 on an M3. Bundle metadata declares macOS 13, but the locked NumPy wheel is tagged macOS 14; full macOS 13 compatibility is not established. [Compatibility details](docs/INSTALLATION.md#requirements-and-compatibility)
 
-V2 is implemented in this repository and builds as a standalone app. At this review, GitHub has V1 `v1.0.0` and `v1.0.1` releases; **no V2 GitHub release asset is published**. The generated desktop ZIP is an ignored local build artifact, not part of a fresh clone.
-
-If you have the desktop ZIP, extract it and move the app to `~/Applications`. For a new development checkout:
-
-```bash
-git clone https://github.com/Maitham16/Artificial_Evolution.git
-cd Artificial_Evolution
-python3.13 -m venv .venv
-./.venv/bin/python -m pip install -r requirements.txt
-./v2/tools/setup_macos.sh
-./"v2/Run Artificial Evolution 2.command" -- --immersive
-```
-
-Keep an existing working `.venv`; it does not need recreating. Setup requires macOS and Homebrew if Godot or Blender is missing. [Installation](docs/INSTALLATION.md) covers exact versions, ZIP installation, source paths, offline use and building.
-
-## Implemented capabilities
-
-| Area | Features | Guide |
-| --- | --- | --- |
-| Simulation | Food seeking, changing seasons, obstacles/hazards, brains/bodies, predator–prey, social groups, continuous ecosystems | [Modes](docs/SIMULATION_MODES.md) |
-| Evolution | Selected neural controllers, neutral inheritance, random movement, greedy foraging, frozen founders where supported | [Evolution and brains](docs/EVOLUTION_AND_BRAINS.md) |
-| Animals | Deer/stags and wolves, Python identities, coats, inherited sizes, eleven skeletal actions, nearby foot IK | [Animals](docs/ANIMALS_AND_ANIMATION.md) |
-| Landscape | Grass, forests, flowers, rocks, mountains, water, wind, clouds, rain, fog, snow and day/night lighting | [Environments](docs/ENVIRONMENTS.md) |
-| Physical habitat | Optional Python slope, river depth, wading, steep-bank and climate effects | [Physical rules](docs/PHYSICAL_HABITAT.md) |
-| Interaction | Creature/plant inspection, confirmed event navigation, following, pause, speed and fixed-tick stepping | [User guide](docs/USER_GUIDE.md) |
-| Observation | Population, food, fitness, ancestry, neural previews, hazard exposure, captures and sharing | [Measurements](docs/RESEARCH_AND_VALIDATION.md) |
-| Reproduction | Synchronized cohorts or continuous energy-funded births | [Modes](docs/SIMULATION_MODES.md) |
-| Data | JSON/CSV, numeric genomes, plots, screenshots, HTML reports, manifests and declared numerical replay | [Export/replay](docs/EXPORTS_AND_REPLAY.md) |
-| Development | Godot editing, Blender authoring, asset hashes/licenses, tests and standalone macOS builds | [Development](docs/DEVELOPMENT.md) |
+V2 is available in source and as a locally generated desktop ZIP. There is no published V2 GitHub release asset yet; a fresh clone does not include ignored `v2/build/`. V1 releases remain [available separately](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1).
 
 ## First experiment
 
-1. Click **Research**. Select **Food seeking**, **Meadow**, **Selected neural**.
-2. Keep 100 founders and seed `2801`, then choose **Start new population**.
-3. Return with **Landscape view** or **V**. Click an animal, then **Focus** or **F** to follow it.
-4. Open **Ecosystem** or press **N** for confirmed events and scenery settings. Scroll **inside the drawer** to reach lower controls.
-5. Pause with **Space**. In Research, inspect neural previews and charts or choose **Single physics tick**.
-6. Press **E** or choose **Export run**. Use **Open export folder** to find the bundle.
+1. Open **Research**. Choose **Food seeking → Meadow → Selected neural**.
+2. Keep 100 founders and seed `2801`, then **Start new population**.
+3. Return with **Landscape view** or **V**. Click an animal, then **Focus** or **F**.
+4. Open **Ecosystem** / **N** to inspect confirmed events and scenery controls. Scroll inside the drawer for its lower settings.
+5. Pause with **Space**, inspect the workbench's neural preview, then export with **E**.
 
-Changing model settings normally archives the previous run before replacement. A live plot describes one run; it does not prove evolution beats a baseline. [Research and validation](docs/RESEARCH_AND_VALIDATION.md) explains independent seeds, matched controls and the preserved V1 studies.
+Model changes normally archive the previous run before replacement. A configuration reload starts fresh founders, not a saved population. A live plot describes one run; [controlled studies](docs/RESEARCH_AND_VALIDATION.md) provide the independent-seed evidence.
+
+## Simulation modes
+
+| Mode | Explore |
+| --- | --- |
+| **Food seeking** | Selected neural, neutral inheritance, random, greedy and frozen-founder baselines |
+| **Changing seasons** | Seasonal food, moving clusters, maturity eligibility and extinction |
+| **Obstacles & hazards** | Radius-aware barriers, damaging regions and risk sensing |
+| **Brains & bodies** | Inherited speed, body size, sensory range and energy trade-offs |
+| **Predator & prey** | Separate evolving populations, hunting/capture and escape observations |
+| **Social behavior** | Isolated groups, optional signaling, stored-food sharing and survival strategies |
+| **Continuous ecosystem** | Overlapping lifetimes, energy-funded births, finite regrowth and lineages |
+
+[Mode rules](docs/SIMULATION_MODES.md) · [Brains and inheritance](docs/EVOLUTION_AND_BRAINS.md) · [Every setting](docs/CONFIGURATION.md)
 
 ## Controls at a glance
 
-| Action | Control |
+| Action | Input |
 | --- | --- |
 | Inspect animal / edible plant | Left click |
-| Focus selection | Double click, **Focus**, or **I** |
+| Focus selected animal | Double click, **Focus**, or **I** |
 | Follow / stop following | **Follow** or **F** |
 | Orbit / pan | Right drag or two-finger gesture / middle drag or Shift + gesture |
 | Zoom | Wheel, pinch, **− / +** |
-| Overview / ground camera | **R / C**, or camera buttons; **Valley** has its own button |
-| Pause / resume Python | **Space** or **Pause / Resume** |
-| Simulation speed | **1× / 5× / 20×** menu |
+| Overview / ground / valley | **R / C** or camera buttons; **Valley** button |
+| Pause / resume Python | **Space** or top button |
+| Target simulation rate | **1× / 5× / 20×** menu |
 | Landscape / Research | **V**; **Esc** returns from immersive to Research |
-| Ecosystem drawer | **N** or **Ecosystem** |
-| Fullscreen | **⛶** or Ctrl/Cmd + Enter |
-| Export | **E** or **Export run** |
+| Ecosystem drawer / fullscreen | **N** / **⛶** or Ctrl/Cmd + Enter |
+| Export a run | **E** or **Export run** |
 
-Gestures over a scrolling panel operate that panel instead of the camera behind it. V1 has [different shortcuts](../docs/USER_GUIDE.md#observe-and-control-the-run).
+Pointer gestures over panels operate the panel rather than the camera behind it. V1 has different shortcuts. [Full user guide →](docs/USER_GUIDE.md)
+
+## Architecture
+
+```mermaid
+flowchart LR
+    View["Godot desktop · view and controls"] <--> Bridge["Local Python bridge"]
+    Bridge <--> Python["Original Python engine"]
+    Python --> Export["Datasets, genomes, plots and replay"]
+    Habitat["Optional physical habitat"] -.-> Python
+    classDef core fill:#eaf4ee,stroke:#4c7e62,color:#183c28
+    classDef view fill:#edf3fa,stroke:#627e9b,color:#1e354a
+    class Python,Export core
+    class View view
+```
+
+Python advances fixed `1/60 s` ticks. Godot receives snapshots at up to 30 Hz and interpolates poses with a 100 ms delay. Cameras, animation and foot IK do not send corrected creature positions back to the engine. [Architecture](docs/ARCHITECTURE.md) · [Protocol and recovery](docs/PYTHON_BRIDGE.md)
 
 ## Original rules and physical habitat
 
-V2 defaults to the original Python model. Its height, distant water, plants, rain and lighting are presentation. Enable the separate Python extension with **Research → Physical habitat (v2 rules) → Start new population**, or:
+Original-rule scenery is visual: trees, outside-arena water, weather and lighting do not silently change the experiment. For actual Python slope, wading, excessive-depth barriers and climate costs, choose **Research → Physical habitat (v2 rules) → Start new population**, or:
 
 ```bash
 ./"v2/Launch 3D Application.command" --habitat
 ```
 
-Grade, wading, excessive river depth, weather and nighttime costs can then affect movement and survival. The HUD identifies **PHYSICAL HABITAT**. It retains existing brains/evolution and uses its own export/replay helper.
-
-This is a **2.5D** extension: horizontal trajectories still belong to Python. It adds no rigid-body animal physics, swimming, currents, tree collisions or terrain-specific neural inputs. Manual scenery overrides remain decorative. See [model boundaries](docs/ENVIRONMENTS.md#simulation-versus-presentation).
+The HUD identifies **PHYSICAL HABITAT**. This is an explicit **2.5D extension** with separately recorded configuration and replay. It is not full rigid-body simulation, swimming, currents, tree collisions or new terrain-specific neural sensing. Manual visual overrides remain cosmetic. [Rules and combined-model limitations →](docs/PHYSICAL_HABITAT.md)
 
 ## Performance and evidence
 
-Native Metal rendering, distant-animal batching, detailed-skeleton budgets and instanced vegetation target 60 FPS. Three recorded 100-founder Balanced trials on the M3 measured about **60 FPS**, with p95 frame times around **17.2 ms**. The OpenGL fallback measured about **40 FPS**. These are local engineering observations, not universal performance guarantees or evolutionary results.
+Native Metal, vegetation budgets, shared distant skeletal draws and selective detailed animation target 60 FPS. Three recorded 100-founder Balanced trials on the local M3 measured about **60 FPS**, with p95 frame times around **17.2 ms**. The OpenGL fallback measured around **40 FPS**. These observations are not guarantees for every machine, population or quality setting.
 
-The latest full V2 record contains **49 Python tests and 235 Godot checks**. Four native UI-pack runs test pointer routing at two window sizes, followed by a standalone release smoke test. The preceding habitat audit records **431 passing original tests** and 13 packaged native runs. [Evidence and limitations](docs/RESEARCH_AND_VALIDATION.md#engineering-evidence) link to exact records and archive hashes.
+The latest recorded complete V2 regression suite contains **49 Python tests + 235 Godot checks**. The preceding habitat audit also records **431 passing original tests** and 13 packaged native cases. CI badges above cover the original Python engine workflow, not native V2 graphics tests. [Exact audits and limitations →](docs/RESEARCH_AND_VALIDATION.md#engineering-evidence)
 
 ## Development quick start
 
@@ -120,14 +179,20 @@ The latest full V2 record contains **49 Python tests and 235 Godot checks**. Fou
 ./v2/tools/test.sh
 python3 v2/tools/verify_original.py
 ./"v2/Open Godot Editor.command"
-./v2/tools/build_macos.sh
-python3 v2/tools/install_macos.py
 ```
 
-Runtime assets are committed; do not run generators just to launch. The [development guide](docs/DEVELOPMENT.md) distinguishes current rigs from legacy generators and describes test scopes, native validators, package contents and contribution rules.
+Runtime art is committed; launching does not require asset regeneration. Blender is an authoring tool. [Development and builds](docs/DEVELOPMENT.md) explains current rigs, tests, asset licenses, source preservation and native validation.
 
 ## Guides and licenses
 
-Start at the [documentation index](docs/README.md). References include [settings/CLI](docs/CONFIGURATION.md), [architecture](docs/ARCHITECTURE.md), [troubleshooting](docs/TROUBLESHOOTING.md), [repository review](docs/REPOSITORY_REVIEW.md) and unchanged [V1 reproducibility](../docs/REPRODUCIBILITY.md).
+| Use the application | Understand the implementation |
+| --- | --- |
+| [Installation](docs/INSTALLATION.md) · [User guide](docs/USER_GUIDE.md) | [Architecture](docs/ARCHITECTURE.md) · [Python bridge](docs/PYTHON_BRIDGE.md) |
+| [Animals and animation](docs/ANIMALS_AND_ANIMATION.md) | [Evolution and brains](docs/EVOLUTION_AND_BRAINS.md) |
+| [Environments](docs/ENVIRONMENTS.md) · [Physical habitat](docs/PHYSICAL_HABITAT.md) | [Research and validation](docs/RESEARCH_AND_VALIDATION.md) |
+| [Settings](docs/CONFIGURATION.md) · [Export/replay](docs/EXPORTS_AND_REPLAY.md) | [Development](docs/DEVELOPMENT.md) · [Repository review](docs/REPOSITORY_REVIEW.md) |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) | [Original V1 documentation](../docs/USER_GUIDE.md) |
 
-Project code uses [MIT](LICENSE). Animal/landscape sources use their recorded CC0 licenses; Godot and runtime notices accompany the package. Blender is an external authoring tool. See [asset provenance](docs/ANIMALS_AND_ANIMATION.md#licenses-and-provenance), [Godot notices](THIRD_PARTY_NOTICES.txt) and [runtime provenance](docs/BUNDLED_RUNTIME.md).
+**[Browse the complete documentation →](docs/README.md)**
+
+Project code is [MIT licensed](LICENSE). Animal/landscape sources have recorded CC0 licenses; Godot and Python dependency notices accompany the app. [Art credits](docs/ANIMALS_AND_ANIMATION.md#licenses-and-provenance) · [Godot notices](THIRD_PARTY_NOTICES.txt) · [Bundled runtime provenance](docs/BUNDLED_RUNTIME.md)

@@ -1,3 +1,159 @@
+<div align="center">
+
+# Artificial Evolution
+
+### From simple neural brains to a 3D Living World
+
+Explore how behavior changes through evolution—with a reproducible 2D research simulator and an immersive 3D observatory powered by the same Python engine.
+
+[![Python CI](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml) [![V2 Living World](https://img.shields.io/badge/V2-3D_Living_World-3d7053?style=flat-square)](v2/README.md) [![V1 release](https://img.shields.io/badge/V1_release-1.0.1-526b86?style=flat-square)](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1) [![MIT License](https://img.shields.io/badge/License-MIT-64766a?style=flat-square)](LICENSE)
+
+**[Explore V2](v2/README.md)** · **[Quick start](#quick-start)** · **[Documentation](#documentation)** · **[V1 research archive](#v1-research-archive)**
+
+</div>
+
+![V2 Living World: evolving deer in a forested valley, with real-time Python state and creature inspection](v2/docs/screenshots/habitat-metal-seed-2801.png)
+
+<p align="center"><sub>Artificial Evolution 2.0 · Real Python creatures, detailed skeletal animals and a living Godot landscape.</sub></p>
+
+## One project, two experiences
+
+Begin with randomly initialized neural controllers. Let creatures move, find food, spend energy and reproduce. Observe which behaviors survive—and compare them with random, greedy and neutral-evolution controls under matched conditions.
+
+| **V2 · 3D Living World** | **V1 · Original 2D Simulator** |
+| --- | --- |
+| An immersive Godot desktop application for exploring the ecosystem in real time. | The established Python/Pygame research workbench and scientific record. |
+| Detailed deer and wolves, smooth animation, natural landscapes, cameras and live inspection. | Seven ecological models, controlled comparisons, 15 study recipes and reproducible analysis. |
+| Existing Python rules by default; optional, explicitly separate physical-habitat rules. | Preserved numerical models, documented protocols, trained populations and datasets. |
+| **[Explore the Living World →](v2/README.md)** | **[Open the V1 user guide →](docs/USER_GUIDE.md)** |
+
+V2 makes the ecosystem visible in 3D. Python continues to own the creatures, decisions and evolution. The original 2D application remains independently accessible.
+
+## What you can explore
+
+| Simulation and exploration | Evidence and analysis |
+| --- | --- |
+| **Evolving brains and bodies**<br>Tiny NumPy networks, inherited weights, mutation and mode-specific selection. | **Controlled baselines**<br>Compare selected, neutral, random, greedy and frozen-founder controllers where supported. |
+| **Seven ecological models**<br>Foraging, seasons, obstacles, body traits, predator–prey, social groups and continuous ecosystems. | **Observable individuals**<br>Inspect energy, food, ancestry, current neural activity and confirmed lifecycle events. |
+| **A living 3D landscape**<br>Deer, wolves, grass, forests, water, weather, daylight and event-driven skeletal animation. | **Reproducible records**<br>Export configurations, datasets, genomes, plots and reports; verify and replay the declared model. |
+
+The project investigates adaptive behavior under specific conditions. A successful animation, live plot or lineage is not evidence of general intelligence. [Methods, findings and limits](v2/docs/RESEARCH_AND_VALIDATION.md) remain explicit.
+
+## The two views
+
+| V2 · Animals and environmental interactions | V1 · Research workbench |
+| --- | --- |
+| ![V2 physical habitat with animals, river and source climate](v2/docs/screenshots/habitat-physical-foraging.png) | ![Original V1 research workbench with population, controls and scientific plots](results/step28-workbench.png) |
+| Optional Python terrain, wading and climate effects; manual scenery overrides remain decorative. | The original interface, data workflows and published research remain available. |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    V2["V2 · Godot 3D Living World"] <--> Bridge["Local Python bridge"]
+    V1["V1 · Pygame 2D Simulator"] <--> Engine["Original Python engine"]
+    Bridge <--> Engine
+    Engine --> Ecology["Brains · food · survival · evolution"]
+    Engine --> Records["Datasets · plots · reports · replay"]
+    Habitat["Optional V2 physical habitat"] -.-> Engine
+    classDef views fill:#edf3fa,stroke:#627e9b,color:#1e354a
+    classDef core fill:#eaf4ee,stroke:#4c7e62,color:#183c28
+    class V1,V2 views
+    class Engine,Ecology,Records core
+```
+
+Godot interpolates received positions and drives visuals from actual Python observations. It does not replace the numerical engine. The optional physical habitat is a separately recorded 2.5D extension, with its own replay and [documented limits](v2/docs/PHYSICAL_HABITAT.md#combined-model-limitations). [Architecture guide →](v2/docs/ARCHITECTURE.md)
+
+## Quick start
+
+### Open the installed 3D application
+
+On the prepared Mac, open **Finder → Go → Home → Applications → Artificial Evolution 2.0.app**, or:
+
+```bash
+open "$HOME/Applications/Artificial Evolution 2.0.app"
+```
+
+The standalone app includes Python, dependencies and art. Godot, Blender and the checkout are not needed at runtime.
+
+### Run from source
+
+From a fresh checkout, prepare Python once. Keep an existing working `.venv` instead of recreating it.
+
+```bash
+git clone https://github.com/Maitham16/Artificial_Evolution.git
+cd Artificial_Evolution
+python3.13 -m venv .venv
+./.venv/bin/python -m pip install -r requirements.txt
+```
+
+**V2 · 3D Living World** — prepare the Mac toolchain, then launch:
+
+```bash
+./v2/tools/setup_macos.sh
+./"v2/Run Artificial Evolution 2.command" -- --immersive --ground-view
+```
+
+**V1 · Original 2D Simulator** — launch the existing workbench:
+
+```bash
+./.venv/bin/python simulator.py
+```
+
+The V2 setup uses Homebrew when Godot or Blender is missing. Current standalone builds target Apple Silicon; see [installation and compatibility](v2/docs/INSTALLATION.md) before building on another Mac. V1 release downloads remain at [v1.0.1](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1). V2 is available in source and as a local desktop build; a V2 GitHub release asset is not yet published.
+
+### Your first Living World session
+
+1. Click an animal, then **Focus** or **F** to follow it.
+2. Open **Research** to choose a model, controller, environment and seed.
+3. Open **Ecosystem** or press **N** for confirmed events and scenery controls.
+4. Pause with **Space**; export the Python run with **E**.
+
+For real terrain/wading/climate effects, select **Research → Physical habitat (v2 rules) → Start new population**. Original rules remain the default. [Full controls →](v2/docs/USER_GUIDE.md)
+
+## Documentation
+
+| Start with V2 | Keep exploring V1 |
+| --- | --- |
+| [Documentation index](v2/docs/README.md) | [Original user guide](docs/USER_GUIDE.md) |
+| [Installation and launch](v2/docs/INSTALLATION.md) | [Reproducibility and research protocols](docs/REPRODUCIBILITY.md) |
+| [Controls and user guide](v2/docs/USER_GUIDE.md) | [Full research archive below](#v1-research-archive) |
+| [Modes](v2/docs/SIMULATION_MODES.md) · [Evolution and brains](v2/docs/EVOLUTION_AND_BRAINS.md) | [Published datasets and models](results/) |
+| [Animals](v2/docs/ANIMALS_AND_ANIMATION.md) · [Environments](v2/docs/ENVIRONMENTS.md) | [V1.0.1 release notes](docs/RELEASE-v1.0.1.md) |
+| [Settings](v2/docs/CONFIGURATION.md) · [Export and replay](v2/docs/EXPORTS_AND_REPLAY.md) | [Frozen V1.0.0 release notes](docs/RELEASE-v1.0.0.md) |
+| [Development](v2/docs/DEVELOPMENT.md) · [Troubleshooting](v2/docs/TROUBLESHOOTING.md) | [Original single-mode viewer](#original-single-mode-viewer) |
+
+## Testing and evidence
+
+The live GitHub Actions badge covers the **original Python suite and seven-world export/replay checks**, on Linux and macOS for pushes and pull requests. It does not represent automated Godot/native graphics coverage.
+
+```bash
+# Original Python regression suite
+./.venv/bin/python -B -m unittest discover -v
+
+# V2 Python and Godot checks
+./v2/tools/test.sh
+
+# Original-file preservation, including the verbatim V1 archive below
+python3 v2/tools/verify_original.py
+```
+
+Recorded local audits include **431 original tests**, **284 V2 tests/checks**, native export/replay and input checks, and repeated Metal trials around **60 FPS** on an Apple M3. Counts and timings belong to their recorded builds, not every machine. [Validation records and limitations →](v2/docs/RESEARCH_AND_VALIDATION.md#engineering-evidence)
+
+## License and credits
+
+Project code is [MIT licensed](LICENSE). Animal and landscape assets carry recorded CC0 licenses; Godot and runtime dependency notices are included with the desktop package. Blender is an external authoring tool. [Asset credits](v2/docs/ANIMALS_AND_ANIMATION.md#licenses-and-provenance) · [Runtime provenance](v2/docs/BUNDLED_RUNTIME.md)
+
+---
+
+## V1 research archive
+
+The complete original README is preserved verbatim below, including its methods, results, figures, commands and section anchors. This is the historical V1 record; its step-specific test counts and release statements describe those earlier revisions. The guides and datasets linked above remain in their original locations.
+
+<details>
+<summary><strong>Open the complete V1 research record · Steps 1–28, experiments and published results</strong></summary>
+
+<!-- V1-README-ARCHIVE:START -->
 # Artificial Evolution
 
 [![Tests](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml)
@@ -4095,3 +4251,6 @@ Official installation references: [NumPy](https://numpy.org/install/),
 [Matplotlib](https://matplotlib.org/stable/install/).
 Pygame's [display documentation](https://www.pygame.org/docs/ref/display.html)
 describes the window and coordinate system used here.
+<!-- V1-README-ARCHIVE:END -->
+
+</details>
