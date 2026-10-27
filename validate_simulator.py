@@ -15,7 +15,7 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
 from research_catalog import STUDIES, Study, StudyJob
-from research_session import (ALGORITHMS, MODES, ROOT, ResearchSession, RunConfig, export_bundle,
+from research_session import (ALGORITHMS, MODES, ROOT, VERSION, ResearchSession, RunConfig, export_bundle,
                               file_hash, replay_run, verify_bundle)
 
 
@@ -92,7 +92,7 @@ def validate(output, demos, baseline, native):
     preserved = {p: h for p, h in baseline_data["files_sha256"].items() if p != "README.md"}
     if not all(file_hash(ROOT / p) == h for p, h in preserved.items()):
         raise RuntimeError("A preexisting scientific source or artifact changed.")
-    result = {"schema_version": 1, "status": "passed", "app_version": "1.0.0", "purpose": "Bounded engineering validation, not an independent scientific replication.",
+    result = {"schema_version": 1, "status": "passed", "app_version": VERSION, "purpose": "Bounded engineering validation, not an independent scientific replication.",
               "modes": records, "native_ui_records": native_records,
               "native_checks": ["Pause/resume", "Live ecosystem and ancestry", "Background export", "Research catalog",
                                 "Mode switching with automatic archive", "Clustered environment", "Neutral algorithm", "Clean application exit"],

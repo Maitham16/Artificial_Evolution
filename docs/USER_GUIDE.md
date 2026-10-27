@@ -1,4 +1,4 @@
-# Artificial Evolution 1.0 — user guide
+# Artificial Evolution 1.0.1 — user guide
 
 The research workbench brings the seven simulation modes and the studies from
 Steps 13–27 into one Pygame application. Its live displays describe one run;
@@ -20,16 +20,16 @@ its installed environment: activate `.venv`, then run `python simulator.py`.
 The original `main.py` viewer and all earlier experiment interfaces retain their
 published source versions and commands.
 
-The release has two ZIP assets with the same `Artificial_Evolution-v1.0.0/`
+The release has two ZIP assets with the same `Artificial_Evolution-v1.0.1/`
 prefix. The **source** asset contains the application, presets, guides, current
 demonstration figures, and Step 27's published summary/figures. The optional
 **research** asset adds all earlier datasets, trained populations, and raw
 histories. Extract both into the same parent directory to combine them:
 
 ```sh
-unzip Artificial_Evolution-v1.0.0-source.zip
-unzip -n Artificial_Evolution-v1.0.0-research.zip
-cd Artificial_Evolution-v1.0.0
+unzip Artificial_Evolution-v1.0.1-source.zip
+unzip -n Artificial_Evolution-v1.0.1-research.zip
+cd Artificial_Evolution-v1.0.1
 ```
 
 Steps 17, 20, and 27 use previously trained populations. Their Run button becomes
@@ -91,6 +91,14 @@ The world view shows live population, food, founder-family rings, earned fitness
 and sampled time curves. Click a creature for its parent, root family, energy,
 inherited dimensions, and eight hidden-neuron activations. Activations are a
 **preview at the current state**, rather than a recording of the preceding tick.
+
+In **Obstacles & hazards**, the red circles are dangerous areas creatures can
+cross. Overlapping a zone costs an additional **12 energy per second** and
+**5 fitness per second**. Labels show the current exposed population, and exposed
+creatures have red warning rings. Click a zone or its label to inspect its rules;
+click a creature to see its total energy drain, hazard energy loss, and exposure
+time. A red energy bar marks active exposure. Eating can replenish energy while
+hazard costs continue to apply. These displays observe the existing damage rules.
 
 Lineages shows every observed birth/parent edge, including extinct branches,
 and the largest living families. Generation and creature ID jointly identify

@@ -47,6 +47,58 @@ class WorkbenchTests(unittest.TestCase):
         self.assertEqual(self.app.session.speed, 5)
         self.assertEqual(self.app.session.events[-1]["action"], "speed")
 
+    def test_hazard_clicks_respect_viewport_and_prioritize_creatures(self):
+        config = RunConfig(mode="obstacles", population=20, food_count=0)
+        self.app.session = ResearchSession(config)
+        self.app.draft = config.to_dict()
+        self.app.sync_inputs()
+        self.app.draw()
+        world = self.app.session.world
+        hazard = world.dangers[0]
+        def click(x, y):
+            point = (self.app.arena.x + x * self.app.arena.width / world.width,
+                     self.app.arena.y + y * self.app.arena.height / world.height)
+            position = (self.app.viewport.x + point[0] * self.app.viewport.width / 1440,
+                        self.app.viewport.y + point[1] * self.app.viewport.height / 900)
+            self.app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=position))
+        click(hazard.x, hazard.y)
+        self.assertEqual(self.app.selected_hazard(), (0, hazard))
+        self.assertIsNone(world.selected_creature)
+        creature = world.creatures[0]
+        creature.x, creature.y = hazard.x, hazard.y
+        click(creature.x, creature.y)
+        self.assertIs(world.selected_creature, creature)
+        self.assertIsNone(self.app.selected_hazard())
+        self.app.select_hazard(0)
+        self.app.session = ResearchSession(config)
+        self.assertIsNone(self.app.selected_hazard())
+
+    def test_hazard_feedback_observes_damage_without_changing_physics(self):
+        config = RunConfig(mode="obstacles", population=20, food_count=0)
+        observed, reference = ResearchSession(config), ResearchSession(config)
+        self.app.session = observed
+        self.app.draft = config.to_dict()
+        self.app.sync_inputs()
+        for session in (observed, reference):
+            creature = session.world.creatures[0]
+            hazard = session.world.dangers[0]
+            creature.x, creature.y, creature.heading, creature.energy = hazard.x, hazard.y, 0., 100.
+            for parameter in creature.brain.parameters: parameter.fill(0.)
+        self.app.select_hazard(0)
+        for tick in range(30):
+            if tick == 15:
+                self.app.hazard_selection = None
+                observed.world.selected_creature = observed.world.creatures[0]
+            self.app.draw()
+            observed.step()
+            reference.step()
+        creature = observed.world.creatures[0]
+        self.assertAlmostEqual(creature.energy, 91.5)
+        self.assertAlmostEqual(creature.hazard_energy_lost, 6.)
+        self.assertAlmostEqual(creature.hazard_seconds, .5)
+        self.assertEqual(observed.simulation.report(), reference.simulation.report())
+        self.assertEqual(observed.snapshot()[0]["individuals"], reference.snapshot()[0]["individuals"])
+
     def test_mode_change_is_transactional_and_keeps_previous_run_on_failure(self):
         original = self.app.session
         self.app.text_values["population"] = "0"
@@ -175,8 +227,8 @@ class ReleaseAndCliTests(unittest.TestCase):
             git("-c", "user.name=Release Test", "-c", "user.email=test@example.invalid", "commit", "--quiet", "-m", "fixture")
             (repo / "app.py").write_text("uncommitted")
             (repo / "private.txt").write_text("never package")
-            first = build_release(repo, root / "one")
-            second = build_release(repo, root / "two")
+            first = build_release(repo, root / "one", version="v1.0.0")
+            second = build_release(repo, root / "two", version="v1.0.0")
             self.assertEqual(first, second)
             for kind in ("source", "research"):
                 path = root / "one" / f"Artificial_Evolution-v1.0.0-{kind}.zip"
@@ -192,6 +244,36 @@ class ReleaseAndCliTests(unittest.TestCase):
                     else: self.assertIn("Artificial_Evolution-v1.0.0/results/evidence.json", names)
             with self.assertRaises(ValueError): build_release(repo, root / "one")
             with self.assertRaises(ValueError): build_release(repo, root / "bad", version="../unsafe")
+
+    def test_both_release_archives_include_committed_license_and_hashed_contents(self):
+        license_bytes = (ROOT / "LICENSE").read_bytes()
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp) / "repo"
+            repo.mkdir()
+            for name, content in {"LICENSE": license_bytes, ".python-version": b"3.13\n",
+                                  ".gitattributes": b"*.csv -text\n", "app.py": b"pass\n",
+                                  "results/data.json": b"{}\n"}.items():
+                path = repo / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+            def git(*args):
+                return subprocess.check_output(["git", "-C", str(repo), *args], stderr=subprocess.STDOUT)
+            git("init", "--quiet")
+            git("add", ".")
+            git("-c", "user.name=Release Test", "-c", "user.email=test@example.invalid",
+                "commit", "--quiet", "-m", "licensed fixture")
+            (repo / "LICENSE").write_text("Uncommitted replacement must never be packaged.\n")
+            build_release(repo, Path(temp) / "release", version="v1.0.1")
+            for kind in ("source", "research"):
+                archive_path = Path(temp) / "release" / f"Artificial_Evolution-v1.0.1-{kind}.zip"
+                with zipfile.ZipFile(archive_path) as archive:
+                    prefix = "Artificial_Evolution-v1.0.1/"
+                    self.assertEqual(archive.read(prefix + "LICENSE"), license_bytes)
+                    manifest = json.loads(archive.read(prefix + f"release-{kind}-manifest.json"))
+                    self.assertEqual(manifest["files_sha256"]["LICENSE"], hashlib.sha256(license_bytes).hexdigest())
+                    if kind == "source":
+                        self.assertEqual(archive.read(prefix + ".python-version"), b"3.13\n")
+                        self.assertEqual(archive.read(prefix + ".gitattributes"), b"*.csv -text\n")
 
     def test_headless_cli_exports_and_verifies_then_replays(self):
         with tempfile.TemporaryDirectory() as temp, redirect_stdout(io.StringIO()):

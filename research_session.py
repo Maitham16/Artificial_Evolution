@@ -24,7 +24,7 @@ from simulation import EvolutionSimulation
 from world import SIMULATION_STEP, World
 
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 ROOT = Path(__file__).resolve().parent
 MODES = ("foraging", "seasons", "obstacles", "traits", "predator_prey", "social", "continuous")
 ENVIRONMENTS = {

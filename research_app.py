@@ -15,6 +15,7 @@ import webbrowser
 import numpy as np
 import pygame
 
+from obstacles import HAZARD_ENERGY_PER_SECOND, HAZARD_FITNESS_PER_SECOND
 from research_catalog import STUDIES, StudyJob
 from research_session import (ALGORITHMS, ENVIRONMENTS, FITNESS_LABELS, MODES, MODE_NAMES, ROOT,
                               VERSION, ResearchSession, RunConfig, export_bundle)
@@ -82,6 +83,7 @@ class ResearchApp:
         self.actual_rate = 0.
         self.lineage_rings = True
         self.figure_preview = None
+        self.hazard_selection = None
         self.draft = self.session.config.to_dict()
         self.text_values = {}
         self.sync_inputs()
@@ -92,6 +94,23 @@ class ResearchApp:
 
     def message(self, text, error=False):
         self.notice, self.error = text, error
+
+    def select_hazard(self, index):
+        world = self.session.world
+        if 0 <= index < len(getattr(world, "dangers", ())):
+            self.hazard_selection = (self.session.run_id, world.generation, index)
+            world.selected_creature = None
+            self.message("Hazards drain extra energy while a creature overlaps them. Click a creature to watch its energy.")
+
+    def selected_hazard(self):
+        if self.hazard_selection is not None:
+            run, generation, index = self.hazard_selection
+            world = self.session.world
+            if (run == self.session.run_id and generation == world.generation
+                    and index < len(getattr(world, "dangers", ()))):
+                return index, world.dangers[index]
+        self.hazard_selection = None
+        return None
 
     def text(self, value, x, y, kind="body", color=INK):
         self.canvas.blit(self.fonts[kind].render(str(value), True, color), (x, y))
@@ -243,6 +262,7 @@ class ResearchApp:
             except (ValueError, TypeError, OSError) as error: self.message(str(error), True)
         elif key == "open_export":
             if self.last_export: self.open_path(self.last_export / "report.html")
+        elif key == "hazard": self.select_hazard(args[0])
         elif key == "study": self.study_index = (self.study_index + args[0]) % len(STUDIES)
         elif key == "workers": self.workers = (1, 2, 4, 8)[((1, 2, 4, 8).index(self.workers) + 1) % 4]
         elif key == "published": self.open_path(STUDIES[self.study_index].source)
@@ -308,8 +328,15 @@ class ResearchApp:
                 return
             if not self.modal and self.tab == "Live world" and self.arena.collidepoint(point):
                 w = self.session.world
-                w.select_creature(((point[0] - self.arena.x) * w.width / self.arena.width,
-                                   (point[1] - self.arena.y) * w.height / self.arena.height))
+                position = ((point[0] - self.arena.x) * w.width / self.arena.width,
+                            (point[1] - self.arena.y) * w.height / self.arena.height)
+                self.hazard_selection = None
+                w.select_creature(position)
+                if w.selected_creature is None:
+                    for index, hazard in enumerate(getattr(w, "dangers", ())):
+                        if hazard.overlaps(*position):
+                            self.select_hazard(index)
+                            break
 
     def spark(self, title, rect, key, color=MINT):
         self.card(rect)
@@ -361,9 +388,21 @@ class ResearchApp:
             self.text(f"Predator fitness {m['predator_mean_fitness']:.1f}", 1170, 349, "small", GOLD)
         else:
             self.text(f"Mean meals {m['mean_meals']:.2f}", 1170, 349, "small", GOLD)
-        self.text("SELECTED CREATURE", 1170, 391, "tiny", MUTED)
+        selected_hazard = self.selected_hazard()
+        self.text("SELECTED HAZARD" if selected_hazard else "SELECTED CREATURE", 1170, 391, "tiny", MUTED)
         c = w.selected_creature
-        if c is None:
+        if selected_hazard:
+            index, hazard = selected_hazard
+            exposed = sum(hazard.overlaps(c.x, c.y, c.radius) for c in w.creatures)
+            self.text(f"Zone {index + 1}", 1170, 420, "large", RED)
+            self.text(f"Currently exposed: {exposed}", 1170, 456, "small", RED if exposed else MUTED)
+            self.text(f"Extra energy loss: {HAZARD_ENERGY_PER_SECOND:g}/s", 1170, 495, "small", RED)
+            self.text(f"Fitness penalty: {HAZARD_FITNESS_PER_SECOND:g}/s", 1170, 522, "small", MUTED)
+            self.wrapped("Creatures can pass through this area. Damage applies for the time their body overlaps the red zone.",
+                         pygame.Rect(1170, 568, 228, 110))
+            self.wrapped("Click an exposed creature to see its energy drain, accumulated hazard damage, and exposure time.",
+                         pygame.Rect(1170, 700, 228, 110))
+        elif c is None:
             self.wrapped("Click a living creature to inspect its ancestry, energy, and current-state neural activations.", pygame.Rect(1170, 423, 230, 130))
         else:
             key = s.key(c)
@@ -371,22 +410,29 @@ class ResearchApp:
             self.text(key, 1170, 420, "large", family_color(birth["founder"]))
             self.text(f"Age {c.age:.1f}s / energy {c.energy:.1f}", 1170, 456, "small")
             pygame.draw.rect(self.canvas, LINE, (1170, 484, 228, 7), border_radius=3)
-            pygame.draw.rect(self.canvas, MINT, (1170, 484, round(228 * c.energy / c.energy_capacity), 7), border_radius=3)
+            in_danger = getattr(c, "in_danger", False)
+            pygame.draw.rect(self.canvas, RED if in_danger else MINT, (1170, 484, round(228 * c.energy / c.energy_capacity), 7), border_radius=3)
             self.text(f"Parent {birth['parent'] or 'founder'}", 1170, 509, "small", MUTED)
             self.text(f"Root {birth['founder']} / depth {birth['depth']}", 1170, 535, "small", MUTED)
             self.text(f"Speed {c.speed:.1f} / size {c.radius}", 1170, 561, "small", MUTED)
+            hazard_details = hasattr(c, "hazard_energy_lost")
+            if hazard_details:
+                self.text(f"{'IN HAZARD' if in_danger else 'Energy drain'}: {c.energy_cost_per_second:.1f}/s",
+                          1170, 582, "small", RED if in_danger else MUTED)
+                self.text(f"Hazard loss {c.hazard_energy_lost:.1f} / {c.hazard_seconds:.1f}s", 1170, 602, "tiny", RED)
             if s.config.algorithm in ("random", "greedy"):
-                self.wrapped("Hand-coded steering. Stored placeholder weights do not control this creature.", pygame.Rect(1170, 612, 226, 100))
+                self.wrapped("Hand-coded steering. Stored placeholder weights do not control this creature.", pygame.Rect(1170, 632 if hazard_details else 612, 226, 100))
             else:
                 inputs = w.get_sensory_inputs(c)
                 hidden = np.tanh(inputs @ c.brain.input_weights + c.brain.hidden_bias)
-                self.text("CURRENT-STATE ACTIVATION", 1170, 612, "tiny", MUTED)
+                offset = 20 if hazard_details else 0
+                self.text("CURRENT-STATE ACTIVATION", 1170, 612 + offset, "tiny", MUTED)
                 for i, value in enumerate(hidden):
-                    y = 641 + i * 18
+                    y = 641 + offset + i * 18
                     self.text(str(i + 1), 1170, y - 3, "tiny", MUTED)
                     pygame.draw.line(self.canvas, LINE, (1200, y + 3), (1394, y + 3), 5)
                     pygame.draw.line(self.canvas, MINT if value >= 0 else GOLD, (1297, y + 3), (1297 + round(value * 96), y + 3), 6)
-                self.text("Preview at the current state", 1170, 800, "tiny", MUTED)
+                self.text("Preview at the current state", 1170, 810 if hazard_details else 800, "tiny", MUTED)
         self.button("Open last report", (1170, 828, 232, 30), ("open_export",), enabled=self.last_export is not None)
 
     def draw_world(self):
@@ -400,11 +446,31 @@ class ResearchApp:
             for c in w.creatures:
                 root = s.births[s.key(c)]["founder"]
                 pygame.draw.circle(surface, family_color(root), (round(c.x), round(c.y)), c.radius + 4, 1)
+        for c in w.creatures:
+            if getattr(c, "in_danger", False):
+                pygame.draw.circle(surface, RED, (round(c.x), round(c.y)), c.radius + 7, 2)
         scale = min(850 / w.width, 510 / w.height)
         self.arena = pygame.Rect(288 + (850 - round(w.width * scale)) // 2, 161 + (510 - round(w.height * scale)) // 2,
                                  round(w.width * scale), round(w.height * scale))
         self.canvas.blit(pygame.transform.smoothscale(surface, self.arena.size), self.arena)
         pygame.draw.rect(self.canvas, LINE, self.arena, 1)
+        selected_hazard = self.selected_hazard()
+        for index, hazard in enumerate(getattr(w, "dangers", ())):
+            center = (self.arena.x + round(hazard.x * self.arena.width / w.width),
+                      self.arena.y + round(hazard.y * self.arena.height / w.height))
+            radius = round(hazard.radius * self.arena.width / w.width)
+            exposed = sum(hazard.overlaps(c.x, c.y, c.radius) for c in w.creatures)
+            if selected_hazard and selected_hazard[0] == index:
+                pygame.draw.circle(self.canvas, RED, center, radius, 3)
+            label = f"HAZARD -{HAZARD_ENERGY_PER_SECOND:g} energy/s"
+            width = max(104, self.fonts["tiny"].size(label)[0] + 12)
+            badge = pygame.Rect(center[0] - width // 2, max(self.arena.top + 3, center[1] - radius - 38), width, 35)
+            badge.clamp_ip(self.arena.inflate(-6, -6))
+            pygame.draw.rect(self.canvas, (57, 29, 38), badge, border_radius=5)
+            pygame.draw.rect(self.canvas, RED if exposed else LINE, badge, 1, border_radius=5)
+            self.text(label, badge.x + 6, badge.y + 3, "tiny", RED)
+            self.text(f"{exposed} exposed", badge.x + 6, badge.y + 18, "tiny", INK)
+            self.hits.append((badge, ("hazard", index)))
         self.button("Auto births ON" if s.config.mode == "continuous" and s.automatic else "Auto births OFF" if s.config.mode == "continuous" else "Auto breed ON" if s.automatic else "Auto breed OFF",
                     (288, 685, 190, 31), ("automatic",))
         self.button("Next generation", (490, 685, 178, 31), ("advance",), enabled=s.config.mode != "continuous" and w.final_evaluation is not None and not s.finished)

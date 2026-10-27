@@ -8,6 +8,8 @@ import re
 import subprocess
 import zipfile
 
+DEFAULT_VERSION = "v1.0.1"
+
 
 def git(repo, *args):
     return subprocess.check_output(["git", "-C", str(repo), *args])
@@ -20,10 +22,12 @@ def source_member(name):
             "results/step27-evaluation.json", "results/step27-evaluation.png",
             "results/step27-effects.png", "results/step27-mechanisms.png"}
     return (path.suffix in (".py", ".md", ".html", ".json", ".txt", ".png")
-            or name == ".gitignore") and not any(p in (".git", ".venv", ".cache", "__pycache__", "exports", "dist") for p in path.parts)
+            or name in ("LICENSE", ".gitignore", ".gitattributes", ".python-version")
+            or name.startswith(".github/workflows/") and path.suffix in (".yml", ".yaml")) and not any(
+                p in (".git", ".venv", ".cache", "__pycache__", "exports", "dist") for p in path.parts)
 
 
-def build_release(repo, output, version="v1.0.0", ref="HEAD"):
+def build_release(repo, output, version=DEFAULT_VERSION, ref="HEAD"):
     repo, output = Path(repo).resolve(), Path(output).resolve()
     if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+", version):
         raise ValueError("Use a semantic release version such as v1.0.0.")
@@ -38,7 +42,8 @@ def build_release(repo, output, version="v1.0.0", ref="HEAD"):
         raise ValueError("Preserve existing release artifacts; use a new output directory.")
     counts = {}
     for kind, destination in targets.items():
-        selected = [n for n in names if source_member(n)] if kind == "source" else [n for n in names if n.startswith("results/")]
+        selected = ([n for n in names if source_member(n)] if kind == "source"
+                    else [n for n in names if n == "LICENSE" or n.startswith("results/")])
         hashes = {}
         with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
             def write(name, data):
@@ -66,7 +71,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parent)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--version", default="v1.0.0")
+    parser.add_argument("--version", default=DEFAULT_VERSION)
     parser.add_argument("--ref", default="HEAD")
     args = parser.parse_args()
     try:

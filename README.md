@@ -6,7 +6,7 @@ An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
 Current step: **28 — Final simulator and research demonstration**.
-**Artificial Evolution 1.0.0** brings seven live worlds, evolutionary algorithms,
+**Artificial Evolution 1.0.1** brings seven live worlds, evolutionary algorithms,
 ancestry visualization, reproducible exports, and 15 research studies into one
 interactive workbench.
 Earlier experiments and saved results remain available.
@@ -30,7 +30,13 @@ into fresh folders. **Export run** saves data, configuration, genomes, plots,
 screenshots, and a local HTML report while the simulation continues.
 
 [User guide](docs/USER_GUIDE.md) · [Reproducibility](docs/REPRODUCIBILITY.md) ·
-[Version 1.0 release](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.0)
+[Version 1.0.1 release](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1)
+
+Version 1.0.1 includes the MIT license in both release ZIPs and the runtime-version
+file in the source ZIP. In Obstacles & hazards, red areas show their extra energy
+cost and live exposure count. Click an area for details or an exposed creature
+for its energy drain, accumulated hazard damage, and exposure time. The model's
+damage rules are unchanged.
 
 ![The artificial-life research workbench](results/step28-workbench.png)
 

@@ -4,6 +4,14 @@ The version 1.0 release combines a research interface with the existing numerica
 models. Earlier experiments retain their original methods, trained arrays, raw
 histories, source hashes, and audit records.
 
+Version 1.0.1 repairs packaging: both source and research ZIPs contain the same
+committed MIT `LICENSE`, recorded in each archive manifest. The source ZIP also
+includes `.python-version`, `.gitattributes`, and the CI workflow. This fixes the
+missing runtime-version file that prevented the v1.0.0 ZIP installation from
+completing the preserved-file check. The original v1.0.0 assets and tag remain
+unchanged. Hazard feedback in 1.0.1 is observational; damage and fitness rules
+retain their original numerical implementation.
+
 ## Validated runtime
 
 The release was checked on macOS with Python 3.13.17, NumPy 2.5.4, Pygame 2.6.1,
@@ -103,7 +111,7 @@ continuous renewal address different questions.
 From a Git checkout of the release tag:
 
 ```sh
-python build_release.py --ref v1.0.0 --version v1.0.0 --output .cache/rebuilt-release
+python build_release.py --ref v1.0.1 --version v1.0.1 --output .cache/rebuilt-release
 ```
 
 The builder reads committed Git blobs, assigns fixed ZIP timestamps/permissions,
