@@ -6,6 +6,8 @@ The 3D application now runs the repository's **existing Python simulation engine
 
 The new [living landscape](docs/NATURAL_WORLD.md) adds rolling green terrain, scanned trees and plants, wind-blown grass, mountains, water, sunlight and atmospheric lighting. Click **Landscape view** or press **V**, then choose **Valley** or **Ground view**. Three scenery quality profiles adjust rendering cost without changing Python.
 
+The [animal models](docs/ANIMAL_MODELS.md) now use detailed, textured deer for herbivores and wolves for predators, with natural coat/size variations and efficient animated gaits. Editable Blender files and CC0 source/license records are included.
+
 All integration changes are under `v2/`. The root Python application, engine, tests, dependencies, configurations, results, and published 1.x releases are unchanged.
 
 ## Run on this Mac
@@ -93,7 +95,7 @@ All seven existing modes are available:
 | `seasons` | Original seasonal stock and cluster movement |
 | `obstacles` | Original barriers and damaging areas; geometry and damage come from Python |
 | `traits` | Original inherited speeds, body sizes, sensor ranges, and energy costs |
-| `predator_prey` | Original hunting and escape; predators are tinted red |
+| `predator_prey` | Original hunting and escape; predators are wolves and prey are deer |
 | `social` | Original group boundaries, signaling and food sharing; recent sharing links are shown |
 | `continuous` | Original simultaneous births, deaths, ancestry and finite regrowth |
 
@@ -166,4 +168,4 @@ See the [connection architecture](docs/PYTHON_BRIDGE.md), [current validation](d
 
 ## Licenses
 
-Project code and original generated art use the copied [MIT license](LICENSE). [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) contains bundled engine notices. Godot is [MIT licensed](https://godotengine.org/license/); Blender is an external [GPL authoring tool](https://www.blender.org/about/license/). The landscape includes [CC0 Poly Haven scans and textures](assets/nature/LICENSE.md), bundled locally with [source attribution and checksums](assets/nature/ASSET_SOURCES.json). No runtime art downloads are required.
+Project code and original generated art use the copied [MIT license](LICENSE). [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) contains bundled engine notices. Godot is [MIT licensed](https://godotengine.org/license/); Blender is an external [GPL authoring tool](https://www.blender.org/about/license/). The landscape includes [CC0 Poly Haven scans and textures](assets/nature/LICENSE.md), bundled locally with [source attribution and checksums](assets/nature/ASSET_SOURCES.json). The [animal models](assets/animals/LICENSE.md) are also CC0, with editable Blender rigs, [source credits and checksums](assets/animals/ASSET_SOURCES.json). No runtime art downloads are required.

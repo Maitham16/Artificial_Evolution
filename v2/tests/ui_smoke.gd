@@ -79,12 +79,28 @@ func _run():
 	var predator_reply=await app._call("configure",{"config":predator_config,"seed_text":"42","paused":true})
 	check(predator_reply.get("ok",false),"Hot switching uses the original predator–prey engine")
 	app.world_view.update_view(0)
-	var red=true
+	var species_match=true
 	for specimen in app.model.agents:
-		if specimen.species=="predator":
-			for mesh in app.world_view.bodies[specimen.id].find_children("*","MeshInstance3D",true,false):
-				if str(mesh.name).begins_with("Body") and mesh.material_override.albedo_color!=Color("c96f60"):red=false
-	check(red,"New-run body identities rebuild species styling")
+		var body=app.world_view.bodies[specimen.id]
+		if body.python_id!=specimen.id or body.lineage_id!=specimen.root:species_match=false
+		if body.model_key=="wolf" and specimen.species!="predator":species_match=false
+		if specimen.species=="predator" and body.model_key!="wolf":species_match=false
+	check(species_match,"New-run animal models retain Python identities and distinguish predators")
+	var first=app.model.agents[0];var animal=app.world_view.bodies[first.id]
+	check(is_equal_approx(animal.basis.x.length(),float(first.radius)/.45),"Python radius still controls body scale")
+	var materials=animal.materials
+	var pose_before=materials[0].get_shader_parameter("pose_frames")
+	animal.present(Vector2.ZERO,.1,5);animal.present(Vector2(1,0),.1,5)
+	var pose_after=materials[0].get_shader_parameter("pose_frames")
+	check(pose_before!=pose_after and animal.current_clip=="Run","Observed displacement advances a GPU gait")
+	animal.present(Vector2(1,0),0,5)
+	check(materials[0].get_shader_parameter("pose_frames")==pose_after,"Paused display does not advance gait")
+	check(animal.skin.find_children("*","Skeleton3D",true,false).is_empty(),"Runtime models avoid CPU skeleton animation")
+	var position_image=load("res://assets/animals/"+animal.model_key+"/positions.exr").get_image()
+	check(position_image.get_format() in [Image.FORMAT_RGBF,Image.FORMAT_RGBAF,Image.FORMAT_RGBH,Image.FORMAT_RGBAH],"GPU pose positions retain floating-point precision")
+	check(position_image.get_mipmap_count()==0,"Data textures have no interpolated mip levels")
+	var style=app.world_view.Animal.appearance(first)
+	check(style==app.world_view.Animal.appearance(first),"Coat, size and model choice are deterministic for an identity")
 	var landscape=app.world_view.nature
 	var built=landscape.generation_count
 	landscape.configure(landscape.dimensions.x,landscape.dimensions.y)

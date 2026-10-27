@@ -1,0 +1,125 @@
+[
+  {
+    "model": "doe",
+    "source_triangles": 4784,
+    "height_metres": 1.1,
+    "animations": [
+      "Idle",
+      "Run"
+    ],
+    "animation_storage": "Blender-baked vertex textures",
+    "source_skin_joints": 31,
+    "vat": {
+      "vertices": 2441,
+      "rows_per_frame": 3,
+      "texture_size": [
+        1024,
+        168
+      ],
+      "position_min": [
+        -0.9707118272781372,
+        -0.12048196792602539,
+        -3.296055555343628
+      ],
+      "position_span": [
+        1.9646068811416626,
+        6.017497539520264,
+        7.712714910507202
+      ],
+      "clips": {
+        "Idle": {
+          "start": 0,
+          "count": 32,
+          "duration": 6.666666666666667
+        },
+        "Run": {
+          "start": 32,
+          "count": 24,
+          "duration": 0.5416666666666666
+        }
+      }
+    }
+  },
+  {
+    "model": "stag",
+    "source_triangles": 4924,
+    "height_metres": 1.43,
+    "animations": [
+      "Idle",
+      "Run"
+    ],
+    "animation_storage": "Blender-baked vertex textures",
+    "source_skin_joints": 31,
+    "vat": {
+      "vertices": 2521,
+      "rows_per_frame": 3,
+      "texture_size": [
+        1024,
+        168
+      ],
+      "position_min": [
+        -1.7602589130401611,
+        -0.09451580047607422,
+        -3.960395097732544
+      ],
+      "position_span": [
+        3.4997289180755615,
+        7.361875057220459,
+        7.885744094848633
+      ],
+      "clips": {
+        "Idle": {
+          "start": 0,
+          "count": 32,
+          "duration": 6.666666666666667
+        },
+        "Run": {
+          "start": 32,
+          "count": 24,
+          "duration": 0.5833333333333334
+        }
+      }
+    }
+  },
+  {
+    "model": "wolf",
+    "source_triangles": 5358,
+    "height_metres": 0.85,
+    "animations": [
+      "Idle",
+      "Run"
+    ],
+    "animation_storage": "Blender-baked vertex textures",
+    "source_skin_joints": 36,
+    "vat": {
+      "vertices": 2923,
+      "rows_per_frame": 3,
+      "texture_size": [
+        1024,
+        168
+      ],
+      "position_min": [
+        -20.424283981323242,
+        -4.035071849822998,
+        -145.54916381835938
+      ],
+      "position_span": [
+        40.848567962646484,
+        133.16487836837769,
+        222.08361053466797
+      ],
+      "clips": {
+        "Idle": {
+          "start": 0,
+          "count": 32,
+          "duration": 3.0
+        },
+        "Run": {
+          "start": 32,
+          "count": 24,
+          "duration": 1.0
+        }
+      }
+    }
+  }
+]

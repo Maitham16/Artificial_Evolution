@@ -1,0 +1,103 @@
+{
+  "ok": true,
+  "archive_sha256": "48f83700601f1ee9efa84532421807b69555eeeab166773063c6d16fa71cfc22",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "window_pixels": [
+    1520,
+    960
+  ],
+  "method": "Four sequential signed-package runs at Balanced quality, 480 frames each, first 90 excluded; live Python simulation. Fresh extraction outside the checkout.",
+  "animation": "Shared floating-point vertex pose textures baked from Blender rigs; no runtime CPU skinning.",
+  "profiles": [
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 19.540525209688,
+      "median_ms": 19.4444444444444,
+      "p95_ms": 23.092,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1028.761,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "mode": "foraging",
+      "view": "ground",
+      "mean_fps": 51.17569713552069
+    },
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 19.8995673896361,
+      "median_ms": 20.0,
+      "p95_ms": 23.3333333333333,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1033.337,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "mode": "foraging",
+      "view": "valley",
+      "mean_fps": 50.25234872798342
+    },
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 15.7150339270569,
+      "median_ms": 16.143,
+      "p95_ms": 18.0555555555556,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1034.241,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "mode": "predator_prey",
+      "view": "ground",
+      "mean_fps": 63.63333382807906
+    },
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 18.3721823579305,
+      "median_ms": 18.0555555555556,
+      "p95_ms": 21.2121212121212,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1030.848,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "mode": "traits",
+      "view": "ground",
+      "mean_fps": 54.43011507929769
+    }
+  ],
+  "limitations": "Local Apple M3 tests; no manual OS mouse/keyboard QA, x86_64 execution, or Apple notarization. Anatomy, coat morphs and gait are presentation only."
+}

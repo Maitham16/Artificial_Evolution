@@ -24,7 +24,7 @@ Replace `--valley-view` with `--ground-view` for the meadow. Capture paths must 
 
 ## Scientific boundary
 
-The original Python engine, bridge and Python tests are unchanged. Python continues to own every creature's 2D position, movement, energy, food, perception, reproduction, evolution and interactions. Godot maps Python X/Y to world X/Z at 20 pixels per metre. Only visual Y-height, slope alignment and a small cosmetic bob are added. Food uses the same height function. Picking intersects that surface and selects the original creature identity.
+The original Python engine, bridge and Python tests are unchanged. Python continues to own every creature's 2D position, movement, energy, food, perception, reproduction, evolution and interactions. Godot maps Python X/Y to world X/Z at 20 pixels per metre. Only visual Y-height, slope alignment and cosmetic animal poses are added. Food uses the same height function. Picking intersects each animal’s display bounds and selects the original creature identity.
 
 Terrain, river, lake, trees, flowers and rocks are **scenery**. They add no collision objects, obstacles, food, costs or resources to Python. Creatures do not learn mountain climbing, swimming or plant avoidance from this view. Python's actual barrier extents and hazard radii are retained; scanned stones depict barriers and terrain-conforming overlays show hazards. These remain the existing Python interactions.
 
@@ -40,7 +40,7 @@ Scenery uses its own fixed noise and scatter seeds, independent of all Python ra
 
 Water, slopes and placement masks reject some plants; the profile JSON records actual counts. Grass is seven curved, tapered blades per clump, instanced in 16 m chunks. It has no shadows and shrinks into the ground between 28–55 m. Other plants use 32 m chunks and distance culling. Textures use mipmaps and GPU compression to reduce aliasing and bandwidth.
 
-Four conifers and one broadleaf tree near the camera-facing clearing retain detailed 3D meshes and cast shadows. Other forest trees use alpha-cutout, camera-facing images baked from the full original scans in Blender. This avoids rendering hundreds of dense scan meshes. These background crowns have baked lighting and no dynamic shadow; close inspection from every direction is less accurate than the hero meshes. Native quality profiles are recorded in [nature-validation](nature-validation/README.md).
+Four conifers and one broadleaf tree near the camera-facing clearing retain detailed 3D meshes and cast shadows. Other forest trees use alpha-cutout, camera-facing images baked from the full original scans in Blender. This avoids rendering hundreds of dense scan meshes. These background crowns have baked lighting and no dynamic shadow; close inspection from every direction is less accurate than the hero meshes. Historical landscape profiles with the former placeholders are recorded in [nature-validation](nature-validation/README.md); current animal measurements are in [animal-validation](animal-validation/README.md).
 
 Terrain uses three mesh resolutions, with the finest geometry near creatures. The river surface is shaded with small moving ripples; one reflection probe captures scenery once per landscape build and affects only the water. The static cloud sky avoids continuous reflection-cubemap updates. Screen-space reflection, dynamic global illumination and volumetric fog are not required by the Compatibility renderer.
 

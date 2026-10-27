@@ -1,0 +1,178 @@
+{
+  "assets": [
+    {
+      "id": "doe",
+      "title": "Deer Female",
+      "authors": [
+        "CDmir",
+        "TinyWorlds"
+      ],
+      "source": "https://opengameart.org/content/deer-female",
+      "url": "https://opengameart.org/sites/default/files/doe.blend",
+      "path": ".cache/animals/doe.blend",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 5359688,
+      "sha256": "577b9e48ce7cee955c6dac1b0a70333eccdfcad3f11eaa1f96a15900b64ca25e"
+    },
+    {
+      "id": "stag",
+      "title": "Old Deer Male",
+      "authors": [
+        "CDmir",
+        "TinyWorlds"
+      ],
+      "source": "https://opengameart.org/content/old-deer-male",
+      "url": "https://opengameart.org/sites/default/files/deer1.blend",
+      "path": ".cache/animals/stag.blend",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 7710492,
+      "sha256": "729f47b10f29e13d128aa2e0a2a5ba47be40cb6593e1e86ac31e236e93bef003"
+    },
+    {
+      "id": "wolf",
+      "title": "3d wolf",
+      "authors": [
+        "NewDLC"
+      ],
+      "source": "https://opengameart.org/content/3d-wolf",
+      "url": "https://opengameart.org/sites/default/files/3dwolf_blend.zip",
+      "path": ".cache/animals/wolf.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 1654976,
+      "sha256": "6bd5e25ce8d9f9661f74199a755e7827927545973fa4081eecb4598a9d5e49dc"
+    }
+  ],
+  "runtime_files": [
+    {
+      "path": "v2/assets/animals/doe/doe-body.png",
+      "bytes": 1430240,
+      "sha256": "097921cbd1cdfe5877c8677918b4b8feea72ecef557869e2c6243f97fae7037e"
+    },
+    {
+      "path": "v2/assets/animals/doe/doe-head.png",
+      "bytes": 1230375,
+      "sha256": "1a52cbc6a2d97854b96c7bc16170063516cdf578d1b3a0c4c04245869ed5a965"
+    },
+    {
+      "path": "v2/assets/animals/doe/doe.bin",
+      "bytes": 142184,
+      "sha256": "5b2aa11723221162eeb661aa13a7d39129402da00caecb8c573ada447cf37d5c"
+    },
+    {
+      "path": "v2/assets/animals/doe/doe.gltf",
+      "bytes": 4297,
+      "sha256": "6051f3a6b5859c8eff90a46728fa9abe9b7c1ecc9bde1fd75743fb58d4053029"
+    },
+    {
+      "path": "v2/assets/animals/doe/normals.exr",
+      "bytes": 2067475,
+      "sha256": "9a9e4a5cc073a4429a96a95959b4c355092d7b67c518825918f12bd10bd2e540"
+    },
+    {
+      "path": "v2/assets/animals/doe/positions.exr",
+      "bytes": 2067475,
+      "sha256": "8161237772062323f9817dbcb917996474cb232d472004d9a38a2ae73eb42c9c"
+    },
+    {
+      "path": "v2/assets/animals/stag/deer-antlers-normal.png",
+      "bytes": 435179,
+      "sha256": "b096d6ce2ba1252b06ed91aff0d372d154192ddae7e09a52483995d5c2b7b4f0"
+    },
+    {
+      "path": "v2/assets/animals/stag/deer-antlers.png",
+      "bytes": 704007,
+      "sha256": "58ec07546dc52e93477977e04cfe208f034568beeac3e797d09b9636d8858931"
+    },
+    {
+      "path": "v2/assets/animals/stag/deer-body-normal.png",
+      "bytes": 294473,
+      "sha256": "e644483f98647e9ecc69c4602e7ffbeb7c3ce774cd3d1244e7ab0fd595bcbfd1"
+    },
+    {
+      "path": "v2/assets/animals/stag/deer-body.png",
+      "bytes": 1155256,
+      "sha256": "d463ce30c8a7d7f9d70203ec776802a66ffca92a75654a47ee0818277f39b8a5"
+    },
+    {
+      "path": "v2/assets/animals/stag/deer-head-normal.png",
+      "bytes": 327549,
+      "sha256": "8a1f532969fe707e679d1286b659e32b53308a9b69762da490d2b62054c91982"
+    },
+    {
+      "path": "v2/assets/animals/stag/deer-head.png",
+      "bytes": 1216980,
+      "sha256": "973a68e27063e81f7fa93ddedc7a66db7a953c17983f7e04957391be1aa29193"
+    },
+    {
+      "path": "v2/assets/animals/stag/normals.exr",
+      "bytes": 2067475,
+      "sha256": "6433cbb7b9048132f050e2a5afd7f7c5c1fcdf71a021edc73cccb8b6177f786f"
+    },
+    {
+      "path": "v2/assets/animals/stag/positions.exr",
+      "bytes": 2067475,
+      "sha256": "29cd091676dc157f2c776b9d478ff86ec57ca8c177d4ab770ee3f1e087ccdb57"
+    },
+    {
+      "path": "v2/assets/animals/stag/stag.bin",
+      "bytes": 157784,
+      "sha256": "e04e3d5c75c7d08666c245e5a243c9d15f237055d0d216c91acaed9ef1d0a10b"
+    },
+    {
+      "path": "v2/assets/animals/stag/stag.gltf",
+      "bytes": 6009,
+      "sha256": "32268e0bf25f20b627b6e0dba996b1248714057f6fc31f00b860f3695a884a28"
+    },
+    {
+      "path": "v2/assets/animals/wolf/dog2Color.png",
+      "bytes": 289490,
+      "sha256": "a04c1da566be5c50a42f62b66199f97c13ad3f5ce2dde0f84ed75a61b0e292cb"
+    },
+    {
+      "path": "v2/assets/animals/wolf/dog2Normal.png",
+      "bytes": 675541,
+      "sha256": "6d536f2279b816aca1556e9eee72f472e2d091c14127f988991d87e78d083347"
+    },
+    {
+      "path": "v2/assets/animals/wolf/normals.exr",
+      "bytes": 2067475,
+      "sha256": "157b82f2cc338690198c0bd8830cea65b693780d3650a714bb1dfeb888847d99"
+    },
+    {
+      "path": "v2/assets/animals/wolf/positions.exr",
+      "bytes": 2067475,
+      "sha256": "78b2e9b7c6893c14f36915ce754af5c7fa338dc29b66157857363fce0150ac5b"
+    },
+    {
+      "path": "v2/assets/animals/wolf/wolf.bin",
+      "bytes": 188988,
+      "sha256": "4b982e1f5256e132853ff2d9fc135ed4e849638f84d6af6639847fc3ad257cac"
+    },
+    {
+      "path": "v2/assets/animals/wolf/wolf.gltf",
+      "bytes": 2111,
+      "sha256": "3459b13daaea9fa51ae03c47d87d8eb2db37e7ef85385d90a73346e9df0ac9f1"
+    }
+  ],
+  "editable_files": [
+    {
+      "path": "v2/art_source/animals/doe.blend",
+      "bytes": 4378976,
+      "sha256": "65ce6c5a346ac598dff43e39666becd64f79f8062f18e5805c4972286f44cb49"
+    },
+    {
+      "path": "v2/art_source/animals/stag.blend",
+      "bytes": 6462535,
+      "sha256": "6f26558cc3426aeca7d824ed6c3f68f2126dd15dfa804201e97a2f5639f1b6d8"
+    },
+    {
+      "path": "v2/art_source/animals/wolf.blend",
+      "bytes": 3476649,
+      "sha256": "635cf116bc618f28ec229f0f8e2952b63e3fe4224f04bc55da6e1d048e441d09"
+    }
+  ],
+  "processing": "Blender 5.2.3; prepare_animal_assets.py. GPU pose data is linear, lossless floating point with no mipmaps. All source and derived animal art is CC0."
+}

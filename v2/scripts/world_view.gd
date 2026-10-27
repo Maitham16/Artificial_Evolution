@@ -21,7 +21,7 @@ var source_run=""
 var research_guides=true
 var selected_id: String = ""
 var visual_time: float = 0.0
-var body_scene = preload("res://assets/models/creature.glb")
+const Animal=preload("res://scripts/animal_view.gd")
 var food_scene = preload("res://assets/models/nutrient.glb")
 var rock_scene = preload("res://assets/models/basalt.glb")
 var ground_material: ShaderMaterial
@@ -121,10 +121,6 @@ func _find_mesh(node: Node) -> Mesh:
 		if found:return found
 	return null
 
-func _tint(node: Node, mat: Material) -> void:
-	if node is MeshInstance3D and (str(node.name).begins_with("Body") or str(node.name).begins_with("Head") or str(node.name).begins_with("Tip")):node.material_override=mat
-	for child in node.get_children():_tint(child,mat)
-
 func update_view(delta: float) -> void:
 	if model==null or model.run_id.is_empty() or camera==null:return
 	visual_time+=delta
@@ -140,15 +136,14 @@ func update_view(delta: float) -> void:
 		if not actor.active:continue
 		var id=str(actor.id);living[id]=true
 		if not bodies.has(id):
-			var body=body_scene.instantiate();add_child(body)
-			var material=StandardMaterial3D.new();material.albedo_color=Color("c96f60") if actor.species=="predator" else family_color(str(actor.root)).darkened(.20);material.roughness=.7
-			_tint(body,material);bodies[id]=body
+			var body=Animal.new();add_child(body);body.configure(actor);bodies[id]=body
 		var pose=poses.get(id,{"position":actor.position,"heading":actor.heading});var position: Vector2=pose.position
-		var body=bodies[id];body.position=Vector3(position.x,surface_height(position)+.025+sin(visual_time*11+actor.slot)*.018,position.y)
+		var body=bodies[id];body.position=Vector3(position.x,surface_height(position)+.015,position.y)
 		var normal: Vector3=nature.normal_at(position)
 		var direction=Vector3(cos(float(pose.heading)),0,sin(float(pose.heading)))
 		var forward=direction.slide(normal).normalized();var side=forward.cross(normal).normalized()
-		body.basis=Basis(forward,side.cross(forward).normalized(),side).scaled(Vector3.ONE*float(actor.radius)/.35)
+		body.basis=Basis(forward,side.cross(forward).normalized(),side).scaled(Vector3.ONE*float(actor.radius)/.45)
+		body.present(position,delta,camera.global_position.distance_to(body.global_position))
 		if id==selected_id:selected=actor
 	for id in bodies.keys():
 		if not living.has(id):bodies[id].queue_free();bodies.erase(id)
@@ -230,16 +225,11 @@ func reset_camera() -> void:
 func pick(point: Vector2) -> String:
 	if model==null:return ""
 	var origin=camera.project_ray_origin(point);var direction=camera.project_ray_normal(point)
-	if abs(direction.y)<.00001:return ""
-	var time=(surface_height(Vector2(origin.x,origin.z))+.3-origin.y)/direction.y
-	for iteration in range(9):
-		var sample_point=origin+direction*time
-		time=(surface_height(Vector2(sample_point.x,sample_point.z))+.3-origin.y)/direction.y
-	var hit=origin+direction*time
 	var best=INF;var result=""
-	for actor in model.agents:
-		if not actor.active:continue
-		var position: Vector2=model.displayed.get(str(actor.id),{"position":actor.position}).position
-		var d=Vector2(hit.x,hit.z).distance_squared_to(position)
-		if d<pow(maxf(.5,float(actor.radius)*1.6),2) and d<best:best=d;result=str(actor.id)
+	for id in bodies:
+		var body=bodies[id];var inverse=body.global_transform.affine_inverse()
+		var hit=body.visual_bounds.intersects_ray(inverse*origin,inverse.basis*direction)
+		if hit!=null:
+			var distance_to_hit=origin.distance_squared_to(body.global_transform*hit)
+			if distance_to_hit<best:best=distance_to_hit;result=id
 	selected_id=result;return result
