@@ -629,6 +629,9 @@ func _toggle_immersive() -> void:
 		workbench_root.show()
 		for node in immersive_layer.get_children():node.queue_free()
 		immersive_layer.hide();landscape_label=null;desktop_hud=null
+	# GUI hit testing follows tree order, not z_index. Keep the visible panel
+	# above the immersive viewport for clicks, wheel and trackpad gestures too.
+	move_child(ecosystem_panel,get_child_count()-1)
 
 func _build_ecosystem_panel() -> void:
 	ecosystem_panel=PanelContainer.new();ecosystem_panel.name="EcosystemPanel";ecosystem_panel.z_index=100;add_child(ecosystem_panel)

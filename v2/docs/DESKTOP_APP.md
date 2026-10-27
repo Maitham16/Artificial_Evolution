@@ -2,6 +2,8 @@
 
 The standalone Apple Silicon app opens directly into the 3D landscape, with a quiet translucent header, camera dock and live creature inspector. **Research** provides the complete existing v2 workbench. The original Python simulation and 2D interface are unchanged.
 
+The Ecosystem drawer supports clicks, wheel and two-finger scrolling, including after switching views. Scroll within the panel to reach its lower settings. See the [input fix and native regression checks](panel-input-validation/README.md).
+
 ![Desktop](screenshots/desktop-foraging.png)
 
 ## Launch

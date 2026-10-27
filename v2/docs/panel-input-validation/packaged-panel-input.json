@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "archive_sha256": "880c503ede341f7193cc38db5e716cff3818418251f128ea6d516342b2caf8f0",
+  "fixture_sha256": "ae47fe168181f586405ab38c6da757ff99a8ea47ee1bf32bce84dc7095368da3",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "cases": [
+    {
+      "case": "original-1520x960",
+      "checks": 17,
+      "failures": 0,
+      "screenshot": "../screenshots/panel-input-original-1520x960.png"
+    },
+    {
+      "case": "physical-1520x960",
+      "checks": 17,
+      "failures": 0,
+      "screenshot": "../screenshots/panel-input-physical-1520x960.png"
+    },
+    {
+      "case": "original-1160x760",
+      "checks": 17,
+      "failures": 0,
+      "screenshot": "../screenshots/panel-input-original-1160x760.png"
+    },
+    {
+      "case": "physical-1160x760",
+      "checks": 17,
+      "failures": 0,
+      "screenshot": "../screenshots/panel-input-physical-1160x760.png"
+    }
+  ],
+  "signature_valid_after_runs": true,
+  "development_settings_unchanged": true,
+  "checkout_and_homebrew_reads_denied": true,
+  "standalone_release_smoke": true,
+  "method": "Fresh signed ZIP. Native Godot editor runs its exported UI pack with an external input fixture and explicit bundled Python paths. Separately, the release executable connects and captures without development overrides. No direct control signal emissions.",
+  "limitations": "GUI event dispatch uses the native editor executable and the exact release UI pack, because release templates lack --script. Not manual macOS hardware input or external script execution in the release executable. Dropdown opening is tested; popup selection remains in the ecosystem functional suite."
+}

@@ -1,0 +1,11 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+FAIL: Visible Close button receives a routed mouse click in immersive mode
+FAIL: Wheel over panel text scrolls its outer container
+FAIL: Panel wheel does not zoom or orbit the world behind it
+FAIL: Mac two-finger pan scrolls panel content
+FAIL: Bottom scenery controls become reachable
+FAIL: Scrolled scenery checkbox receives a routed click
+FAIL: Panel Close remains clickable after view switch: true
+FAIL: Panel Close remains clickable after view switch: true
+AE2_PANEL_INPUT_RESULT {"checks":12,"failures":8}
