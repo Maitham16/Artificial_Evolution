@@ -9,6 +9,8 @@ var config={}
 var seed_text=""
 var agents: Array=[]
 var food: Array=[]
+var food_objects: Dictionary={}
+var environment_context: Dictionary={}
 var barriers: Array=[]
 var hazards: Array=[]
 var births={}
@@ -77,6 +79,10 @@ func accept(data: Dictionary,received_at: float=-1.0) -> bool:
 		if actor.active:
 			poses[str(actor.id)]={"position":actor.position,"heading":float(actor.heading),"age":float(actor.age)}
 			for field in ["toward_seconds","away_seconds","opponent_visible_seconds"]:poses[str(actor.id)][field]=float(actor.get(field,0))
+	environment_context=data.get("environment_context",{})
+	food_objects={}
+	for plant in data.get("food_objects",[]):
+		var record=plant.duplicate();record.position=point(plant.x,plant.y);record.radius=float(plant.radius)/UNITS;food_objects[str(plant.id)]=record
 	food=[]
 	for pellet in data.food:food.append(point(pellet[0],pellet[1]))
 	barriers=[]

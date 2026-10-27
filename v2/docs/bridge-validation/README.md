@@ -1,5 +1,7 @@
 # Python-engine connection validation — 27 October 2026
 
+The tables and source-test logs below record the initial Python bridge validation. The packaged-app JSON and native screenshots are refreshed by `validate_macos.py`; newer [ecosystem validation](../ecosystem-validation/README.md) records the current test totals, weather and event-driven scenes.
+
 The 3D application uses the existing Python `ResearchSession` and numerical models. These checks validate the connection and preservation of behavior, not a new scientific finding.
 
 | Check | Result | Evidence |

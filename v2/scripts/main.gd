@@ -13,6 +13,18 @@ const MODES=["foraging","seasons","obstacles","traits","predator_prey","social",
 const MODE_LABELS=["Food seeking","Changing seasons","Obstacles & hazards","Brains & bodies","Predator & prey","Social behavior","Continuous ecosystem"]
 const ENV_LABELS={"uniform":"Meadow","clustered":"Food clusters","sparse":"Scarcity","wide_clustered":"Wide clusters","barren":"Barren","seasonal":"Seasonal food"}
 const POLICY_LABELS={"selection":"Selected neural","neutral":"Neutral neural","random":"Random movement","greedy":"Greedy forager","founder":"Frozen founders","coevolution":"Co-evolution","group":"Group survival","individual":"Individual survival","funded":"Funded reproduction","clonal":"Clonal reproduction"}
+var ecosystem_panel: PanelContainer
+var scenery_status: Label
+var food_status: Label
+var event_list: ItemList
+var event_rows: Array=[]
+var event_filter=0
+var visual_hour: HSlider
+var visual_cycle: CheckBox
+var visual_motion: CheckBox
+var visual_status: Label
+var cli_visuals={}
+var cli_ecosystem_panel=false
 var immersive=false
 var immersive_layer: Control
 var workbench_root: Control
@@ -98,6 +110,11 @@ func _ready() -> void:
 		elif arg=="--ground-view":cinematic_start=true
 		elif arg=="--valley-view":valley_start=true
 		elif arg.begins_with("--quality="):quality_index=clampi(int(arg.trim_prefix("--quality=")),0,2)
+		elif arg.begins_with("--visual-weather="):cli_visuals.weather=arg.trim_prefix("--visual-weather=")
+		elif arg.begins_with("--visual-season="):cli_visuals.season=arg.trim_prefix("--visual-season=")
+		elif arg.begins_with("--visual-hour="):cli_visuals.hour=float(arg.trim_prefix("--visual-hour="))
+		elif arg=="--visual-cycle=off":cli_visuals.cycle=false
+		elif arg=="--ecosystem-panel":cli_ecosystem_panel=true
 		elif arg.begins_with("--profile="):profile_path=arg.trim_prefix("--profile=")
 	var settings=bridge.discover()
 	repository_edit.text=str(settings.get("repository",""));python_edit.text=str(settings.get("python",""))
@@ -105,6 +122,8 @@ func _ready() -> void:
 	startup_deadline=_now()+60
 	world_view.nature.quality=quality_index
 	_sync_quality_menus()
+	_apply_visual_options(cli_visuals)
+	ecosystem_panel.visible=cli_ecosystem_panel
 	if immersive_start:_toggle_immersive()
 	get_tree().root.close_requested.connect(_on_close);get_tree().auto_accept_quit=false
 
@@ -189,6 +208,7 @@ func _build_ui() -> void:
 	_button("Overview",camera_row,func():world_view.reset_camera();following=false)
 	_button("Follow",camera_row,func():following=not following)
 	_button("Ground view",camera_row,func():world_view.ground_view();following=false)
+	_button("Ecosystem",camera_row,_toggle_ecosystem)
 	_quality_menu(camera_row)
 	rate_label=_label("CONNECTING",camera_row,12,MUTED);rate_label.size_flags_horizontal=SIZE_EXPAND_FILL;rate_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT
 	lineage_panel=PanelContainer.new();lineage_panel.size_flags_vertical=SIZE_EXPAND_FILL;lineage_panel.visible=false;center.add_child(lineage_panel)
@@ -199,6 +219,7 @@ func _build_ui() -> void:
 		var card=PanelContainer.new();card.size_flags_horizontal=SIZE_EXPAND_FILL;footer.add_child(card)
 		var plot=Visuals.new();plot.title=definition[0];plot.mode=definition[1];plot.accent=definition[2];plot.model=model;card.add_child(plot);plots.append(plot)
 	status_label=_label("Starting the existing Python engine…",root,12,MUTED);status_label.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS
+	_build_ecosystem_panel()
 
 func _build_sidebar(parent: Node) -> void:
 	var card=PanelContainer.new();card.custom_minimum_size.x=230;parent.add_child(card)
@@ -408,7 +429,7 @@ func _process(delta: float) -> void:
 			var pos=model.displayed[selected_id].position
 			world_view.target=world_view.target.lerp(Vector3(pos.x,world_view.surface_height(pos)+.4,pos.y),1-exp(-6*delta));world_view._update_camera()
 		ui_clock+=delta
-		if ui_clock>.15:ui_clock=0;_refresh()
+		if ui_clock>.15:ui_clock=0;_refresh();_refresh_ecosystem()
 		if _now()-last_rate_at>=1:
 			measured=float(model.ticks-last_rate_ticks)/60/(_now()-last_rate_at);last_rate_at=_now();last_rate_ticks=model.ticks
 		frame_count+=1
@@ -457,7 +478,11 @@ func _view_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index==MOUSE_BUTTON_LEFT and event.pressed:
 			var id=world_view.pick(event.position)
-			if not id.is_empty():selected_id=id;bridge.request("select",{"key":id});_refresh()
+			if not id.is_empty():
+				selected_id=id;world_view.selected_food="";bridge.request("select",{"key":id});_refresh()
+			else:
+				var plant=world_view.pick_food(event.position)
+				if not plant.is_empty():ecosystem_panel.show();_refresh_ecosystem()
 		if event.pressed and event.button_index==MOUSE_BUTTON_WHEEL_UP:world_view.zoom(-1)
 		if event.pressed and event.button_index==MOUSE_BUTTON_WHEEL_DOWN:world_view.zoom(1)
 	elif event is InputEventMouseMotion:
@@ -473,6 +498,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		elif event.keycode==KEY_F:following=not following
 		elif event.keycode==KEY_E:_export()
 		elif event.keycode==KEY_V:_toggle_immersive()
+		elif event.keycode==KEY_N:_toggle_ecosystem()
 		elif event.keycode==KEY_C:world_view.ground_view();following=false
 		elif event.keycode==KEY_ESCAPE and immersive:_toggle_immersive()
 
@@ -500,7 +526,7 @@ func _load_config() -> void:
 
 func _help() -> void:
 	var dialog=AcceptDialog.new();dialog.title="Python-powered vivarium"
-	dialog.dialog_text="SPACE — pause/resume Python\nLeft click — inspect a creature\nRight drag — orbit; middle drag — pan; scroll — zoom\nR — reset; F — follow; E — export the Python run\n\nPython owns all neural decisions, movement, meals, survival, births, deaths and interactions.\nGodot interpolates received positions and headings for display.\n\nChoose modes and policies in the sidebar. Run settings exposes the existing Python presets and complete configuration.\nUse Connection to set the repository and Python interpreter."
+	dialog.dialog_text="SPACE — pause/resume Python\nLeft click — inspect a creature or an edible plant\nN — ecosystem / scenery and confirmed event log\nRight drag — orbit; middle drag — pan; scroll — zoom\nR — reset; F — follow; E — export the Python run\n\nPython owns all neural decisions, movement, meals, survival, births, deaths and interactions.\nGodot interpolates received positions and headings for display.\n\nChoose modes and policies in the sidebar. Run settings exposes the existing Python presets and complete configuration.\nUse Connection to set the repository and Python interpreter."
 	add_child(dialog);dialog.confirmed.connect(dialog.queue_free);dialog.popup_centered()
 
 func _finish_cli() -> void:
@@ -517,7 +543,7 @@ func _finish_cli() -> void:
 		frame_samples.sort()
 		var total=0.0
 		for value in frame_samples:total+=value
-		var profile={"frames":frame_samples.size(),"mean_ms":total/frame_samples.size(),"median_ms":frame_samples[frame_samples.size()/2],"p95_ms":frame_samples[mini(frame_samples.size()-1,int(frame_samples.size()*.95))],"quality":quality_index,"immersive":immersive,"scenery":world_view.nature.statistics,"animation":world_view.animation_summary(),"renderer":RenderingServer.get_current_rendering_method(),"device":RenderingServer.get_video_adapter_name()}
+		var profile={"frames":frame_samples.size(),"mean_ms":total/frame_samples.size(),"median_ms":frame_samples[frame_samples.size()/2],"p95_ms":frame_samples[mini(frame_samples.size()-1,int(frame_samples.size()*.95))],"quality":quality_index,"immersive":immersive,"scenery":world_view.nature.statistics,"animation":world_view.animation_summary(),"ecosystem":world_view.ecosystem_summary(),"renderer":RenderingServer.get_current_rendering_method(),"device":RenderingServer.get_video_adapter_name()}
 		var file=FileAccess.open(profile_path,FileAccess.WRITE)
 		if file:file.store_string(JSON.stringify(profile,"\t")+"\n");file.close()
 	print("AE2_PYTHON_VIEW ",JSON.stringify({"ticks":model.ticks,"frames":model.received_frames,"mode":model.config.mode,"engine":"Python ResearchSession"}))
@@ -562,14 +588,95 @@ func _toggle_immersive() -> void:
 		var bar=HBoxContainer.new();bar.name="LandscapeControls";bar.set_anchors_and_offsets_preset(PRESET_TOP_WIDE);bar.offset_left=24;bar.offset_top=20;bar.offset_right=-24;bar.mouse_filter=MOUSE_FILTER_IGNORE;immersive_layer.add_child(bar)
 		landscape_label=_label("LIVING MEADOW / PYTHON SIMULATION",bar,14,Color("f0f0dc"));landscape_label.size_flags_horizontal=SIZE_EXPAND_FILL
 		_button("Workbench",bar,_toggle_immersive)
+		_button("Ecosystem",bar,_toggle_ecosystem)
 		_button("Overview",bar,func():world_view.reset_camera();following=false)
 		_button("Valley",bar,func():world_view.valley_view();following=false)
 		_button("Ground view",bar,func():world_view.ground_view();following=false)
 		_quality_menu(bar)
-		var hint=_label("Right drag: orbit    Scroll: zoom    Middle drag: pan    C: ground view    F: follow    Space: pause    Esc: workbench",immersive_layer,13,Color("e8e8d0"))
+		var hint=_label("Right drag: orbit    Scroll: zoom    Middle drag: pan    C: ground view    F: follow    N: ecosystem    Space: pause    Esc: workbench",immersive_layer,13,Color("e8e8d0"))
 		hint.name="LandscapeHint";hint.set_anchors_and_offsets_preset(PRESET_BOTTOM_WIDE);hint.offset_left=24;hint.offset_top=-40;hint.offset_bottom=-16;hint.mouse_filter=MOUSE_FILTER_IGNORE
 	else:
 		viewport_container.reparent(view_home);viewport_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 		workbench_root.show()
 		for node in immersive_layer.get_children():node.queue_free()
 		immersive_layer.hide();landscape_label=null
+
+func _build_ecosystem_panel() -> void:
+	ecosystem_panel=PanelContainer.new();ecosystem_panel.name="EcosystemPanel";ecosystem_panel.z_index=100;add_child(ecosystem_panel)
+	ecosystem_panel.set_anchors_and_offsets_preset(PRESET_TOP_RIGHT);ecosystem_panel.offset_left=-405;ecosystem_panel.offset_right=-20;ecosystem_panel.offset_top=86;ecosystem_panel.anchor_bottom=1;ecosystem_panel.offset_bottom=-60
+	var scroll=ScrollContainer.new();scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;ecosystem_panel.add_child(scroll)
+	var box=VBoxContainer.new();box.size_flags_horizontal=SIZE_EXPAND_FILL;scroll.add_child(box)
+	var header=HBoxContainer.new();box.add_child(header);var title=_label("ECOSYSTEM OBSERVATORY",header,15,MINT);title.size_flags_horizontal=SIZE_EXPAND_FILL;_button("Close",header,_toggle_ecosystem)
+	_wrap("PYTHON SIMULATION",box,12,MINT)
+	scenery_status=_wrap("Waiting for authoritative environment…",box,13,INK)
+	food_status=_wrap("Click a fern in the arena to inspect a real Python food object.",box)
+	_label("CONFIRMED PYTHON EVENTS · click to locate",box,11,MINT)
+	var filter_menu=OptionButton.new();filter_menu.name="EventFilter"
+	for label in ["All confirmed events","Births, deaths, captures and seasons","Meals"]:filter_menu.add_item(label)
+	filter_menu.item_selected.connect(func(index):event_filter=index;event_rows.clear();_refresh_ecosystem());box.add_child(filter_menu)
+	event_list=ItemList.new();event_list.custom_minimum_size.y=170;event_list.size_flags_horizontal=SIZE_EXPAND_FILL;event_list.add_theme_font_size_override("font_size",12);box.add_child(event_list);event_list.item_selected.connect(_locate_event)
+	_wrap("Meal effects mark the creature's observed position; the engine does not identify the consumed plant. Lines show recorded paths and the nearest visible opponent, not a chosen target.",box,11)
+	box.add_child(HSeparator.new())
+	_label("DECORATIVE SCENERY",box,12,GOLD)
+	_wrap("Lighting, clouds, rain, snow, wind and seasonal colors affect this 3D view only. They never change food, energy, senses or evolution.",box,12)
+	var weather_menu=OptionButton.new();weather_menu.name="VisualWeather"
+	for label in ["Weather: automatic","Clear","Cloudy","Rain","Fog","Snow"]:weather_menu.add_item(label)
+	weather_menu.item_selected.connect(func(index):world_view.atmosphere.choose_weather(world_view.atmosphere.WEATHER[index]));box.add_child(weather_menu)
+	var season_menu=OptionButton.new();season_menu.name="VisualSeason"
+	for label in ["Season: Python / summer fallback","Spring colors","Summer colors","Autumn colors","Winter colors"]:season_menu.add_item(label)
+	season_menu.item_selected.connect(func(index):world_view.atmosphere.choose_season(world_view.atmosphere.SEASONS[index]));box.add_child(season_menu)
+	visual_status=_label("",box,12,GOLD)
+	visual_hour=HSlider.new();visual_hour.min_value=0;visual_hour.max_value=23.99;visual_hour.step=.05;visual_hour.value=10.5;visual_hour.value_changed.connect(func(value):world_view.atmosphere.set_hour(value));box.add_child(visual_hour)
+	visual_cycle=CheckBox.new();visual_cycle.text="Day / night cycle · 4 minute day";visual_cycle.button_pressed=true;visual_cycle.toggled.connect(func(value):world_view.atmosphere.cycle_enabled=value);box.add_child(visual_cycle)
+	visual_motion=CheckBox.new();visual_motion.text="Scenery motion (independent of Python pause)";visual_motion.button_pressed=true;visual_motion.toggled.connect(func(value):world_view.atmosphere.motion_enabled=value);box.add_child(visual_motion)
+	ecosystem_panel.hide()
+
+func _toggle_ecosystem() -> void:ecosystem_panel.visible=not ecosystem_panel.visible;_refresh_ecosystem()
+
+func _apply_visual_options(options: Dictionary) -> void:
+	var director=world_view.atmosphere
+	if options.has("weather"):director.choose_weather(str(options.weather))
+	if options.has("season"):director.choose_season(str(options.season))
+	if options.has("hour"):director.set_hour(float(options.hour))
+	if options.has("cycle"):director.cycle_enabled=bool(options.cycle)
+	director.step(0,true)
+	visual_cycle.set_pressed_no_signal(director.cycle_enabled)
+	visual_motion.set_pressed_no_signal(director.motion_enabled)
+	var weather_menu=ecosystem_panel.find_child("VisualWeather",true,false);weather_menu.select(director.WEATHER.find(director.weather_choice))
+	var season_menu=ecosystem_panel.find_child("VisualSeason",true,false);season_menu.select(director.SEASONS.find(director.season_choice))
+
+func _refresh_ecosystem() -> void:
+	if not ecosystem_panel.visible:return
+	var context=model.environment_context;var source_season=context.get("season")
+	scenery_status.text="%d living · %d edible plants · generation %d\n" % [int(model.metrics.get("population",0)),model.food_objects.size(),model.generation]
+	if source_season is Dictionary:scenery_status.text+="Python season: %s · food target %d" % [str(source_season.season).capitalize(),int(context.get("food_target",0))]
+	else:scenery_status.text+="No seasons in this Python mode."
+	var plant=model.food_objects.get(world_view.selected_food)
+	if plant:
+		food_status.text="PYTHON FOOD %s · %.0f energy\nCollision radius %.1f px · source (%.1f, %.1f)\nFern size and wind are decorative." % [plant.id,plant.energy,float(plant.radius)*State.UNITS,plant.x,plant.y]
+	elif not world_view.selected_food.is_empty():food_status.text="Food %s was removed by Python. No plant was recreated." % world_view.selected_food
+	else:food_status.text="Click an edible fern in the arena to inspect its Python food identity."
+	var director=world_view.atmosphere
+	visual_status.text="%02d:%02d · %s · %s (%s)" % [int(director.hour),int(fmod(director.hour,1)*60),director.weather,str(director.season).capitalize(),director.season_source]
+	visual_hour.set_value_no_signal(director.hour)
+	var latest=[]
+	for event in world_view.recent_events:
+		if event_filter==0 or (event_filter==1 and event.kind!="meal") or (event_filter==2 and event.kind=="meal"):latest.append(event)
+		if latest.size()>=64:break
+	if latest!=event_rows:
+		event_rows=latest.duplicate(true);event_list.clear()
+		for event in event_rows:
+			var message="%5.1fs  %s  %s" % [float(event.get("time",0)),str(event.kind).to_upper(),str(event.id)]
+			if event.kind=="capture":message+=" → "+", ".join(event.get("targets",[]))
+			elif event.kind=="season":message+=" "+str(event.context.season)
+			elif event.kind=="birth" and event.get("parent")!=null:message+=" ← "+str(event.parent)
+			elif event.kind=="death":message+=" · "+str(event.get("cause",""))
+			event_list.add_item(message)
+			event_list.set_item_tooltip(event_list.item_count-1,message)
+
+func _locate_event(index: int) -> void:
+	if index<0 or index>=event_rows.size():return
+	var event=event_rows[index];var id=world_view.focus_event(event)
+	following=false
+	if not id.is_empty():selected_id=id;bridge.request("select",{"key":id});_refresh()
+	elif event.has("x"):status_label.text="Recorded %s location · %.1fs · %s" % [event.kind,float(event.get("time",0)),event.id]

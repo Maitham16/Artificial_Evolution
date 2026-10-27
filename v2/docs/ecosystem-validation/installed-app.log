@@ -1,0 +1,6 @@
+Installed signed ZIP into /Users/maith/Applications/Artificial Evolution 2.0.app
+Native launch without AE_ENGINE_ROOT or AE_PYTHON; saved engine registry used.
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_PYTHON_VIEW {"engine":"Python ResearchSession","frames":96,"mode":"foraging","ticks":289}

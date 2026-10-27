@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "app_version": "1.0.1",
+  "run_id": "cbbf86764de9",
+  "files_sha256": {
+    "application.png": "c123ed85ecf667171df31e7bed67794a164278d35ce2301d52eedb61da5118f9",
+    "config.json": "835b011420073fe64e23f8d94d989490f1eb8abab66cb663bb523c37878ca441",
+    "generations.csv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "genomes.npz": "1557c65344dc507a466b73dc8d9a15924e7cb6d01c30f7fc6495294af5aeba08",
+    "individuals.csv": "c7ff600744e03cf0538efd11f809c1cc648739a9814ee057405f0056d0257dd9",
+    "lineage.csv": "b7b5e497d8d1e3d08f2cd23451e9735e3e0ac4143c9a08fb967bf60941f2b9ee",
+    "population.csv": "65c79961bcb17539ce9d366a31110ab60259220e260f662f79c73a1341ec5c0c",
+    "population.pdf": "bff13665517c9bf90e7bb5d285a86f68ed97605b14102ab35b5dc8ac167af2b7",
+    "population.png": "52be086eafa5939c0d908e75f2166558e5ed2474043540dc0014331a21afe871",
+    "population.svg": "493b65cda60973ceb81554f050d7b7da44c918ae6a245a4a84d0aa8e662d26e9",
+    "report.html": "768a90848b9021cd4675273b1aebf7387b78f95f63895763ba7effcd79fae221",
+    "run.json": "308ed41dc1f86bfc09972296395a55c0a7b56a00a5ca7ca6ced515ab61366943",
+    "telemetry.csv": "238dc4ab392d06db65835dd14fa99f2548b5645bf3415985c69ae489118d629d"
+  }
+}

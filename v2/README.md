@@ -8,6 +8,8 @@ The new [living landscape](docs/NATURAL_WORLD.md) adds rolling green terrain, sc
 
 The [animal models](docs/ANIMAL_MODELS.md) now use detailed, textured deer for herbivores and wolves for predators, with natural coat/size variations and [event-driven skeletal animation](docs/CREATURE_ANIMATION.md). Walk/run/turn, feeding, pursuit/escape, rest, real continuous births, age-based visual growth and confirmed deaths follow Python observations. Editable Blender files and CC0 source/license records are included.
 
+The [interactive ecosystem observatory](docs/INTERACTIVE_ECOSYSTEM.md) adds edible ferns, source event navigation, recorded movement trails, animated plants, seasonal colors, weather and a day/night cycle. Press **N** or click **Ecosystem**. The panel separates Python events and actual seasonal food from decorative lighting and weather.
+
 All integration changes are under `v2/`. The root Python application, engine, tests, dependencies, configurations, results, and published 1.x releases are unchanged.
 
 ## Run on this Mac
@@ -70,7 +72,8 @@ Paths are stored in `~/Library/Application Support/ArtificialEvolution2/engine.j
 
 | Action | Control |
 | --- | --- |
-| Inspect a creature | Left-click its displayed body |
+| Inspect a creature / edible plant | Left-click its displayed body / fern |
+| Ecosystem events and scenery | N or **Ecosystem**; click a confirmed event to locate it |
 | Orbit / pan | Right drag / middle drag |
 | Zoom | Scroll |
 | Overview / follow | R / F, or the camera buttons |
@@ -156,6 +159,7 @@ python3 v2/tools/verify_original.py --all-existing
 # Build and test the actual Mac app ZIP
 ./v2/tools/build_macos.sh
 ./.venv/bin/python v2/tools/validate_macos.py
+./.venv/bin/python v2/tools/validate_ecosystem_macos.py
 ```
 
 On another checkout, omit `--all-existing`; the original Mac's untracked experiment files are not required there. Rebuilding Blender assets deliberately regenerates the editable `.blend` files and optimized `.glb` files, so preserve hand edits before running the generator.

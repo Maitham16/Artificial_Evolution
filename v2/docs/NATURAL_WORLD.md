@@ -1,6 +1,6 @@
 # Living landscape
 
-Godot displays a rolling meadow surrounded by mixed woodland, a meandering river, a small lake and layered mountains. Scanned rocks, ferns and flowers supplement photographic ground materials. Grass blades, leaves and tree crowns move in shader-driven wind. A cloud sky, warm directional sunlight, cascaded shadows, a static reflection capture and distance haze provide outdoor lighting.
+Godot displays a rolling meadow surrounded by mixed woodland, a meandering river, a small lake and layered mountains. Scanned rocks, ferns and flowers supplement photographic ground materials. Grass blades, leaves and tree crowns move in shader-driven wind. A drifting cloud sky, sunlight/moonlight, cascaded day shadows, a static reflection capture and distance haze provide outdoor lighting. The [ecosystem observatory](INTERACTIVE_ECOSYSTEM.md) adds explicitly decorative weather, a day/night cycle and seasonal colors following Python when available.
 
 ![Valley view](screenshots/valley.png)
 
@@ -24,7 +24,7 @@ Replace `--valley-view` with `--ground-view` for the meadow. Capture paths must 
 
 ## Scientific boundary
 
-The original Python engine, bridge and Python tests are unchanged. Python continues to own every creature's 2D position, movement, energy, food, perception, reproduction, evolution and interactions. Godot maps Python X/Y to world X/Z at 20 pixels per metre. Only visual Y-height, slope alignment and cosmetic animal poses are added. Food uses the same height function. Picking intersects each animal’s display bounds and selects the original creature identity.
+The original Python engine and root Python tests are unchanged. The v2 bridge now adds passive food identities, seasonal history and confirmed interaction observations. Python continues to own every creature's 2D position, movement, energy, food, perception, reproduction, evolution and interactions. Godot maps Python X/Y to world X/Z at 20 pixels per metre. Only visual Y-height, slope alignment and cosmetic animal poses are added. Food uses the same height function. Picking intersects each animal’s display bounds and selects the original creature identity.
 
 Terrain, river, lake, trees, flowers and rocks are **scenery**. They add no collision objects, obstacles, food, costs or resources to Python. Creatures do not learn mountain climbing, swimming or plant avoidance from this view. Python's actual barrier extents and hazard radii are retained; scanned stones depict barriers and terrain-conforming overlays show hazards. These remain the existing Python interactions.
 
@@ -42,7 +42,7 @@ Water, slopes and placement masks reject some plants; the profile JSON records a
 
 Four conifers and one broadleaf tree near the camera-facing clearing retain detailed 3D meshes and cast shadows. Other forest trees use alpha-cutout, camera-facing images baked from the full original scans in Blender. This avoids rendering hundreds of dense scan meshes. These background crowns have baked lighting and no dynamic shadow; close inspection from every direction is less accurate than the hero meshes. Historical landscape profiles with the former placeholders are recorded in [nature-validation](nature-validation/README.md); current animal measurements are in [animal-validation](animal-validation/README.md).
 
-Terrain uses three mesh resolutions, with the finest geometry near creatures. The river surface is shaded with small moving ripples; one reflection probe captures scenery once per landscape build and affects only the water. The static cloud sky avoids continuous reflection-cubemap updates. Screen-space reflection, dynamic global illumination and volumetric fog are not required by the Compatibility renderer.
+Terrain uses three mesh resolutions, with the finest geometry near creatures. The river surface is shaded with small moving ripples; one reflection probe captures scenery once per landscape build and affects only the water. The sky uses a small incremental radiance map while the reflection probe remains captured once; its daylight intensity changes without recapturing the landscape. Screen-space reflection, dynamic global illumination and volumetric fog are not required by the Compatibility renderer.
 
 ## Art sources and authoring
 

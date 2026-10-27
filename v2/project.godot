@@ -39,3 +39,30 @@ renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_s3tc_bptc=true
 textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_3d=2
+
+[shader_globals]
+
+eco_time={
+"type": "float",
+"value": 0.0
+}
+eco_wind={
+"type": "float",
+"value": 1.0
+}
+eco_tint={
+"type": "color",
+"value": Color(1, 1, 1, 1)
+}
+eco_snow={
+"type": "float",
+"value": 0.0
+}
+eco_wetness={
+"type": "float",
+"value": 0.0
+}
+eco_daylight={
+"type": "float",
+"value": 1.0
+}

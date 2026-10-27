@@ -160,6 +160,7 @@ func _asset(name: String) -> Mesh:
 			material.set_shader_parameter("has_normal",source.normal_texture!=null)
 			if source.normal_texture:material.set_shader_parameter("normal_texture",source.normal_texture)
 			material.set_shader_parameter("crown_height",height)
+			material.set_shader_parameter("season_response",0.0 if name=="rock_07" else .2 if name=="fir_sapling" else 1.0)
 			material.set_shader_parameter("wind_strength",.024 if name=="fir_sapling" else .13 if name=="jacaranda_tree" else .05 if name!="rock_07" else 0.0)
 			material.set_shader_parameter("fade_end",235.0 if name in ["fir_sapling","jacaranda_tree"] else 180.0 if name=="rock_07" else 110.0)
 			found.surface_set_material(surface,material)

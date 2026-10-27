@@ -86,6 +86,11 @@ class EngineAdapter:
         self.selected = self.session.key(self.session.world.creatures[0])
         self.sequence = 0
         self.chart_stamp = None
+        self.food_serial = 0
+        self.food_observations = {}
+        self.capture_generation = self.session.world.generation
+        self.capture_cursor = 0
+        self.season_signature = None
         self.view_sequence = 0
         self.view_events = deque(maxlen=4096)
         self.view_seen_births = len(self.session.births)
@@ -121,10 +126,17 @@ class EngineAdapter:
             # is selection/copying, not physical mating and not a death.
             if s.config.mode == 'continuous' and birth['parent'] in s.actors:
                 event('reproduce', birth['parent'], child=key)
+        source_captures = getattr(s.world, 'captures', ())
+        if self.capture_generation != s.world.generation:
+            self.capture_generation, self.capture_cursor = s.world.generation, 0
+        new_captures = source_captures[self.capture_cursor:]
+        self.capture_cursor = len(source_captures)
         for key, (c, meals, captures) in list(self.view_watch.items()):
             if c.food_eaten > meals: event('meal', key, count=c.food_eaten-meals)
             if getattr(c, 'captures', 0) > captures:
-                event('capture', key, count=c.captures-captures)
+                targets = [f"g{c.generation}:c{item['prey_id']}" for item in new_captures
+                           if item['predator_id'] == c.creature_id and c.generation == s.world.generation]
+                event('capture', key, count=c.captures-captures, targets=targets)
             if not c.alive:
                 event('death', key)
                 del self.view_watch[key]
@@ -134,9 +146,43 @@ class EngineAdapter:
             else:
                 self.view_watch[key] = (c, c.food_eaten, getattr(c, 'captures', 0))
 
+    def environment_context(self):
+        w = self.session.world
+        history = getattr(w, 'environment_history', ())
+        season = None
+        if self.session.config.mode == 'seasons' and history:
+            row = history[-1]
+            season = {key: row[key] for key in ('generation', 'season', 'season_index', 'cycle', 'food_count')}
+            season['cluster_centers'] = [list(p) for p in w.food_cluster_centers]
+        return dict(season=season, food_target=w.food_count, actual_food=len(w.food),
+                    source='Python simulation', weather_simulated=False, daylight_simulated=False)
+
+    def observe_food(self):
+        current = {}
+        records = []
+        for food in self.session.world.food:
+            identity = id(food)
+            record = self.food_observations.get(identity)
+            if record is None or record[0] is not food:
+                self.food_serial += 1
+                record = (food, f'f{self.food_serial}')
+            current[identity] = record
+            records.append(dict(id=record[1], x=food.x, y=food.y,
+                                radius=food.radius, energy=food.energy))
+        self.food_observations = current
+        return records
+
     def frame(self, seen_births=0, full=False, seen_animation=0):
         s, w = self.session, self.session.world
         self.observe_animation_events()
+        context = self.environment_context()
+        if context['season'] is not None:
+            signature = (context['season']['season'], context['season']['cycle'])
+            if self.season_signature is not None and signature != self.season_signature:
+                self.view_sequence += 1
+                self.view_events.append(dict(seq=self.view_sequence, kind='season', id='environment',
+                                             time=s.elapsed, context=context['season']))
+            self.season_signature = signature
         living_keys = {s.key(c) for c in w.creatures}
         # Current bodies only. Historical ancestry is sent separately and is never
         # reconstructed from display interpolation.
@@ -169,6 +215,18 @@ class EngineAdapter:
                                captures=getattr(c, 'captures', 0), children=getattr(c, 'children', 0),
                                signal=getattr(c, 'signal', 0.), shared_in=getattr(c, 'shared_in', 0.),
                                shared_out=getattr(c, 'shared_out', 0.)))
+        if hasattr(w, 'perceive_opponents'):
+            by_species = {role: [c for c in w.creatures if c.species == role] for role in ('prey', 'predator')}
+            for row in agents:
+                if not row['active']: continue
+                c = s.actors[row['id']]
+                others = by_species['prey' if c.species == 'predator' else 'predator']
+                positions = np.array([(other.x, other.y) for other in others]).reshape(-1, 2)
+                perception = w.perceive_opponents(c, positions)
+                if perception.visible:
+                    target = next(other for other in others if (other.x, other.y) == tuple(perception.target_position))
+                    row['observed_opponent'] = dict(id=s.key(target), x=target.x, y=target.y,
+                                                    distance=math.hypot(c.x-target.x, c.y-target.y), source='nearest visible opponent')
         activation, inputs = [], []
         selected = s.actors.get(self.selected)
         if selected and selected.alive and self.selected in living_keys and s.config.algorithm not in ('random', 'greedy'):
@@ -191,7 +249,7 @@ class EngineAdapter:
                      paused=s.paused, speed=s.speed, automatic=s.automatic, finished=s.finished,
                      extinct=getattr(w, 'lineage_extinct', False),
                      awaiting_generation=w.final_evaluation is not None and not s.finished,
-                     width=w.width, height=w.height, agents=agents,
+                     width=w.width, height=w.height, agents=agents, environment_context=context, food_objects=self.observe_food(),
                      food=[[f.x, f.y, f.radius] for f in w.food],
                      barriers=[[b.x, b.y, b.width, b.height] for b in getattr(w, 'barriers', ())],
                      hazards=[[h.x, h.y, h.radius] for h in getattr(w, 'dangers', ())],

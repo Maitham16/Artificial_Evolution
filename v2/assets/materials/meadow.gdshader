@@ -1,4 +1,7 @@
 shader_type spatial;
+global uniform vec4 eco_tint;
+global uniform float eco_snow;
+global uniform float eco_wetness;
 render_mode diffuse_burley;
 uniform sampler2D grass_color : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D grass_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -24,11 +27,13 @@ void fragment(){
  vec3 ground=mix(grass,fine,.22)*meadow_tint.rgb;
  ground=mix(ground,soil,smoothstep(.62,.90,patches)*.45);
  ground*=.86+.26*noise(p*.027);
- ALBEDO=mix(ground,rock,rocky);
+ ALBEDO=mix(ground*eco_tint.rgb,rock,rocky)*(1.0-eco_wetness*.22);
+ float snow=eco_snow*smoothstep(.45,.92,world_normal.y)*(.8+.2*noise(p*.12));
+ ALBEDO=mix(ALBEDO,vec3(.72,.79,.83),snow);
  vec3 normal_a=texture(grass_normal,p*.42).rgb;
  vec3 normal_b=texture(stone_normal,p*.10).rgb;
  NORMAL_MAP=mix(normal_a,normal_b,rocky);
  NORMAL_MAP_DEPTH=mix(.25,.65,rocky);
- ROUGHNESS=.94;
+ ROUGHNESS=.94-eco_wetness*.32;
  SPECULAR=.12;
 }

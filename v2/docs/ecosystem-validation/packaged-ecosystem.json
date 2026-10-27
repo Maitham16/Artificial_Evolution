@@ -1,0 +1,498 @@
+{
+  "ok": true,
+  "archive_sha256": "8dbba6d748f2311b755631329d6e4e4ce90aa8eccd497fb01e2fe4c145900707",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "method": "Six sequential native signed-ZIP runs, Balanced, 480 frames, first 90 excluded; fresh extraction outside the checkout. Each Python export manifest verified and replayed exactly by the original engine.",
+  "profiles": [
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 459
+        },
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Walking",
+          "Eating"
+        ]
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 1,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 256,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.0674225656198
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 432,
+      "immersive": true,
+      "mean_ms": 24.8239112654321,
+      "median_ms": 25.0,
+      "p95_ms": 28.675,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1028.167,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "meadow-day",
+      "mode": "foraging",
+      "mean_fps": 40.28374051564245,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "screenshot": "../screenshots/ecosystem-meadow-day.png",
+      "python_ticks": 896,
+      "verified_original_bundle": true,
+      "replayed_exactly_with_original_engine": true
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 444
+        },
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating"
+        ]
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 5,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 256,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 16.0,
+          "motion_enabled": true,
+          "rain": 1.0,
+          "season": "autumn",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "rain",
+          "weather_source": "decorative",
+          "wind": 1.9475380741231
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 424,
+      "immersive": true,
+      "mean_ms": 25.7205943396227,
+      "median_ms": 26.3888888888889,
+      "p95_ms": 27.822,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1030.447,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "autumn-rain",
+      "mode": "foraging",
+      "mean_fps": 38.879350406747605,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "screenshot": "../screenshots/ecosystem-autumn-rain.png",
+      "python_ticks": 869,
+      "verified_original_bundle": true,
+      "replayed_exactly_with_original_engine": true
+    },
+    {
+      "animation": {
+        "active_models": 64,
+        "death_remnants": 6,
+        "detailed_skeletons": 4,
+        "event_gaps": 0,
+        "events": {
+          "capture": 36,
+          "death": 36,
+          "meal": 169
+        },
+        "gpu_bone_models": 60,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Escaping",
+          "Turning left",
+          "Turning right",
+          "Hunting",
+          "Eating",
+          "Dying",
+          "Dead"
+        ]
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 6,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 240,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 22.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.21869712248608
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 442,
+      "immersive": true,
+      "mean_ms": 13.6272703962704,
+      "median_ms": 11.6666666666667,
+      "p95_ms": 20.0,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1033.39,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "predators-night",
+      "mode": "predator_prey",
+      "mean_fps": 73.38226738890324,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "screenshot": "../screenshots/ecosystem-predators-night.png",
+      "python_ticks": 549,
+      "verified_original_bundle": true,
+      "replayed_exactly_with_original_engine": true
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 440
+        },
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating"
+        ]
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 1,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 256,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 12.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "winter",
+          "season_source": "decorative",
+          "snow": 1.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "snow",
+          "weather_source": "decorative",
+          "wind": 1.05366732513664
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 426,
+      "immersive": true,
+      "mean_ms": 25.4786853714882,
+      "median_ms": 25.0,
+      "p95_ms": 33.045,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1026.77,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "winter-snow",
+      "mode": "foraging",
+      "mean_fps": 39.24849282526347,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "screenshot": "../screenshots/ecosystem-winter-snow.png",
+      "python_ticks": 863,
+      "verified_original_bundle": true,
+      "replayed_exactly_with_original_engine": true
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 310
+        },
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating"
+        ]
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 4,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 256,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 8.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "spring",
+          "season_source": "Python",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": {
+              "cluster_centers": [
+                [
+                  500.588213459455,
+                  404.015842061543
+                ],
+                [
+                  569.788016898409,
+                  164.987805117799
+                ],
+                [
+                  395.764098108427,
+                  145.227566708142
+                ],
+                [
+                  224.362936710856,
+                  213.29556840529
+                ]
+              ],
+              "cycle": 1.0,
+              "food_count": 150.0,
+              "generation": 1.0,
+              "season": "spring",
+              "season_index": 0.0
+            },
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "fog",
+          "weather_source": "decorative",
+          "wind": 1.09978272301412
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 428,
+      "immersive": true,
+      "mean_ms": 23.2552079439252,
+      "median_ms": 23.0633333333333,
+      "p95_ms": 27.759,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1040.655,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "python-spring",
+      "mode": "seasons",
+      "mean_fps": 43.00112054088182,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "screenshot": "../screenshots/ecosystem-python-spring.png",
+      "python_ticks": 794,
+      "verified_original_bundle": true,
+      "replayed_exactly_with_original_engine": true
+    },
+    {
+      "animation": {
+        "active_models": 44,
+        "death_remnants": 5,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "birth": 31,
+          "death": 11,
+          "meal": 117,
+          "reproduce": 31
+        },
+        "gpu_bone_models": 39,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating",
+          "Growing",
+          "Reproducing",
+          "Dying",
+          "Dead"
+        ]
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 3,
+        "python_food_plants": 120,
+        "recent_confirmed_events": 189,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 120.0,
+            "daylight_simulated": false,
+            "food_target": 120.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.13075337063961
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 437,
+      "immersive": true,
+      "mean_ms": 21.7604935163998,
+      "median_ms": 22.2222222222222,
+      "p95_ms": 25.3177777777778,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1028.625,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "continuous-births",
+      "mode": "continuous",
+      "mean_fps": 45.95484009801293,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "screenshot": "../screenshots/ecosystem-continuous-births.png",
+      "python_ticks": 746,
+      "verified_original_bundle": true,
+      "replayed_exactly_with_original_engine": true
+    }
+  ],
+  "limitations": "Local Apple M3 execution, no independent replication, manual OS input QA, x86_64 execution or Apple notarization. Weather, lighting and seasonal color overrides are decorative. No forced feeding, capture, birth or death in these native runs."
+}
