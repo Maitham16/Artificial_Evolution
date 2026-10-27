@@ -29,7 +29,6 @@ jobs:
       SDL_AUDIODRIVER: dummy
       PYGAME_HIDE_SUPPORT_PROMPT: "1"
       MPLBACKEND: Agg
-      MPLCONFIGDIR: ${{ runner.temp }}/matplotlib
       OPENBLAS_NUM_THREADS: "1"
       OMP_NUM_THREADS: "1"
     steps:
@@ -48,6 +47,7 @@ jobs:
       - name: Install pinned dependencies
         run: |
           mkdir -p .cache/ci
+          printf 'MPLCONFIGDIR=%s/matplotlib\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
           python --version
           python -m pip install -r requirements.txt
           python -m pip check
