@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "mode": "social",
+  "environment": "uniform",
+  "algorithm": "group",
+  "seed": 2801,
+  "population": 40,
+  "groups": 4,
+  "food_count": 80,
+  "generations": 3,
+  "episode_seconds": 60.0,
+  "body_mutation_rate": 0.0,
+  "body_mutation_scale": 0.0,
+  "food_access": "restricted",
+  "signaling": true,
+  "sharing": true,
+  "signals_hidden": false
+}

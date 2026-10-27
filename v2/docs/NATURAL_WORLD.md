@@ -1,8 +1,10 @@
 # Living landscape
 
+[Documentation](README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
+
 The current [physical-habitat update](PHYSICAL_HABITAT.md) adds native Metal rendering, terrain foot IK and optional Python terrain/water/climate rules. The default research mode retains the original engine; this guide describes its scenery boundary.
 
-Godot displays a rolling meadow surrounded by mixed woodland, a meandering river, a small lake and layered mountains. Scanned rocks, ferns and flowers supplement photographic ground materials. Grass blades, leaves and tree crowns move in shader-driven wind. A drifting cloud sky, sunlight/moonlight, cascaded day shadows, a static reflection capture and distance haze provide outdoor lighting. The [ecosystem observatory](INTERACTIVE_ECOSYSTEM.md) adds explicitly decorative weather, a day/night cycle and seasonal colors following Python when available.
+Godot displays a rolling meadow surrounded by mixed woodland, a meandering river, a small lake and layered mountains. Scanned rocks, ferns and flowers supplement photographic ground materials. Grass blades, leaves and tree crowns move in shader-driven wind. A drifting cloud sky, sunlight/moonlight, cascaded day shadows, water reflections and distance haze provide outdoor lighting. The [ecosystem observatory](INTERACTIVE_ECOSYSTEM.md) adds decorative overrides and source-following climate presentation when available; see [Environments](ENVIRONMENTS.md).
 
 ![Valley view](screenshots/valley.png)
 
@@ -44,7 +46,7 @@ Water, slopes and placement masks reject some plants; the profile JSON records a
 
 Four conifers and one broadleaf tree near the camera-facing clearing retain detailed 3D meshes and cast shadows. Other forest trees use alpha-cutout, camera-facing images baked from the full original scans in Blender. This avoids rendering hundreds of dense scan meshes. These background crowns have baked lighting and no dynamic shadow; close inspection from every direction is less accurate than the hero meshes. Historical landscape profiles with the former placeholders are recorded in [nature-validation](nature-validation/README.md); current animal measurements are in [animal-validation](animal-validation/README.md).
 
-Terrain uses three mesh resolutions, with the finest geometry near creatures. The river surface is shaded with small moving ripples; one reflection probe captures scenery once per landscape build and affects only the water. The sky uses a small incremental radiance map while the reflection probe remains captured once; its daylight intensity changes without recapturing the landscape. Screen-space reflection, dynamic global illumination and volumetric fog are not required by the Compatibility renderer.
+Terrain uses three mesh resolutions, with the finest geometry near creatures. The river surface has small moving ripples. Native Metal Mobile uses sky reflections and a small incremental radiance map. Only the Compatibility fallback retains the static river reflection probe captured once per landscape build. These paths do not require screen-space reflections, dynamic global illumination or volumetric fog.
 
 ## Art sources and authoring
 

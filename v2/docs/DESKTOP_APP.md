@@ -1,5 +1,7 @@
 # Artificial Evolution 2.0 desktop app
 
+[Documentation](README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
+
 The standalone Apple Silicon app opens directly into the 3D landscape, with a quiet translucent header, camera dock and live creature inspector. **Research** provides the complete existing v2 workbench. The original Python simulation and 2D interface are unchanged.
 
 The Ecosystem drawer supports clicks, wheel and two-finger scrolling, including after switching views. Scroll within the panel to reach its lower settings. See the [input fix and native regression checks](panel-input-validation/README.md).
@@ -8,7 +10,7 @@ The Ecosystem drawer supports clicks, wheel and two-finger scrolling, including 
 
 ## Launch
 
-On this Mac, double-click `~/Applications/Artificial Evolution 2.0.app` or `v2/Launch 3D Application.command`. The desktop app includes Python and the engine, works offline, and needs no checkout, virtual environment, Godot, Blender or Homebrew at runtime. The current build is arm64/macOS 13+, locally ad-hoc signed. It is not an Intel build or Apple-notarized distribution.
+On this Mac, double-click `~/Applications/Artificial Evolution 2.0.app` or `v2/Launch 3D Application.command`. The desktop app includes Python and the engine, works offline, and needs no checkout, virtual environment, Godot, Blender or Homebrew at runtime. It is arm64 and locally ad-hoc signed, not an Intel build or Apple-notarized distribution. The declared macOS 13 minimum does not establish full runtime compatibility: the locked NumPy wheel is tagged macOS 14 and native validation used macOS 27. See [compatibility](INSTALLATION.md#requirements-and-compatibility).
 
 To install from a ZIP without developer tools, double-click the ZIP and drag **Artificial Evolution 2.0.app** into `~/Applications`.
 
@@ -44,7 +46,7 @@ For source development run `./"v2/Run Artificial Evolution 2.command"`, which co
 
 Focus and overview move smoothly; zoom/orbit ease toward the requested camera pose. Pitch and distance are bounded and camera height remains above display terrain. Following tracks the already interpolated pose with responsive easing at high simulation speeds, and stops if the selection is no longer active. It never chooses another animal automatically. The inspector shows source ID, energy, age, food, fitness, ancestry and observed animation state. Close it with **×** and click an animal to reopen it. A thin selection ring remains visible; scientific sensor rings and trails are confined to the workbench.
 
-The HUD's simulation controls wait for Python acknowledgements. Speed affects original fixed physics ticks; camera movement and decorative scenery are independent. A disconnect freezes creature state and disables commands. Eating, births, growth, predation and death retain their existing source-event semantics. Weather and lighting remain explicitly decorative in **Ecosystem**; see [interactive ecosystem](INTERACTIVE_ECOSYSTEM.md).
+The HUD's simulation controls wait for Python acknowledgements. Speed affects original fixed physics ticks; camera movement and decorative scenery are independent. A disconnect freezes creature state and disables commands. Eating, births, growth, predation and death retain their existing source-event semantics. Original-rule weather/lighting are decorative; physical auto climate can follow Python while manual overrides stay cosmetic. See [Environments](ENVIRONMENTS.md).
 
 ## Rendering
 
@@ -68,7 +70,7 @@ The standalone package can also start the original interface through **Research 
 
 ## Data and reproducibility
 
-The 3D app writes exports to `~/Library/Application Support/ArtificialEvolution2/python-runs/`. **Research → Open export folder** opens them. Exports use the original engine's config, run report, genomes, plots, CSVs, HTML and manifests. Existing `simulator.py --verify-bundle` and `--replay … --headless` work on these exports. The bundled original Python CLI can perform those checks too.
+The 3D app writes exports to `~/Library/Application Support/ArtificialEvolution2/python-runs/`. **Research → Open export folder** opens them. Exports use the original engine's config, run report, genomes, plots, CSVs, HTML and manifests. Original-rule bundles use `simulator.py --verify-bundle` and `--replay … --headless`; physical bundles require the V2 habitat helper for numerical replay. Both helpers are bundled. See [Export and replay](EXPORTS_AND_REPLAY.md).
 
 `Contents/Resources/engine-manifest.json` identifies every copied source/preset with SHA-256. The bundled runtime is separately locked, licensed and isolated from user `PYTHONHOME`, `PYTHONPATH` and site packages. Caches and endpoints live in user data, not in the signed bundle. The original 431 tests were run with both the original `.venv` and the separate bundled-runtime interpreter. See [runtime provenance](BUNDLED_RUNTIME.md) and [validation](desktop-validation/README.md).
 

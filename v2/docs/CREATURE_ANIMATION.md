@@ -1,5 +1,7 @@
 # Event-driven skeletal animation
 
+[Documentation](README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
+
 Godot now displays walking, running, turning, feeding, resting, pursuit, escape, reproduction, juvenile growth and death using the deer/wolf skeletal rigs. Python remains the only source of movement, meals, reproduction, survival and interactions. The original 2D simulator and numerical models are unchanged.
 
 ## What drives each animation

@@ -1,5 +1,7 @@
 # Bundled desktop runtime
 
+[Documentation](README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
+
 The standalone app includes a relocatable CPython **3.13.18**, build **20261026**, for Apple Silicon, from [Astral Python Build Standalone](https://github.com/astral-sh/python-build-standalone/releases/tag/20261026). [Official distribution documentation](https://docs.astral.sh/python-build-standalone/) describes the self-contained installations. This replaces the packaged app's previous dependence on the Mac's repository and `.venv`; the source launcher still uses the existing development environment.
 
 `v2/runtime.lock.json` pins the Python install archive, the matching full archive used for third-party license texts, the unmodified root requirements hash, all 13 macOS dependency wheels, and bundled license files. NumPy/Pygame/Matplotlib and transitive versions match the original `requirements.txt` exactly. The original `.venv` is never upgraded. Both environments passed the same 431 original tests.
@@ -11,3 +13,5 @@ All original root Python files, including tests for source-hash consistency, and
 Godot starts its owned interpreter with `-E -s -B`: Python environment overrides and user site packages are ignored and bytecode is not written into the bundle. The adapter uses the application user data directory for Matplotlib caches, TCP endpoints and exports. A separate runtime-only `sitecustomize.py` gives independent original 2D launches a user cache under `~/Library/Caches/ArtificialEvolution2/`, so the unchanged original plotting defaults cannot write into the signed engine folder. The original engine remains the sole owner of numerical decisions, movement, survival and evolution.
 
 The [standalone validator](../tools/validate_desktop_macos.py) extracts the actual signed ZIP outside the checkout and denies the application and its Python child read access to this repository, `/opt/homebrew` and `/usr/local`. It removes development path overrides, uses a system-only PATH, and supplies deliberately invalid `PYTHONHOME`/`PYTHONPATH`. It checks original source hashes, seven-mode export/replay, original 2D CLI compatibility, unchanged development settings and the app signature after all runs. This is local engineering validation, not external replication or Apple notarization.
+
+The package declares macOS 13 in its app metadata, while the locked NumPy wheel targets macOS 14. End-to-end native validation is on macOS 27, so the declared minimum is not a verified full-stack compatibility claim. See [installation compatibility](INSTALLATION.md#requirements-and-compatibility).

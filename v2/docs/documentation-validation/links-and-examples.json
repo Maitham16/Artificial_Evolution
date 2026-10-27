@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "checks": {
+    "markdown_files": 36,
+    "relative_links": 496,
+    "anchors": 49,
+    "bash_blocks": 76,
+    "python_blocks": 1,
+    "json_blocks": 1,
+    "example_configs": 3
+  },
+  "RunConfig_fields": 33,
+  "HabitatConfig_fields": 10,
+  "problems": []
+}

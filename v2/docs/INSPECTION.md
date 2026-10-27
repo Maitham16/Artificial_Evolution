@@ -1,5 +1,9 @@
 # Repository inspection and isolation design
 
+[Documentation](README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
+
+**Historical report:** the prototype-specific model, file tree and feature limits below describe the initial implementation, not the current app. Use [Architecture](ARCHITECTURE.md) and [the current review](REPOSITORY_REVIEW.md) for present behavior.
+
 This report records the initial repository inspection and standalone prototype. The active application now uses the existing Python engine through the [Python bridge](PYTHON_BRIDGE.md); the later connection replaces the GDScript model described below.
 
 Inspection date: 27 October 2026. Original baseline: `f890b4f481a6659714dfae70e11f5b34f19a86f3` (v1.0.1 maintenance commit). The inspection preceded v2 implementation.

@@ -1,5 +1,7 @@
 # Terrain contact, 60 FPS and physical habitats
 
+[Documentation](README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
+
 The Apple Silicon desktop build now uses Godot's native Metal Mobile renderer, batches distant animated animals and applies terrain foot IK to nearby detailed skeletons. An **opt-in Python physical habitat** adds traversable terrain, a river inside the arena, wading, bank collisions and climate costs. The original Python files and original 2D application remain unchanged.
 
 ![Physical habitat](screenshots/habitat-physical-foraging.png)
@@ -85,6 +87,8 @@ Defaults use a 240-simulated-second day and 40-second weather stages. Clear/wet 
 
 ## Export and replay
 
+For complete copyable fixed-tick examples, bundled-interpreter commands and dataset meanings, see [Export and replay](EXPORTS_AND_REPLAY.md). Configuration loading through the checkbox uses **Start new population**; the direct **Apply JSON configuration** button currently starts original rules without forwarding physical options. See [Configuration](CONFIGURATION.md).
+
 Physical exports contain the original numerical datasets plus `habitat.json`, `habitat_telemetry.csv`, an explicit `engine_extension` manifest marker and a source-code hash. Their HTML report identifies the physical rules and correct replay command. They do **not** use the unchanged original replay as an equivalent numerical model.
 
 ```bash
@@ -107,3 +111,9 @@ AE2_APP="$HOME/Applications/Artificial Evolution 2.0.app"
 ```
 
 Replay checks source version, physical configuration, climate, complete individual telemetry and original scientific outputs. Camera/IK changes and decorative overrides are not scientific events. Published original results remain unchanged; compare new physical results only under matched habitat, seeds, controller budgets and training/test conditions. In particular, physical social demes can have different terrain and require appropriate experimental controls.
+
+## Combined model limitations
+
+The extension reuses original interaction solvers; it is not a new consistent 3D contact engine. In `predator_prey.py`, each actor's `reflected_path` is computed at commanded speed before the habitat-wrapped `move` call. Capture resolution uses those precomputed swept planar paths even when the extension slows or blocks final motion. Physical predator–prey therefore has a capture-path inconsistency: exact replay confirms the recorded implementation, not terrain-aware capture geometry. This source-reading finding has not been measured as a new failure-rate experiment. Use original rules for established predator–prey inference, and state this limitation in any physical-mode analysis.
+
+Physical social groups can occupy unequal terrain. Food rejection and safe-spawn relocation change the effective placement distribution. Existing sensor dimensions provide no dedicated terrain/depth/weather channels. These boundaries matter when designing matched treatment/control conditions. The visual realism, event tests and local performance audit do not establish ecological validity of every combined model.

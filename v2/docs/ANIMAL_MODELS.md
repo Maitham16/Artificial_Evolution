@@ -1,5 +1,7 @@
 # Detailed animal models
 
+[Documentation](README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
+
 The Godot viewer uses textured, anatomically recognizable deer and wolves in place of the original creature placeholders. The deer have narrow heads, ears, dark eyes, four jointed legs, split hooves and short tails; the antlered variation has a separate branching antler mesh. Wolves have a muzzle, nose, eyes, ears, teeth, four jointed legs, paws and a long tail. Materials retain the source coat detail, with normal maps where provided.
 
 ![Animal model close-ups](screenshots/animals.png)
@@ -47,7 +49,7 @@ Native asset close-up review, independent of any simulation:
 
 All three source assets are CC0: [Deer Female](https://opengameart.org/content/deer-female) and [Old Deer Male](https://opengameart.org/content/old-deer-male) by CDmir with collaborator TinyWorlds; [3d wolf](https://opengameart.org/content/3d-wolf) by NewDLC. Attribution, source links and the full dedication are bundled in [assets/animals](../assets/animals/LICENSE.md). [ASSET_SOURCES.json](../assets/animals/ASSET_SOURCES.json) records original download checksums and hashes of the derived runtime and editable files. No art downloads occur during simulation.
 
-Open `v2/art_source/animals/doe.blend`, `stag.blend` or `wolf.blend` in Blender. Each file includes its rig, actions and packed textures. To regenerate from the checksum-pinned originals:
+Current skeletal actions are edited in `v2/art_source/animation/{doe,stag,wolf}.blend`; see [current authoring](DEVELOPMENT.md#asset-authoring). The earlier source-conversion files remain at `v2/art_source/animals/{doe,stag,wolf}.blend`. Each file includes its rig, actions and packed textures. To regenerate from the checksum-pinned originals:
 
 ```bash
 python3 v2/tools/fetch_animal_assets.py

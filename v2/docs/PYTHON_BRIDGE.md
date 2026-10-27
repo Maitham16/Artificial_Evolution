@@ -1,6 +1,8 @@
 # Python–Godot connection
 
-The active simulation is the existing root `research_session.ResearchSession`. The 3D application is an observer and controller of a separate Python process. No root implementation file was modified.
+[Documentation](README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
+
+With physical habitat disabled, the active simulation is the existing root `research_session.ResearchSession`. The opt-in extension is described below and in [Architecture](ARCHITECTURE.md#physical-extension-boundary). The 3D application is an observer and controller of a separate Python process. No root implementation file was modified.
 
 ```mermaid
 flowchart LR

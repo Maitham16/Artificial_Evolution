@@ -1,5 +1,7 @@
 # Interactive ecosystem observatory
 
+[Documentation](README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
+
 The later [physical-habitat update](PHYSICAL_HABITAT.md) adds optional actual terrain/wading/climate effects and nearby foot IK. The decorative/source boundary described here remains the default original research mode.
 
 The 3D view now combines the existing event-driven animal animation with edible plants, a clickable Python event journal, recorded movement trails, and a separate decorative environment director. Every change is under `v2/`; the original Python application and numerical engine remain unchanged.
@@ -34,9 +36,11 @@ Use **Predator & prey** to observe the original co-evolution engine; wolves foll
 | Birth, reproduction, growth and death | Existing journal: continuous reproduction follows actual funded offspring; young bodies scale from real age/maturity. Three-second death remnants are presentation only. No mating, pregnancy, resurrection or extra collisions. |
 | Python seasonal context | Actual `SeasonalWorld.environment_history`, food target, stock and cluster centers. The auto season follows this context; other modes use decorative summer. A season receipt records the observed transition, not every skipped generation. |
 | Manual seasonal colors | Decorative override. The Python source season remains displayed separately and food does not change. |
-| Day/night, moonlight, stars, clouds, rain, snow, fog, wet ground, frost, pollen and vegetation motion | **Decorative:** no Python weather, temperature or daylight model is introduced. These effects cannot change energy, sensors, movement, food, survival or fitness. Snow does not hide food from Python. |
+| Day/night, moonlight, stars, clouds, rain, snow, fog, wet ground, frost, pollen and vegetation motion | **Original-rule default:** decorative; no source weather/daylight cost. In opt-in physical mode, auto climate follows the recorded Python model; manual effects remain decorative and snow does not hide food from Python. |
 
 Python **Pause / Space** freezes physics and creature animation. **Scenery motion** independently pauses the decorative clock, wind, water and precipitation motion. Scenery may continue while Python is paused or disconnected; this does not represent continuing ecology. The **day/night cycle** checkbox controls its clock separately. The default decorative day lasts 240 wall-clock seconds. Automatic weather cycles clear, cloudy, rain (snow in visual winter), fog, clear in 55-second stages, with gradual precipitation/cloud transitions. The hour slider, weather menu and color overrides are view controls only.
+
+In physical mode, auto weather/season and **Follow Python daylight** instead use the simulated climate, including pause and speed. Manual overrides still do not change that climate or its costs. See [physical rules](PHYSICAL_HABITAT.md) and [environment clocks](ENVIRONMENTS.md#weather-and-daynight-controls). Scroll inside the drawer for its lower controls; the current [pointer-routing fix](panel-input-validation/README.md) preserves input across view switches.
 
 ## Implementation
 

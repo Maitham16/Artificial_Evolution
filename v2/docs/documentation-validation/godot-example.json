@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "source_launch": true,
+  "headless": true,
+  "mode": "foraging",
+  "founders": 30,
+  "food_count": 90,
+  "generation_budget": 3,
+  "physical_habitat": true,
+  "ticks": 161,
+  "bundle_verified": true,
+  "physical_replay_matched": true,
+  "limitations": "Bounded frame-driven CLI correctness check, not native graphics or FPS evidence."
+}

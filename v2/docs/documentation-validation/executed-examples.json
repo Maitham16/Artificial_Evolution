@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "examples": [
+    {
+      "example": "original",
+      "ticks": 120,
+      "shell_exit_code": 0,
+      "code_sha256": "f43d76321cba4fae6862b3d579a2d23cdf53ba22fd8abcf7c4381a5026ebe9b4",
+      "bundle_verified": true,
+      "numerical_replay": true,
+      "bundled_helper_replay": true
+    },
+    {
+      "example": "physical",
+      "ticks": 120,
+      "shell_exit_code": 0,
+      "code_sha256": "cf68fee805548aacd2632ba9ca191ea3aa592fe925871d32587c87790bea9696",
+      "bundle_verified": true,
+      "numerical_replay": true,
+      "bundled_helper_replay": true
+    },
+    {
+      "configuration": "v2/docs/examples/foraging.json",
+      "ticks": 120,
+      "construct_step_and_replay": true
+    },
+    {
+      "configuration": "v2/docs/examples/predator_prey.json",
+      "ticks": 120,
+      "construct_step_and_replay": true
+    },
+    {
+      "configuration": "v2/docs/examples/social.json",
+      "ticks": 120,
+      "construct_step_and_replay": true
+    }
+  ],
+  "scope": "Short correctness checks, not complete evolutionary training or scientific replication."
+}

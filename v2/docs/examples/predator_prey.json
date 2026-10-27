@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "mode": "predator_prey",
+  "environment": "uniform",
+  "algorithm": "coevolution",
+  "seed": 2801,
+  "population": 60,
+  "predators": 12,
+  "generations": 3,
+  "episode_seconds": 60.0,
+  "food_count": 150
+}

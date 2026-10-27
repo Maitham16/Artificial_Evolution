@@ -1,0 +1,23 @@
+{
+  "review_base_commit": "342438f6ea5e1beb99c245dbe4f0d49309e63389",
+  "tracked_files": 1154,
+  "by_top_level": {
+    "(root files)": 90,
+    ".github": 1,
+    "configs": 9,
+    "docs": 4,
+    "exports": 1,
+    "results": 486,
+    "v2": 563
+  },
+  "formats": {
+    "markdown_indexed": 28,
+    "python_parsed": 120,
+    "json_decoded": 184,
+    "npz_containers_indexed": 182,
+    "compressed_json_decoded": 48,
+    "csv_headers_read": 47,
+    "gdscript_indexed": 25
+  },
+  "problems": []
+}

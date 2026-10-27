@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "mode": "foraging",
+  "environment": "uniform",
+  "algorithm": "selection",
+  "seed": 2801,
+  "population": 30,
+  "food_count": 90,
+  "generations": 3,
+  "fixed_speed": 60.0,
+  "mutation_rate": 0.1,
+  "mutation_scale": 0.1
+}
