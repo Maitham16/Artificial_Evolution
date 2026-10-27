@@ -1,5 +1,7 @@
 # Artificial Evolution
 
+[![Tests](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml)
+
 An experiment to investigate whether food-seeking behavior evolves in creatures
 controlled by tiny neural networks, with random movement as a comparison.
 
@@ -32,7 +34,19 @@ screenshots, and a local HTML report while the simulation continues.
 
 ![The artificial-life research workbench](results/step28-workbench.png)
 
-### Original single-mode viewer
+## Automated checks
+
+GitHub Actions runs the complete test suite and fresh seven-world export/replay
+checks on Linux and macOS for every push and pull request. The workflow uses
+Python 3.13.17 and the pinned dependencies in `requirements.txt`. Test logs,
+installed package versions, and integration datasets are available as workflow
+artifacts for seven days.
+
+Historical native recordings retain the runtime requirements documented in
+[Reproducibility](docs/REPRODUCIBILITY.md). The full scientific studies remain
+separate from the bounded CI checks. The frozen v1.0.0 release is unchanged.
+
+## Original single-mode viewer
 
 The original viewer and scientific scripts retain their published source versions:
 

@@ -1,0 +1,75 @@
+name: Tests
+
+"on":
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Python 3.13 / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    defaults:
+      run:
+        shell: bash
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYGAME_HIDE_SUPPORT_PROMPT: "1"
+      MPLBACKEND: Agg
+      MPLCONFIGDIR: ${{ runner.temp }}/matplotlib
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up validated Python runtime
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13.17"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install pinned dependencies
+        run: |
+          mkdir -p .cache/ci
+          python --version
+          python -m pip install -r requirements.txt
+          python -m pip check
+          python -m pip freeze --all > .cache/ci/installed-packages.txt
+
+      - name: Run complete test suite
+        run: python -m unittest discover -v 2>&1 | tee .cache/ci/tests.log
+
+      - name: Verify fresh seven-world exports and replay
+        # Historical native recordings retain their original macOS runtime contract.
+        run: >-
+          python validate_simulator.py
+          --output .cache/ci/integration.json
+          --demos .cache/ci/demos
+          --native .cache/ci/no-native-recordings
+
+      - name: Upload test and integration evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-evidence-${{ matrix.os }}
+          path: .cache/ci/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
