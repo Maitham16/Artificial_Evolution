@@ -93,6 +93,31 @@ class OriginalPreservationTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(report['new_tracked_files_outside_v2'], ['new_engine.py'])
 
+    def test_only_the_exact_new_pages_workflow_is_authorized(self):
+        self.redesign()
+        folder = self.root / '.github/workflows'
+        folder.mkdir(parents=True)
+        (folder / 'pages.yml').write_text('name: Documentation website\n')
+        subprocess.run(['git', 'add', '.github/workflows/pages.yml'], cwd=self.root, check=True)
+        code, report = self.verify()
+        self.assertEqual(code, 0)
+        self.assertEqual(report['authorized_new_infrastructure'], ['.github/workflows/pages.yml'])
+        (folder / 'pages-helper.yml').write_text('name: Unreviewed\n')
+        subprocess.run(['git', 'add', '.github/workflows/pages-helper.yml'], cwd=self.root, check=True)
+        code, report = self.verify()
+        self.assertEqual(code, 1)
+        self.assertEqual(report['new_tracked_files_outside_v2'], ['.github/workflows/pages-helper.yml'])
+
+    def test_pages_infrastructure_does_not_exempt_original_hashes(self):
+        folder = self.root / '.github/workflows'
+        folder.mkdir(parents=True)
+        (folder / 'pages.yml').write_text('name: Documentation website\n')
+        subprocess.run(['git', 'add', '.github/workflows/pages.yml'], cwd=self.root, check=True)
+        (self.root / 'engine.py').write_text('CHANGED = True\n')
+        code, report = self.verify()
+        self.assertEqual(code, 1)
+        self.assertIn({'path': 'engine.py', 'error': 'changed'}, report['problems'])
+
 
 if __name__ == '__main__':
     unittest.main()

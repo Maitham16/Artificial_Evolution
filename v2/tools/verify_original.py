@@ -7,6 +7,10 @@ from pathlib import Path
 import subprocess
 import sys
 
+# Explicitly requested website deployment infrastructure. This is a new file,
+# never an exemption from the hash checks on any original application or guide.
+AUTHORIZED_INFRASTRUCTURE = frozenset({'.github/workflows/pages.yml'})
+
 
 def archived_readme(data):
     """Extract the uniquely delimited, verbatim V1 README from its new landing page."""
@@ -50,13 +54,17 @@ def main():
     new_tracked = subprocess.check_output(
         ['git', 'ls-files', '-z'], cwd=root).decode().split('\0')
     outside = [name for name in new_tracked
-               if name and name not in tracked and not name.startswith('v2/')]
+               if name and name not in tracked and not name.startswith('v2/')
+               and name not in AUTHORIZED_INFRASTRUCTURE]
+    infrastructure = sorted(name for name in new_tracked
+                            if name in AUTHORIZED_INFRASTRUCTURE and name not in tracked)
     report = {'ok': not problems and not outside,
               'baseline_commit': baseline['commit'],
               'scope': 'all pre-existing local files' if args.all_existing else 'original tracked files',
               'files_checked': len(names), 'original_tracked_files': len(tracked),
               'preserved_documentation_archives': documentation_archives,
-              'problems': problems, 'new_tracked_files_outside_v2': outside}
+              'problems': problems, 'new_tracked_files_outside_v2': outside,
+              'authorized_new_infrastructure': infrastructure}
     encoded = json.dumps(report, indent=2) + '\n'
     if args.report:
         path = args.report.resolve()

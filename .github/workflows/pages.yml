@@ -1,0 +1,94 @@
+name: Documentation website
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - README.md
+      - LICENSE
+      - docs/**
+      - results/**
+      - v2/README.md
+      - v2/docs/**
+      - v2/website/**
+      - v2/tools/verify_original.py
+      - v2/assets/icon.svg
+      - .github/workflows/pages.yml
+  pull_request:
+    paths:
+      - README.md
+      - LICENSE
+      - docs/**
+      - results/**
+      - v2/README.md
+      - v2/docs/**
+      - v2/website/**
+      - v2/tools/verify_original.py
+      - v2/assets/icon.svg
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: documentation-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build and validate MkDocs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up isolated documentation Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13.17'
+          cache: pip
+          cache-dependency-path: v2/website/requirements.txt
+
+      - name: Install pinned website dependencies
+        run: |
+          python -m pip install -r v2/website/requirements.txt
+          python -m pip check
+
+      - name: Verify original source preservation
+        run: python v2/tools/verify_original.py
+
+      - name: Build documentation in strict mode
+        run: mkdocs build --strict --config-file v2/website/mkdocs.yml
+
+      - name: Check built links, SEO, sitemap and source hashes
+        run: python v2/website/check_site.py --report .cache/website/validation.json
+
+      - name: Upload checked Pages site
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: .cache/website/site
+
+  deploy:
+    name: Publish GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Deploy checked artifact
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

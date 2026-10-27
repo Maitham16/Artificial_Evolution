@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block extrahead %}
+  {{ super() }}
+  {% set description = page.meta.description if page and page.meta.description else config.site_description %}
+  {% set title = page.meta.title if page and page.meta.title else (page.title if page else config.site_name) %}
+  {% set image = config.site_url ~ 'assets/gallery/living-world.jpg' %}
+  {% if page and page.canonical_url %}
+  <meta property="og:url" content="{{ page.canonical_url }}">
+  {% endif %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ title }} · {{ config.site_name }}">
+  <meta property="og:description" content="{{ description }}">
+  <meta property="og:image" content="{{ image }}">
+  <meta property="og:image:alt" content="Actual Artificial Evolution 2.0 application: a Python-controlled deer population in a green Godot landscape">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ title }} · {{ config.site_name }}">
+  <meta name="twitter:description" content="{{ description }}">
+  <meta name="twitter:image" content="{{ image }}">
+  <meta name="theme-color" content="#123f36">
+  {% if not page %}<meta name="robots" content="noindex, follow">{% endif %}
+  {% if page and page.is_homepage %}
+  <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "WebSite", "name": config.site_name, "url": config.site_url, "description": description, "inLanguage": "en"} | tojson }}</script>
+  {% endif %}
+{% endblock %}
+{% block content %}
+  {% if page and page.meta.home %}<div class="ae-home">{% endif %}
+  {{ super() }}
+  {% if page and page.meta.source_url %}
+  <aside class="ae-source" aria-label="Documentation source">
+    <strong>One source, two ways to read.</strong>
+    This page is published from the existing repository documentation.
+    <a href="{{ page.meta.source_url }}">Read the original Markdown on GitHub →</a>
+  </aside>
+  {% endif %}
+  {% if page and page.meta.home %}</div>{% endif %}
+{% endblock %}

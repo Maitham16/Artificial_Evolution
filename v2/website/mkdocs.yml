@@ -1,0 +1,145 @@
+site_name: Artificial Evolution
+site_description: Explore artificial life through a reproducible Python 2D simulator and a Godot 3D Living World. Installation, experiments, real galleries and developer guides.
+site_author: Maitham16
+site_url: https://maitham16.github.io/Artificial_Evolution/
+repo_url: https://github.com/Maitham16/Artificial_Evolution
+repo_name: Maitham16 / Artificial Evolution
+edit_uri: ''
+copyright: 'Artificial Evolution · MIT code · Recorded third-party art licenses'
+docs_dir: pages
+site_dir: ../../.cache/website/site
+use_directory_urls: true
+strict: true
+hooks:
+  - hooks.py
+watch:
+  - ../docs
+  - ../README.md
+  - ../../docs
+  - ../../README.md
+theme:
+  name: material
+  custom_dir: overrides
+  language: en
+  font: false
+  logo: assets/brand/icon.svg
+  favicon: assets/brand/icon.svg
+  palette:
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+plugins:
+  - search:
+      lang: en
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+extra_css:
+  - assets/stylesheets/extra.css
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Maitham16/Artificial_Evolution
+      name: Artificial Evolution on GitHub
+validation:
+  nav:
+    not_found: warn
+    omitted_files: info
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn
+nav:
+  - Home: index.md
+  - Get started:
+      - Choose and install: getting-started/index.md
+      - Your first experiment: getting-started/first-experiment.md
+      - Downloads: downloads.md
+  - Living World · V2:
+      - Overview: v2/index.md
+      - Installation: v2/installation.md
+      - Cameras and controls: v2/user-guide.md
+      - Simulation modes: v2/simulation-modes.md
+      - Animals and animation: v2/animals-and-animation.md
+      - Landscapes and weather: v2/environments.md
+      - Evolution and brains: v2/evolution-and-brains.md
+      - Physical habitat: v2/physical-habitat.md
+      - Settings reference: v2/configuration.md
+      - Export and replay: v2/exports-and-replay.md
+      - All V2 guides: v2/documentation.md
+  - 2D simulator · V1:
+      - Overview: v1/index.md
+      - User guide: v1/user-guide.md
+      - Reproducible experiments: v1/reproducibility.md
+      - Complete research record: v1/research-record.md
+      - Release notes:
+          - Version 1.0.1: v1/releases/v1.0.1.md
+          - Version 1.0.0: v1/releases/v1.0.0.md
+  - Explore:
+      - Real application gallery: gallery/index.md
+      - Architecture: architecture/index.md
+      - Research:
+          - Methods and study catalog: research/index.md
+          - Measurements and limitations: research/validation.md
+          - Engineering records: research/engineering.md
+  - Development:
+      - Application development: development/application.md
+      - This documentation website: development/website.md
+      - Implementation references:
+          - Python bridge: v2/python-bridge.md
+          - Desktop application: v2/desktop-app.md
+          - Bundled runtime: v2/bundled-runtime.md
+          - Animal models: v2/animal-models.md
+          - Skeletal animation: v2/creature-animation.md
+          - Natural world: v2/natural-world.md
+          - Interactive ecosystem: v2/interactive-ecosystem.md
+          - Repository review: v2/repository-review.md
+  - Help:
+      - Frequently asked questions: faq.md
+      - Troubleshooting: v2/troubleshooting.md
+      - License and project: about.md

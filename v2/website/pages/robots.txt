@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://maitham16.github.io/Artificial_Evolution/sitemap.xml
