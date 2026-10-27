@@ -29,7 +29,9 @@ Frames contain a stream ID, increasing sequence, server wall time, run identity,
 
 New-run configuration clears obsolete queued presentation frames. A previous run is snapshotted and exported before replacement; an archive error retains it. Export data are copied on the simulation thread and written by one worker, so exporting never reads concurrently mutating creature objects. The UI remains responsive and sends heartbeats while exports finish. A disconnect pauses Python and allows a connection to the same process to resume safely. A new process requires a new session; this bridge does not invent an arbitrary resume checkpoint from display data.
 
-Normal closure requests shutdown, pauses Python, saves the changed run, waits for its acknowledgement, and closes the connection. A save failure leaves the run paused for correction. An owner-PID check stops an orphan process after attempting to save. The automatic-save bypass exists for disposable test sessions and is not used by regular launches.
+Normal closure requests shutdown, pauses Python, saves the changed run, waits for its acknowledgement, and closes the connection. A save failure leaves the run paused for correction. An owner-PID check stops an orphan process after attempting to save. Finder launches may wait for macOS Desktop-folder approval before Python can initialize a Desktop-based virtual environment. Startup keeps polling rather than treating a delayed privacy prompt as a permanent failure. The exported app includes `NSDesktopFolderUsageDescription`, and closing an uninitialized viewer terminates its blocked child process.
+
+The automatic-save bypass exists for disposable test sessions and is not used by regular launches.
 
 ## Preservation and reproducibility
 

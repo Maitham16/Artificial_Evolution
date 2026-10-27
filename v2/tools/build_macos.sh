@@ -15,6 +15,14 @@ if [[ -z "$AE_APP" ]]; then echo "Export produced no .app"; exit 1; fi
 # These attributes belong only to this freshly generated application.
 /usr/bin/xattr -dr com.apple.FinderInfo "$AE_APP" 2>/dev/null || true
 /usr/bin/xattr -dr com.apple.ResourceFork "$AE_APP" 2>/dev/null || true
+python3 - "$AE_APP" <<'PYPLIST'
+from pathlib import Path
+import plistlib,sys
+path=Path(sys.argv[1])/'Contents/Info.plist'
+info=plistlib.loads(path.read_bytes())
+info['NSDesktopFolderUsageDescription']='Run your existing Artificial_Evolution Python project and environment stored on Desktop.'
+path.write_bytes(plistlib.dumps(info))
+PYPLIST
 /usr/bin/codesign --force --deep --sign - "$AE_APP"
 /usr/bin/codesign --verify --deep --strict "$AE_APP"
 rm "$AE_STAGE/Artificial Evolution 2.zip"

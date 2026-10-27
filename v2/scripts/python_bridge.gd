@@ -74,13 +74,18 @@ func remember() -> void:
 	if file:file.store_string(JSON.stringify({"repository":engine_root,"python":python},"\t")+"\n");file.close()
 
 func reconnect() -> void:
-	if backend_pid>0 and OS.is_process_running(backend_pid) and not endpoint.is_empty():
+	if backend_pid>0 and OS.is_process_running(backend_pid):
 		peer.disconnect_from_host();peer=StreamPeerTCP.new();incoming.clear();outgoing.clear();authenticated=false;saw_connection=false;seen_births=-1
-		started_at=_now();_connect()
+		started_at=_now()
+		if endpoint.is_empty():
+			_set_status("starting","Waiting for the existing Python process to finish starting…")
+		else:_connect()
 	else:launch(engine_root,python)
 
 func _connect() -> void:
+	peer.disconnect_from_host();peer=StreamPeerTCP.new();incoming.clear();outgoing.clear();authenticated=false;saw_connection=false;seen_births=-1
 	if int(endpoint.get("protocol",0))!=PROTOCOL:_set_status("error","Python bridge protocol differs from this renderer.");return
+	started_at=_now()
 	var error=peer.connect_to_host("127.0.0.1",int(endpoint.port))
 	if error!=OK:_set_status("error","Cannot connect to the local Python engine: "+error_string(error));return
 	_set_status("connecting","Connecting to Python on this Mac…")
@@ -116,12 +121,12 @@ func _deliver(value) -> void:
 
 func _process(_delta: float) -> void:
 	var now=_now()
-	if status=="starting":
+	if status in ["starting","waiting_for_permission"]:
 		if FileAccess.file_exists(endpoint_path):
 			var data=JSON.parse_string(FileAccess.get_file_as_string(endpoint_path))
 			if data is Dictionary and data.has("port") and data.has("token"):endpoint=data;_connect()
 		if backend_pid>0 and not OS.is_process_running(backend_pid):_set_status("error","Python exited during startup. Verify .venv dependencies with v2/tools/configure_engine.py.")
-		elif now-started_at>20:_set_status("error","Python startup timed out. Check the repository, interpreter, and terminal output.")
+		elif now-started_at>20 and status!="waiting_for_permission":_set_status("waiting_for_permission","Python is still starting. If macOS requests Desktop-folder access, click Allow. The connection will resume automatically.")
 		return
 	if status not in ["connecting","authenticating","ready"]:return
 	peer.poll()
@@ -155,3 +160,9 @@ func _process(_delta: float) -> void:
 
 func detach() -> void:
 	peer.disconnect_from_host();authenticated=false;_set_status("stopped")
+
+func cancel_uninitialized_process() -> void:
+	# A blocked interpreter has not created a ResearchSession or endpoint yet.
+	# Do not leave it orphaned when closing a startup/permission dialog.
+	if endpoint.is_empty() and backend_pid>0 and OS.is_process_running(backend_pid):
+		OS.kill(backend_pid)

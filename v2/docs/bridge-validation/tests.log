@@ -20,7 +20,7 @@ test_second_client_cannot_take_control (test_engine_bridge.TransportTests.test_s
 test_wire_supports_every_existing_mode (test_engine_bridge.TransportTests.test_wire_supports_every_existing_mode) ... ok
 
 ----------------------------------------------------------------------
-Ran 20 tests in 7.104s
+Ran 20 tests in 6.784s
 
 OK
 Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
@@ -28,4 +28,4 @@ Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 AE2_VIEW_TEST_RESULT {"checks":18,"failures":0}
 Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 
-AE2_UI_TEST_RESULT {"checks":22,"engine_ticks":0,"failures":0}
+AE2_UI_TEST_RESULT {"checks":24,"engine_ticks":0,"failures":0}

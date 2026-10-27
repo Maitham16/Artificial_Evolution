@@ -1,0 +1,14 @@
+{
+  "status": "awaiting user Desktop-folder permission for Finder launch",
+  "macos_service": "kTCCServiceSystemPolicyDesktopFolder",
+  "responsible_bundle": "org.maitham.artificialevolution2",
+  "diagnosis": "macOS tccd logged AUTHREQ_PROMPTING while the Finder-launched Python interpreter opened the Desktop-based environment. Terminal launches connect successfully.",
+  "fixes": [
+    "NSDesktopFolderUsageDescription in exported Info.plist",
+    "Continue waiting and connect after late approval",
+    "Reconnect can recover a process without a ready endpoint",
+    "Close cancels an uninitialized owned interpreter"
+  ],
+  "permission_scope": "Desktop Folder only; no Full Disk Access requested",
+  "terminal_and_packaged_binary_tests": "passed for all seven modes"
+}

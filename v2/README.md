@@ -60,6 +60,8 @@ python3 v2/tools/configure_engine.py --python /absolute/path/to/python
 
 Paths are stored in `~/Library/Application Support/ArtificialEvolution2/engine.json`. You can also edit them in the app's **Connection** tab. Source launches discover their own repository; `AE_ENGINE_ROOT` and `AE_PYTHON`, or `-- --engine-root=/path --python=/path`, provide explicit overrides. The standalone app needs access to the repository and its Python environment.
 
+**First Finder launch:** macOS requests **Desktop folder access** because this Mac's repository and `.venv` are on Desktop. Click **Allow** on that macOS prompt for **Artificial Evolution 2.0**. If access was denied, use **System Settings → Privacy & Security → Files & Folders → Artificial Evolution 2.0 → Desktop Folder**. Python cannot open the environment until macOS grants that access. The app keeps waiting and connects automatically after approval; **Reconnect** can also retry. Launching the same application through the Terminal launcher is already validated. This is a macOS privacy requirement, not a change to the Python engine.
+
 ## Controls
 
 | Action | Control |

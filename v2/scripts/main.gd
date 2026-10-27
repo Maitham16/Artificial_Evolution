@@ -334,7 +334,7 @@ func _on_catalog(_catalog: Dictionary) -> void:
 
 func _on_status(status: String,message: String) -> void:
 	connection_label.text=message;status_label.text=message
-	if status in ["disconnected","error","stopped"]:model.connected=false
+	if status in ["disconnected","error","stopped","waiting_for_permission"]:model.connected=false
 
 func _on_frame(data: Dictionary) -> void:
 	var changed=model.run_id!=str(data.run_id)
@@ -497,5 +497,6 @@ func _shutdown(code: int=0) -> void:
 			printerr("Python shutdown: ",result.get("error","Unknown failure"))
 			if not cli_done:closing=false;status_label.text=str(result.get("error","Run could not be saved; Python remains paused."));return
 			code=1
+	bridge.cancel_uninitialized_process()
 	bridge.detach()
 	get_tree().quit(code)

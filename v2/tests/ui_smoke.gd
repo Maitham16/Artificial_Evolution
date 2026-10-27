@@ -47,11 +47,18 @@ func _run():
 	var deadline=Time.get_ticks_msec()+100
 	while Time.get_ticks_msec()<deadline:await process_frame
 	check(not app.model.connected,"Disconnect freezes the display")
-	app.bridge.reconnect()
+	var endpoint_path=app.bridge.endpoint_path
+	app.bridge.endpoint={};app.bridge.endpoint_path=endpoint_path+".not-ready"
+	app.bridge.started_at=app._now()-21;app.bridge._set_status("starting","Testing a delayed interpreter startup")
+	await process_frame
+	check(app.bridge.status=="waiting_for_permission","A slow or permission-blocked interpreter stays retryable")
+	app.bridge.endpoint_path=endpoint_path
 	deadline=Time.get_ticks_msec()+5000
 	while not app.bridge.authenticated and Time.get_ticks_msec()<deadline:await process_frame
 	var reconnected=await app._call("state")
 	check(reconnected.get("ok",false) and reconnected.report.execution.ticks==snapshot,"Reconnect retains the same paused Python run")
+	check(app.bridge.authenticated,"Late endpoint availability connects automatically after the wait")
+	if not reconnected.get("ok",false):await app._shutdown(1);return
 	var validated=await app._call("validate_config",{"config_json":'{"seed":9223372036854775807}'})
 	check(validated.get("ok",false) and validated.seed_text=="9223372036854775807","Configuration import preserves 63-bit seeds")
 	app._set_draft(validated.config,validated.seed_text)
