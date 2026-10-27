@@ -57,7 +57,7 @@ def bundle(app):
     engine=resources/'engine';engine.mkdir(exist_ok=True)
     # Include every original Python source byte, including tests: exports record this full source set.
     paths=[*sorted(ROOT.glob('*.py')),ROOT/'LICENSE',ROOT/'requirements.txt',*sorted((ROOT/'configs').glob('*.json')),
-           V2/'backend/engine_bridge.py',V2/'backend/runtime_sitecustomize.py']
+           V2/'backend/engine_bridge.py',V2/'backend/runtime_sitecustomize.py',V2/'backend/habitat.py']
     files={}
     for source in paths:
         relative=source.relative_to(ROOT);target=engine/relative;target.parent.mkdir(parents=True,exist_ok=True)

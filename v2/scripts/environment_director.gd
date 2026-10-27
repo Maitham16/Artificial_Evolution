@@ -63,13 +63,16 @@ func step(delta: float,immediate: bool=false) -> void:
 	if motion_enabled:
 		visual_seconds+=delta;weather_seconds+=delta
 		if cycle_enabled:hour=fposmod(hour+delta*24/day_length,24)
+	var physical=source_context.get("physical_climate",{})
+	if not physical.is_empty() and cycle_enabled:hour=float(physical.hour)
 	var source_season=source_context.get("season")
 	season=str(source_season.season) if season_choice=="auto" and source_season is Dictionary else "summer" if season_choice=="auto" else season_choice
 	season_source="Python" if season_choice=="auto" and source_season is Dictionary else "decorative"
+	if season_choice=="auto" and not physical.is_empty():season=str(physical.season);season_source="Python habitat"
 	weather=weather_choice
 	if weather=="auto":
 		var pattern=["clear","cloudy","snow" if season=="winter" else "rain","fog","clear"]
-		weather=pattern[int(weather_seconds/55.0)%pattern.size()]
+		weather=str(physical.weather) if not physical.is_empty() else pattern[int(weather_seconds/55.0)%pattern.size()]
 	var weight=1.0 if immediate else 1-exp(-delta*.8)
 	rain=lerpf(rain,1.0 if weather=="rain" else 0.0,weight)
 	snow=lerpf(snow,1.0 if weather=="snow" else 0.0,weight)
@@ -110,4 +113,4 @@ func step(delta: float,immediate: bool=false) -> void:
 	for probe in nature.content.find_children("RiverReflection","ReflectionProbe",false,false):probe.intensity=.03+.77*daylight
 
 func summary() -> Dictionary:
-	return {"hour":hour,"weather":weather,"season":season,"season_source":season_source,"source_context":source_context,"weather_source":"decorative","daylight_source":"decorative","cycle_enabled":cycle_enabled,"motion_enabled":motion_enabled,"rain":rain,"snow":snow,"wind":wind}
+	return {"hour":hour,"weather":weather,"season":season,"season_source":season_source,"source_context":source_context,"weather_source":"Python habitat" if source_context.has("physical_climate") and weather_choice=="auto" else "decorative","daylight_source":"Python habitat" if source_context.has("physical_climate") and cycle_enabled else "decorative","cycle_enabled":cycle_enabled,"motion_enabled":motion_enabled,"rain":rain,"snow":snow,"wind":wind}

@@ -10,6 +10,10 @@ uniform float desaturation=0.0;
 uniform float surface_roughness=.86;
 uniform float opacity=1.0;
 uniform bool gpu_skeleton=true;
+uniform bool batch_mode=false;
+uniform bool batch_tint=true;
+uniform sampler2D instance_poses : filter_nearest, repeat_disable;
+varying vec3 instance_coat;
 uniform sampler2D bone_palette : filter_nearest, repeat_disable;
 uniform vec2 palette_size=vec2(128,296);
 uniform float upper_weights[64];
@@ -27,16 +31,26 @@ mat4 bone_at(uint bone,float frame){
 }
 mat4 sampled(uint bone,vec3 frames){return bone_at(bone,frames.x)*(1.0-frames.z)+bone_at(bone,frames.y)*frames.z;}
 void vertex(){
+ vec3 current=base_frames,old=previous_frames,overlay=upper_frames;
+ float blend=transition,upper_amount=upper_blend;
+ instance_coat=coat_tint.rgb;
+ if(batch_mode){
+  vec4 a=texture(instance_poses,vec2(.125,INSTANCE_CUSTOM.x));
+  vec4 b=texture(instance_poses,vec2(.375,INSTANCE_CUSTOM.x));
+  current=a.xyz;blend=a.w;old=b.xyz;upper_amount=b.w;
+  overlay=texture(instance_poses,vec2(.625,INSTANCE_CUSTOM.x)).xyz;
+  instance_coat=batch_tint?texture(instance_poses,vec2(.875,INSTANCE_CUSTOM.x)).rgb:vec3(1);
+ }
  if(gpu_skeleton){
   mat4 skin=mat4(0.0);
   for(int i=0;i<4;i++){
    float weight=BONE_WEIGHTS[i];
    if(weight>.0001){
     uint bone=BONE_INDICES[i];
-    mat4 pose=sampled(bone,base_frames);
-    if(transition<.999){pose=sampled(bone,previous_frames)*(1.0-transition)+pose*transition;}
-    float amount=upper_blend*upper_weights[int(bone)];
-    if(amount>.001){pose=pose*(1.0-amount)+sampled(bone,upper_frames)*amount;}
+    mat4 pose=sampled(bone,current);
+    if(blend<.999){pose=sampled(bone,old)*(1.0-blend)+pose*blend;}
+    float amount=upper_amount*upper_weights[int(bone)];
+    if(amount>.001){pose=pose*(1.0-amount)+sampled(bone,overlay)*amount;}
     skin+=pose*weight;
    }
   }
@@ -50,7 +64,7 @@ void fragment(){
  vec3 coat=base_color.rgb;
  if(has_texture){coat*=texture(coat_texture,UV).rgb;}
  float luminance=dot(coat,vec3(.2126,.7152,.0722));
- ALBEDO=mix(coat,vec3(luminance),desaturation)*coat_tint.rgb;
+ ALBEDO=mix(coat,vec3(luminance),desaturation)*instance_coat;
  if(has_normal){NORMAL_MAP=texture(coat_normal,UV).rgb;NORMAL_MAP_DEPTH=.45;}
  ROUGHNESS=surface_roughness;SPECULAR=.24;BACKLIGHT=ALBEDO*.07;
 }

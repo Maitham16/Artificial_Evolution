@@ -1,5 +1,7 @@
 # Living landscape
 
+The current [physical-habitat update](PHYSICAL_HABITAT.md) adds native Metal rendering, terrain foot IK and optional Python terrain/water/climate rules. The default research mode retains the original engine; this guide describes its scenery boundary.
+
 Godot displays a rolling meadow surrounded by mixed woodland, a meandering river, a small lake and layered mountains. Scanned rocks, ferns and flowers supplement photographic ground materials. Grass blades, leaves and tree crowns move in shader-driven wind. A drifting cloud sky, sunlight/moonlight, cascaded day shadows, a static reflection capture and distance haze provide outdoor lighting. The [ecosystem observatory](INTERACTIVE_ECOSYSTEM.md) adds explicitly decorative weather, a day/night cycle and seasonal colors following Python when available.
 
 ![Valley view](screenshots/valley.png)

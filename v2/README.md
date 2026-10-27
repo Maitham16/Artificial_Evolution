@@ -10,6 +10,8 @@ The [animal models](docs/ANIMAL_MODELS.md) now use detailed, textured deer for h
 
 The [interactive ecosystem observatory](docs/INTERACTIVE_ECOSYSTEM.md) adds edible ferns, source event navigation, recorded movement trails, animated plants, seasonal colors, weather and a day/night cycle. Press **N** or click **Ecosystem**. The panel separates Python events and actual seasonal food from decorative lighting and weather.
 
+The [terrain and physical-habitat update](docs/PHYSICAL_HABITAT.md) adds native Metal rendering targeting 60 FPS, nearby terrain foot IK, and optional Python terrain/wading/climate rules. Original research rules remain the default; choose **Research → Physical habitat (v2 rules) → Start new population** for the explicitly different model.
+
 All integration changes are under `v2/`. The root Python application, engine, tests, dependencies, configurations, results, and published 1.x releases are unchanged.
 
 ## Run both versions on this Mac
@@ -42,7 +44,7 @@ The current standalone build targets **Apple Silicon (arm64), macOS 13+**. It is
 
 ## Setup and dependencies
 
-The authoring toolchain is Godot 4.7.2 standard, Blender 5.2.3 LTS, and the existing Python 3.13.17 environment with unchanged root dependency pins. The desktop build uses a separate pinned, relocatable CPython 3.13.18 runtime; it never upgrades the original `.venv`. Godot uses its Compatibility renderer. Blender is needed for authoring assets, not during simulation.
+The authoring toolchain is Godot 4.7.2 standard, Blender 5.2.3 LTS, and the existing Python 3.13.17 environment with unchanged root dependency pins. The desktop build uses a separate pinned, relocatable CPython 3.13.18 runtime; it never upgrades the original `.venv`. Godot now uses its Mobile renderer with native Metal on Apple Silicon; Compatibility/OpenGL remains an explicit slower fallback. Blender is needed for authoring assets, not during simulation.
 
 If the original environment already works, keep it. To create it on another checkout:
 
@@ -166,6 +168,7 @@ python3 v2/tools/verify_original.py --all-existing
 ./.venv/bin/python v2/tools/validate_macos.py
 ./.venv/bin/python v2/tools/validate_ecosystem_macos.py
 ./.venv/bin/python v2/tools/validate_desktop_macos.py
+./.venv/bin/python v2/tools/validate_habitat_macos.py
 python3 v2/tools/install_macos.py
 python3 v2/tools/validate_installed_macos.py
 ```
@@ -176,7 +179,7 @@ The Mac builder produces `v2/build/Artificial Evolution 2.zip` and `desktop-mani
 
 For bounded native validation, the app accepts `-- --frames=180 --mode=obstacles --screenshot=/absolute/world.png --export=/absolute/new-export-root`. The exported bundle is a unique child of that export root. It pauses Python before capture, saves the authoritative Python bundle, and shuts down the owned backend. `--no-auto-save` is intended for disposable automated test sessions.
 
-See the [connection architecture](docs/PYTHON_BRIDGE.md), [current validation](docs/bridge-validation/README.md), and [original repository inspection](docs/INSPECTION.md). The original [README](../README.md) and [user guide](../docs/USER_GUIDE.md) remain the reference for the established research workflows.
+See the [current 60 FPS / habitat validation](docs/habitat-validation/README.md), [physical-habitat guide](docs/PHYSICAL_HABITAT.md), the [connection architecture](docs/PYTHON_BRIDGE.md), [current validation](docs/bridge-validation/README.md), and [original repository inspection](docs/INSPECTION.md). The original [README](../README.md) and [user guide](../docs/USER_GUIDE.md) remain the reference for the established research workflows.
 
 ## Licenses
 

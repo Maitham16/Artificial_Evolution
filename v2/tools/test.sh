@@ -10,3 +10,5 @@ AE_TEST_PYTHON="${AE_PYTHON:-$AE_ROOT/.venv/bin/python}"
 "$AE_V2_ROOT/Run Artificial Evolution 2.command" --headless --script tests/lifecycle_smoke.gd -- --no-auto-save
 "$AE_V2_ROOT/Run Artificial Evolution 2.command" --headless --script tests/ecosystem_smoke.gd -- --no-auto-save
 "$AE_V2_ROOT/Run Artificial Evolution 2.command" --headless --script tests/desktop_smoke.gd -- --no-auto-save
+"$AE_V2_ROOT/Run Artificial Evolution 2.command" --headless --script tests/terrain_animation.gd
+"$AE_V2_ROOT/Run Artificial Evolution 2.command" --headless --script tests/habitat_smoke.gd -- --no-auto-save

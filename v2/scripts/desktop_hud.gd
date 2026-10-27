@@ -83,6 +83,7 @@ func refresh() -> void:
 	var state="Disconnected" if not connected else "Extinct" if model.extinct else "Complete" if model.finished else "Paused" if model.paused else "Live"
 	metrics.text="%s   ·   G%02d   ·   %d LIVING" % [state,model.generation,int(model.metrics.get("population",0))]
 	status.text="%s   ·   %d edible plants   ·   Python %.1f×" % [str(app.ENV_LABELS.get(model.config.get("environment",""),"Living ecosystem")),model.food_objects.size(),app.measured]
+	if model.habitat.get("enabled",false):status.text+="  ·  PHYSICAL HABITAT / "+str(model.habitat.climate.weather)
 	if not connected:status.text=app.bridge.detail
 	var actor=model.actor(app.selected_id)
 	follow_button.disabled=actor==null or not actor.active

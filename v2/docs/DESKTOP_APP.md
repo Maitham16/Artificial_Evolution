@@ -48,7 +48,7 @@ The HUD's simulation controls wait for Python acknowledgements. Speed affects or
 
 The three quality profiles affect the view only. **Performance** uses fewer plants, shorter shadow range, and half-resolution 3D with full-resolution interface text. Picking scales into the actual render viewport. **Balanced** and **Lush** retain full-resolution 3D with their existing vegetation budgets.
 
-Selected and nearby animals use actual `Skeleton3D` poses; distant animals retain shared GPU bone animation and existing blend/stride rules. Individual animal shadows stop beyond 34 m and resume inside 30 m to avoid threshold flicker. Repeated stationary poses reuse terrain alignment. Static food transforms are uploaded only when source food changes or appearance easing is active, while shader wind remains animated. Hidden research charts and landscape trails do not redraw in landscape mode. These budgets affect presentation, not simulation, sensors or numerical fidelity.
+Selected and nearby animals use actual `Skeleton3D` poses with [terrain foot IK](PHYSICAL_HABITAT.md). Distant animals share GPU skeletal draw batches with existing blend/stride rules. Native Metal Mobile rendering now targets 60 FPS on this Mac. Individual animal shadows stop beyond 34 m and resume inside 30 m to avoid threshold flicker. Repeated stationary poses reuse terrain alignment. Static food transforms are uploaded only when source food changes or appearance easing is active, while shader wind remains animated. Hidden research charts and landscape trails do not redraw in landscape mode. These budgets affect presentation, not simulation, sensors or numerical fidelity.
 
 [Measured native profiles](desktop-validation/README.md) include all seven modes, the performance profile and a small window. They are local timings, not guarantees for every Mac.
 
@@ -69,3 +69,7 @@ The standalone package can also start the original interface through **Research 
 The 3D app writes exports to `~/Library/Application Support/ArtificialEvolution2/python-runs/`. **Research → Open export folder** opens them. Exports use the original engine's config, run report, genomes, plots, CSVs, HTML and manifests. Existing `simulator.py --verify-bundle` and `--replay … --headless` work on these exports. The bundled original Python CLI can perform those checks too.
 
 `Contents/Resources/engine-manifest.json` identifies every copied source/preset with SHA-256. The bundled runtime is separately locked, licensed and isolated from user `PYTHONHOME`, `PYTHONPATH` and site packages. Caches and endpoints live in user data, not in the signed bundle. The original 431 tests were run with both the original `.venv` and the separate bundled-runtime interpreter. See [runtime provenance](BUNDLED_RUNTIME.md) and [validation](desktop-validation/README.md).
+
+## Physical terrain and climate
+
+[Physical habitat](PHYSICAL_HABITAT.md) is an opt-in v2 rule extension. Choose **Research → Physical habitat (v2 rules) → Start new population**, or launch with `--habitat`. Python applies uphill, wading, bank and weather effects; manual scenery overrides remain cosmetic. These exports declare the changed rules and use the separate bundled v2 habitat replay. Original research mode and the original 2D application remain unchanged. See [current validation](habitat-validation/README.md).

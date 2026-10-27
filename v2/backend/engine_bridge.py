@@ -33,6 +33,7 @@ os.environ.setdefault('MPLCONFIGDIR', str(ROOT / 'v2/.cache/matplotlib'))
 import numpy as np
 from research_session import (ALGORITHMS, ENVIRONMENTS, MODES, MODE_NAMES, VERSION,
                               ResearchSession, RunConfig, export_bundle)
+from habitat import HabitatConfig, HabitatSession, export_habitat
 from world import SIMULATION_STEP
 from obstacles import HAZARD_ENERGY_PER_SECOND
 
@@ -81,8 +82,9 @@ def catalog():
 
 class EngineAdapter:
     """Passive view of real engine objects, plus calls to the public session API."""
-    def __init__(self, config=None):
-        self.session = ResearchSession(config or RunConfig())
+    def __init__(self, config=None, habitat=None):
+        options=HabitatConfig.from_dict(habitat)
+        self.session = HabitatSession(config or RunConfig(), habitat) if options.enabled else ResearchSession(config or RunConfig())
         self.selected = self.session.key(self.session.world.creatures[0])
         self.sequence = 0
         self.chart_stamp = None
@@ -154,8 +156,11 @@ class EngineAdapter:
             row = history[-1]
             season = {key: row[key] for key in ('generation', 'season', 'season_index', 'cycle', 'food_count')}
             season['cluster_centers'] = [list(p) for p in w.food_cluster_centers]
-        return dict(season=season, food_target=w.food_count, actual_food=len(w.food),
-                    source='Python simulation', weather_simulated=False, daylight_simulated=False)
+        physical=isinstance(self.session,HabitatSession)
+        context=dict(season=season, food_target=w.food_count, actual_food=len(w.food),
+                     source='Python physical habitat' if physical else 'Python simulation', weather_simulated=physical, daylight_simulated=physical)
+        if physical:context['physical_climate']=self.session.habitat_owner.climate.copy()
+        return context
 
     def observe_food(self):
         current = {}
@@ -241,8 +246,15 @@ class EngineAdapter:
                  for b in births[max(0, seen_births):]]
         by_id = {c.creature_id: s.key(c) for c in w.creatures}
         self.sequence += 1
+        habitat_enabled=isinstance(s,HabitatSession)
+        habitat_state=dict(enabled=habitat_enabled)
+        if habitat_enabled:
+            habitat_state.update(config=asdict(s.habitat_config),climate=s.habitat_owner.climate.copy(),surface_sha256=s.surface.digest)
+            for row in agents:
+                creature=s.actors[row['id']]
+                row['habitat']=dict(**creature.habitat_ledger,water_depth=s.surface.depth(creature.x,creature.y))
         frame = dict(type='frame', protocol=PROTOCOL, seq=self.sequence, run_id=s.run_id,
-                     ticks=s.ticks, time=s.elapsed, generation=w.generation,
+                     ticks=s.ticks, time=s.elapsed, generation=w.generation, habitat=habitat_state,
                      animation_events=[e for e in self.view_events if e["seq"] > seen_animation], animation_sequence=self.view_sequence,
                      animation_floor=self.view_events[0]['seq'] if self.view_events else self.view_sequence+1,
                      config=s.config.to_dict(), seed_text=str(s.config.seed),
@@ -261,6 +273,7 @@ class EngineAdapter:
                               for edge in getattr(w, 'transfer_edges', {}).values()
                               if w.elapsed_time-edge['last_time'] <= .5
                               and edge['donor_id'] in by_id and edge['recipient_id'] in by_id])
+        if full and habitat_enabled:frame['habitat_surface']=s.surface.describe()
         stamp = (s.ticks // 60, w.generation, len(s.samples))
         if full or stamp != self.chart_stamp:
             frame['charts'] = dict(samples=s.samples[-720:],
@@ -292,6 +305,7 @@ class Peer:
         # ticks. Preserve a chart update if its frame has not yet been sent.
         if self.latest and 'charts' in self.latest and 'charts' not in value:
             value['charts'] = self.latest['charts']
+        if self.latest and self.latest.get('run_id')==value.get('run_id') and 'habitat_surface' in self.latest and 'habitat_surface' not in value:value['habitat_surface']=self.latest['habitat_surface']
         self.latest = value
 
     def flush(self):
@@ -381,7 +395,8 @@ class BridgeServer:
             raise ValueError('An export is already running; wait for completion.')
         report, genomes = self.adapter.session.snapshot()
         root = self.export_root if root is None else Path(root).expanduser().resolve()
-        future = self.executor.submit(export_bundle, report, genomes, root, screenshot)
+        writer = export_habitat if 'habitat' in report else export_bundle
+        future = self.executor.submit(writer, report, genomes, root, screenshot)
         self.pending = (future, peer, request_id, report['run_id'], report['execution']['ticks'])
 
     def command(self, peer, request):
@@ -418,7 +433,7 @@ class BridgeServer:
             config = configuration(request)
             if self.pending:
                 raise ValueError('Wait for the current export before starting a new run.')
-            candidate = EngineAdapter(config)  # Validate and construct before replacing a live run.
+            candidate = EngineAdapter(config, request.get("habitat"))  # Validate and construct before replacing a live run.
             if 'paused' in request and type(request['paused']) is not bool:
                 raise ValueError('Paused must be boolean.')
             if request.get('paused', False):

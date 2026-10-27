@@ -2,6 +2,10 @@ extends Node3D
 const State = preload("res://scripts/python_state.gd")
 const Nature = preload("res://scripts/nature_scene.gd")
 var nature
+var animal_batches
+var last_update_ms=0.0
+var batch_ms=0.0
+var animal_ms=0.0
 var atmosphere
 var recent_events: Array=[]
 var food_ages={}
@@ -62,6 +66,7 @@ func _ready() -> void:
 	effects=Node3D.new();effects.name="ConfirmedEventEffects";add_child(effects)
 	observation_lines=MeshInstance3D.new();observation_lines.mesh=ImmediateMesh.new();add_child(observation_lines)
 	var trail_material=StandardMaterial3D.new();trail_material.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED;trail_material.albedo_color=Color("d7cda4");trail_material.vertex_color_use_as_albedo=true;observation_lines.material_override=trail_material
+	animal_batches=preload("res://scripts/animal_batches.gd").new();add_child(animal_batches)
 	_update_camera(true)
 
 func _ring(inner: float, outer: float, color: Color) -> MeshInstance3D:
@@ -73,11 +78,12 @@ func _ring(inner: float, outer: float, color: Color) -> MeshInstance3D:
 func set_model(value) -> void:
 	model=value;geometry_signature="";selected_id="";target=Vector3.ZERO
 
-func surface_height(point: Vector2) -> float:return nature.height_at(point) if nature!=null else 0.0
+func surface_height(point: Vector2) -> float:return nature.contact_height_at(point) if nature!=null else 0.0
 
 func _rebuild_arena() -> void:
 	for child in decor.get_children():child.queue_free()
 	var width=float(model.width)/State.UNITS;var height=float(model.height)/State.UNITS
+	nature.set_physical_surface(model.habitat_surface if model.habitat.get("enabled",false) else {})
 	nature.configure(width,height)
 	if not model.groups.is_empty():
 		var lines=ImmediateMesh.new();lines.surface_begin(Mesh.PRIMITIVE_LINES)
@@ -147,9 +153,10 @@ func _find_mesh(node: Node) -> Mesh:
 
 func update_view(delta: float) -> void:
 	if model==null or model.run_id.is_empty() or camera==null:return
+	var update_started=Time.get_ticks_usec()
 	visual_time+=delta
 	atmosphere.set_source(model.environment_context)
-	var signature=model.run_id+str(model.generation)+str(model.width)+str(model.height)+str(model.barriers)+str(model.hazards)+str(model.groups)
+	var signature=model.run_id+str(model.generation)+str(model.width)+str(model.height)+str(model.barriers)+str(model.hazards)+str(model.groups)+str(model.habitat.get("surface_sha256",""))
 	if signature!=geometry_signature:
 		_rebuild_arena();geometry_signature=signature
 	if source_run!=model.run_id:
@@ -159,6 +166,7 @@ func update_view(delta: float) -> void:
 		remnants.clear();missing_since.clear();activity_counts.clear();event_counts.clear();recent_events.clear();food_ages.clear();body_poses.clear();food_render_revision=-1;trails.clear();selected_food=""
 		for effect in effects.get_children():effect.queue_free()
 		reset_camera();source_run=model.run_id
+	var animals_started=Time.get_ticks_usec()
 	var poses=model.sample_display()
 	var living={};var selected=null
 	for actor in model.agents:
@@ -178,6 +186,7 @@ func update_view(delta: float) -> void:
 			body.basis=Basis(forward,side.cross(forward).normalized(),side).scaled(Vector3.ONE*float(actor.radius)/.45)
 		body.set_detailed(id==selected_id or id in detailed_ids)
 		body.present(actor,pose,model.display_sim_time,delta,camera.global_position.distance_to(body.global_position))
+		body.feet.apply(nature,delta)
 		activity_counts[body.animation_state]=int(activity_counts.get(body.animation_state,0))+1
 		if id==selected_id:selected=actor
 	detail_clock+=delta
@@ -214,6 +223,10 @@ func update_view(delta: float) -> void:
 		remnants[id]._present_death(delta)
 		activity_counts[remnants[id].animation_state]=int(activity_counts.get(remnants[id].animation_state,0))+1
 		if remnants[id].expired:remnants[id].queue_free();remnants.erase(id)
+	animal_ms=(Time.get_ticks_usec()-animals_started)/1000.0
+	var batch_started=Time.get_ticks_usec()
+	animal_batches.update(bodies)
+	batch_ms=(Time.get_ticks_usec()-batch_started)/1000.0
 	var food_changed=food_render_revision!=model.food_revision
 	if food_changed:
 		food_growth_until=visual_time+.35;food_render_revision=model.food_revision
@@ -248,6 +261,8 @@ func update_view(delta: float) -> void:
 		var position: Vector2=poses.get(str(selected.id),{"position":selected.position}).position
 		selection.position=Vector3(position.x,surface_height(position)+.1,position.y);selection.scale=Vector3.ONE*maxf(.5,float(selected.radius)/.35)
 		sensing.position=Vector3(position.x,surface_height(position)+.10,position.y);sensing.scale=Vector3.ONE*float(selected.vision)/8
+
+	last_update_ms=(Time.get_ticks_usec()-update_started)/1000.0
 
 func _update_camera(immediate: bool=false) -> void:
 	if camera==null:return
@@ -319,10 +334,11 @@ func pick(point: Vector2) -> String:
 	selected_id=result;return result
 
 func animation_summary() -> Dictionary:
-	var detailed=0
+	var detailed=0;var contacts=0;var foot_error=0.0;var solves=0
 	for body in bodies.values():
-		if body.detailed:detailed+=1
-	return {"terrain_pose_updates":terrain_pose_updates,"food_uploads":food_uploads,"active_models":bodies.size(),"detailed_skeletons":detailed,"gpu_bone_models":bodies.size()-detailed,"death_remnants":remnants.size(),"events":event_counts.duplicate(),"observed_visual_states":activity_counts.keys(),"event_gaps":model.animation_gaps if model else 0}
+		if body.detailed:
+			detailed+=1;contacts+=int(body.feet.statistics.contacts);foot_error=maxf(foot_error,float(body.feet.statistics.max_error_m));solves+=int(body.feet.statistics.solves)
+	return {"foot_ik":{"contacts":contacts,"max_error_m":foot_error,"solves":solves},"batching":animal_batches.statistics,"terrain_pose_updates":terrain_pose_updates,"food_uploads":food_uploads,"active_models":bodies.size(),"detailed_skeletons":detailed,"gpu_bone_models":bodies.size()-detailed,"death_remnants":remnants.size(),"events":event_counts.duplicate(),"observed_visual_states":activity_counts.keys(),"event_gaps":model.animation_gaps if model else 0}
 
 func _record_event(event: Dictionary) -> void:
 	# Only confirmed journal receipts create effects. No inferred plant contact or kills.
@@ -391,4 +407,4 @@ func focus_event(event: Dictionary) -> String:
 	return ""
 
 func ecosystem_summary() -> Dictionary:
-	return {"scenery":atmosphere.summary(),"python_food_plants":model.food_objects.size(),"recent_confirmed_events":recent_events.size(),"bounded_event_effects":effects.get_child_count(),"selected_food":selected_food,"source":"Python journal and snapshots; weather/daylight are decorative"}
+	return {"scenery":atmosphere.summary(),"python_food_plants":model.food_objects.size(),"recent_confirmed_events":recent_events.size(),"bounded_event_effects":effects.get_child_count(),"selected_food":selected_food,"source":"Python habitat climate" if model.habitat.get("enabled",false) else "Python journal and snapshots; weather/daylight are decorative"}

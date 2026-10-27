@@ -48,3 +48,7 @@ The [ecosystem observatory](INTERACTIVE_ECOSYSTEM.md) adds current food records 
 ## Standalone desktop payload
 
 The current [desktop application](DESKTOP_APP.md) bundles a relocatable interpreter, pinned dependencies and byte-for-byte original source/preset copies. Exported launches prefer that payload; source launches keep the original `.venv`. Remembered development settings are saved atomically and are never truncated or replaced by bundled launches. See [runtime provenance](BUNDLED_RUNTIME.md) and [current standalone validation](desktop-validation/README.md).
+
+## Optional physical habitat
+
+`habitat.py` subclasses the original session and wraps its existing creature survival/move methods only when the explicit v2 option is enabled. It records a deterministic heightfield, climate and physical-cost/contact ledger, with its own declared export/replay. The original session is used unchanged when disabled. [Rules and replay](PHYSICAL_HABITAT.md), [current validation](habitat-validation/README.md).

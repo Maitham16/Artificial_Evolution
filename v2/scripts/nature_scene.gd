@@ -9,6 +9,8 @@ const SKY=preload("res://assets/materials/daylight.gdshader")
 const PROFILES=[{"name":"Performance","trees":200,"broadleaf":22,"grass":14000,"flowers":160,"ferns":45,"rocks":60,"shadow":75.0},
 	{"name":"Balanced","trees":360,"broadleaf":38,"grass":30000,"flowers":500,"ferns":100,"rocks":100,"shadow":105.0},
 	{"name":"Lush","trees":560,"broadleaf":55,"grass":52000,"flowers":800,"ferns":170,"rocks":150,"shadow":130.0}]
+var physical_surface={}
+var contact_vertices={}
 var quality=1
 var half=Vector2(25,15)
 var terrain_noise=FastNoiseLite.new()
@@ -47,6 +49,13 @@ func _ready() -> void:
 func river_x(z: float) -> float:return -half.x-15+sin(z*.035)*5+sin(z*.013+1)*3
 
 func height_at(point: Vector2) -> float:
+	if not physical_surface.is_empty():
+		var edge=maxf(absf(point.x)-float(physical_surface.width)/2,absf(point.y)-float(physical_surface.height)/2)
+		if edge<=0:return _physical_height(point)
+		if edge<3:return lerpf(_physical_height(point),_scenery_height(point),smoothstep(0,3,edge))
+	return _scenery_height(point)
+
+func _scenery_height(point: Vector2) -> float:
 	var edge=maxf(absf(point.x)-half.x,absf(point.y)-half.y)
 	var meadow=.65+terrain_noise.get_noise_2d(point.x*.064,point.y*.064)*1.35+sin(point.x*.11)*cos(point.y*.13)*.36
 	var outside=smoothstep(0.0,34.0,edge)
@@ -68,13 +77,17 @@ func configure(width: float,height: float,force: bool=false) -> void:
 	if dimensions==Vector2(width,height) and not force:return
 	dimensions=Vector2(width,height);half=dimensions/2
 	for child in content.get_children():child.free()
+	contact_vertices.clear()
 	scatter.clear();statistics={"trees":0,"grass_clumps":0,"flowers":0,"ferns":0,"rocks":0,"draw_batches":0}
 	generation_count+=1
 	var started=Time.get_ticks_usec()
-	_terrain_patch(-48,48,1.0,0)
+	_terrain_patch(-48,48,.5 if not physical_surface.is_empty() else 1.0,0)
 	_terrain_patch(-160,160,2.0,48)
 	_terrain_patch(-640,640,4.0,160)
 	_water()
+	if not physical_surface.is_empty():
+		var water=MeshInstance3D.new();var plane=PlaneMesh.new();plane.size=Vector2(physical_surface.width,physical_surface.height);water.mesh=plane;water.position.y=float(physical_surface.water_level);water.layers=4
+		var material=ShaderMaterial.new();material.shader=WATER;water.material_override=material;water.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF;water.name="PythonHabitatWater";content.add_child(water)
 	var rng=RandomNumberGenerator.new();rng.seed=93281+quality
 	var profile=PROFILES[quality]
 	sun.directional_shadow_max_distance=profile.shadow
@@ -115,7 +128,9 @@ func configure(width: float,height: float,force: bool=false) -> void:
 		flowers.append(_plant_transform(p,rng.randf_range(.65,1.6),rng))
 	_batch_asset("flower_empodium",flowers,false,100);statistics.flowers=flowers.size()
 	_grass(rng,int(profile.grass))
-	var probe=ReflectionProbe.new();probe.name="RiverReflection";probe.position=Vector3(-half.x-22,4,-24);probe.size=Vector3(160,72,210);probe.cull_mask=2;probe.reflection_mask=4;probe.ambient_mode=ReflectionProbe.AMBIENT_DISABLED;probe.update_mode=ReflectionProbe.UPDATE_ONCE;probe.intensity=.8;probe.blend_distance=22;probe.enable_shadows=false;content.add_child(probe)
+	var probe=ReflectionProbe.new();probe.name="RiverReflection";probe.position=Vector3(-half.x-22,4,-24);probe.size=Vector3(160,72,210);probe.cull_mask=2;probe.reflection_mask=4;probe.ambient_mode=ReflectionProbe.AMBIENT_DISABLED;probe.update_mode=ReflectionProbe.UPDATE_ONCE;probe.intensity=.8;probe.blend_distance=22;probe.enable_shadows=false
+	if RenderingServer.get_current_rendering_method()=="gl_compatibility":content.add_child(probe)
+	else:probe.free()
 	statistics.build_ms=(Time.get_ticks_usec()-started)/1000.0
 
 func _terrain_patch(start: float,end: float,step: float,hole: float) -> void:
@@ -124,7 +139,9 @@ func _terrain_patch(start: float,end: float,step: float,hole: float) -> void:
 	for z in range(count+1):
 		for x in range(count+1):
 			var p=Vector2(start+x*step,start+z*step);var n=normal_at(p)
-			vertices.append(Vector3(p.x,height_at(p),p.y));normals.append(n);uvs.append(p)
+			var altitude=height_at(p)
+			if maxf(absf(p.x),absf(p.y))<=48:contact_vertices[p]=altitude
+			vertices.append(Vector3(p.x,altitude,p.y));normals.append(n);uvs.append(p)
 			var tangent=Vector3.RIGHT.slide(n).normalized();tangents.append_array(PackedFloat32Array([tangent.x,tangent.y,tangent.z,-1]))
 	for z in range(count):
 		for x in range(count):
@@ -249,3 +266,26 @@ func _grass(rng: RandomNumberGenerator,count: int) -> void:
 func set_quality(index: int) -> void:
 	quality=clampi(index,0,2)
 	if dimensions!=Vector2.ZERO:configure(dimensions.x,dimensions.y,true)
+
+func set_physical_surface(value: Dictionary) -> void:
+	if str(physical_surface.get("sha256",""))==str(value.get("sha256","")):return
+	physical_surface=value;dimensions=Vector2.ZERO
+
+func _physical_height(point: Vector2) -> float:
+	var nx=int(physical_surface.nx);var nz=int(physical_surface.nz)
+	var fx=clampf((point.x/float(physical_surface.width)+.5)*(nx-1),0,nx-1)
+	var fz=clampf((point.y/float(physical_surface.height)+.5)*(nz-1),0,nz-1)
+	var ix=mini(nx-2,int(fx));var iz=mini(nz-2,int(fz));var tx=fx-ix;var tz=fz-iz
+	var heights=physical_surface.heights;var offset=iz*nx+ix
+	var a=float(heights[offset]);var b=float(heights[offset+1]);var c=float(heights[offset+nx]);var d=float(heights[offset+nx+1])
+	return a+(b-a)*tx+(c-a)*tz if tx+tz<=1 else d+(c-d)*(1-tx)+(b-d)*(1-tz)
+
+func contact_height_at(point: Vector2) -> float:
+	var extent=maxf(absf(point.x),absf(point.y))
+	var spacing=(.5 if not physical_surface.is_empty() else 1.0) if extent<48 else 2.0 if extent<160 else 4.0
+	var corner=(point/spacing).floor()*spacing;var f=(point-corner)/spacing
+	var samples=[]
+	for p in [corner,corner+Vector2(spacing,0),corner+Vector2(0,spacing),corner+Vector2(spacing,spacing)]:
+		if not contact_vertices.has(p):contact_vertices[p]=height_at(p)
+		samples.append(float(contact_vertices[p]))
+	return samples[0]+(samples[1]-samples[0])*f.x+(samples[2]-samples[0])*f.y if f.x+f.y<=1 else samples[3]+(samples[2]-samples[3])*(1-f.x)+(samples[1]-samples[3])*(1-f.y)

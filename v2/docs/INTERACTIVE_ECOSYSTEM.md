@@ -1,5 +1,7 @@
 # Interactive ecosystem observatory
 
+The later [physical-habitat update](PHYSICAL_HABITAT.md) adds optional actual terrain/wading/climate effects and nearby foot IK. The decorative/source boundary described here remains the default original research mode.
+
 The 3D view now combines the existing event-driven animal animation with edible plants, a clickable Python event journal, recorded movement trails, and a separate decorative environment director. Every change is under `v2/`; the original Python application and numerical engine remain unchanged.
 
 ![Autumn rain and observatory](screenshots/ecosystem-autumn-rain.png)

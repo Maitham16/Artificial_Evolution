@@ -12,6 +12,8 @@ var food: Array=[]
 var food_objects: Dictionary={}
 var food_revision=0
 var environment_context: Dictionary={}
+var habitat={}
+var habitat_surface={}
 var barriers: Array=[]
 var hazards: Array=[]
 var births={}
@@ -81,6 +83,10 @@ func accept(data: Dictionary,received_at: float=-1.0) -> bool:
 			poses[str(actor.id)]={"position":actor.position,"heading":float(actor.heading),"age":float(actor.age)}
 			for field in ["toward_seconds","away_seconds","opponent_visible_seconds"]:poses[str(actor.id)][field]=float(actor.get(field,0))
 	environment_context=data.get("environment_context",{})
+	habitat=data.get("habitat",{"enabled":false})
+	if changed:habitat_surface={}
+	if data.has("habitat_surface"):habitat_surface=data.habitat_surface
+	if habitat.get("enabled",false):environment_context["physical_climate"]=habitat.climate
 	var next_food={}
 	for plant in data.get("food_objects",[]):
 		var record=plant.duplicate();record.position=point(plant.x,plant.y);record.radius=float(plant.radius)/UNITS;next_food[str(plant.id)]=record

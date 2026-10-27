@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "version": "physical_habitat_v1",
+  "grid_spacing": 1.0,
+  "water_level": -0.2,
+  "max_water_depth": 0.75,
+  "max_slope": 0.9,
+  "uphill_cost": 2.0,
+  "wading_cost": 2.5,
+  "weather_period": 40.0,
+  "day_seconds": 240.0
+}

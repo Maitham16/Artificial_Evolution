@@ -1,9 +1,13 @@
 extends Node3D
 ## Actual Skeleton3D bone poses, driven only by received movement and events.
 const COAT=preload("res://assets/materials/animal_skin.gdshader")
-const MODELS={"doe":preload("res://assets/animals/skeletal/doe/doe.gltf"),"stag":preload("res://assets/animals/skeletal/stag/stag.gltf"),"wolf":preload("res://assets/animals/skeletal/wolf/wolf.gltf")}
+const MODELS={"doe":"res://assets/animals/skeletal/doe/doe.gltf","stag":"res://assets/animals/skeletal/stag/stag.gltf","wolf":"res://assets/animals/skeletal/wolf/wolf.gltf"}
 const HERBIVORE_COATS=[Color(.90,.83,.73),Color(1.04,.97,.87),Color(.78,.72,.66),Color(.98,.89,.76),Color(1.02,1.0,.95)]
 const PREDATOR_COATS=[Color(.84,.88,.92),Color(.87,.81,.71),Color(.66,.67,.65),Color(1.0,.98,.92)]
+var feet
+var pose_revision=0
+var batched=false
+var gpu_parameters={"base":Vector3.ZERO,"previous":Vector3.ZERO,"upper":Vector3.ZERO,"blend":1.0,"amount":0.0}
 var shadows_enabled=true
 var detailed=false
 var detail_initialized=false
@@ -60,7 +64,7 @@ func configure(actor: Dictionary) -> void:
 	python_id=str(actor.id);lineage_id=str(actor.root)
 	var style=appearance(actor);model_key=style.model;coat_color=style.coat;appearance_size=style.size;gait_phase=style.phase;idle_phase=style.phase
 	name="Animal_"+python_id.replace(":","_");set_meta("python_id",python_id);set_meta("python_lineage",lineage_id);set_meta("python_species",actor.get("species"))
-	skin=MODELS[model_key].instantiate();add_child(skin)
+	skin=load(MODELS[model_key]).instantiate();add_child(skin)
 	for player in skin.find_children("*","AnimationPlayer",true,false):player.free()
 	skeleton=skin.find_children("*","Skeleton3D",true,false)[0]
 	library=load("res://assets/animals/skeletal/"+model_key+"/poses.res");clips=library.clips
@@ -88,6 +92,7 @@ func configure(actor: Dictionary) -> void:
 			material.set_shader_parameter("palette_size",Vector2(library.gpu_dimensions))
 	set_detailed(false)
 	_pose("Rest",idle_phase)
+	feet=preload("res://scripts/terrain_feet.gd").new();feet.setup(self)
 
 func _update_growth(actor: Dictionary,immediate: bool=false) -> void:
 	var maturity=float(actor.get("maturity_age",0.0) if actor.get("maturity_age")!=null else 0.0)
@@ -105,7 +110,9 @@ func _sample(clip: String,phase: float,bone: int) -> Transform3D:
 
 func set_detailed(value: bool) -> void:
 	if detail_initialized and detailed==value:return
+	if feet:feet.reset()
 	detail_initialized=true;detailed=value;phase_elapsed=1.0
+	skeleton.process_mode=Node.PROCESS_MODE_INHERIT if value else Node.PROCESS_MODE_DISABLED
 	for mesh in meshes:
 		mesh.skin=mesh.get_meta("source_skin") if value else null
 		mesh.skeleton=mesh.get_meta("source_skeleton") if value else NodePath("")
@@ -137,6 +144,8 @@ func _gpu_frames(clip: String,phase: float) -> Vector3:
 
 func _gpu_pose(clip: String,phase: float,blend: float=1.0,upper: String="Rest",upper_phase: float=0.0,amount: float=0.0) -> void:
 	var frames=_gpu_frames(clip,phase);var previous=_gpu_frames(previous_clip,previous_phase);var overlay=_gpu_frames(upper,upper_phase)
+	gpu_parameters={"base":frames,"previous":previous,"upper":overlay,"blend":blend,"amount":amount}
+	if batched:return
 	for material in materials:
 		material.set_shader_parameter("base_frames",frames);material.set_shader_parameter("previous_frames",previous)
 		material.set_shader_parameter("upper_frames",overlay);material.set_shader_parameter("transition",blend);material.set_shader_parameter("upper_blend",amount)
@@ -199,7 +208,7 @@ func present(actor: Dictionary,pose: Dictionary,sim_time: float,delta: float,cam
 	animation_state=display_state
 	crossfade_elapsed+=delta;phase_elapsed+=delta
 	# Shared skeletal poses avoid per-animal AnimationPlayer track evaluation.
-	if phase_elapsed<(1.0/30 if camera_distance<30 else 1.0/20):return
+	if phase_elapsed<(1.0/60 if detailed and camera_distance<12 else 1.0/30 if camera_distance<30 else 1.0/20):return
 	phase_elapsed=0;current_clip=base_clip
 	var blend=smoothstep(0.0,.22,crossfade_elapsed);var phase=idle_phase if base_clip=="Rest" else gait_phase
 	if not detailed:
@@ -208,6 +217,7 @@ func present(actor: Dictionary,pose: Dictionary,sim_time: float,delta: float,cam
 		if grow_target<.999:upper="Grow";upper_phase=idle_phase;amount=.12
 		if not event_kind.is_empty():upper=event_kind;upper_phase=event_time/maxf(.1,event_duration);amount=smoothstep(0.0,.18,event_time)*(1-smoothstep(event_duration-.2,event_duration,event_time))
 		_gpu_pose(base_clip,phase,blend,upper,upper_phase,amount);return
+	pose_revision+=1
 	for bone in skeleton.get_bone_count():
 		var target=_sample(base_clip,phase,bone)
 		if bone in library.upper_bones:
@@ -231,3 +241,12 @@ func _present_death(delta: float) -> void:
 	var opacity=1-smoothstep(2.3,3.0,death_time)
 	for material in materials:material.set_shader_parameter("opacity",opacity)
 	expired=death_time>=3.0
+
+func set_batched(value: bool) -> void:
+	if batched==value:return
+	batched=value
+	for mesh in meshes:mesh.visible=not value
+	if not value:
+		for material in materials:
+			material.set_shader_parameter("base_frames",gpu_parameters.base);material.set_shader_parameter("previous_frames",gpu_parameters.previous)
+			material.set_shader_parameter("upper_frames",gpu_parameters.upper);material.set_shader_parameter("transition",gpu_parameters.blend);material.set_shader_parameter("upper_blend",gpu_parameters.amount)

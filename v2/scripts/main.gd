@@ -14,7 +14,11 @@ const MODE_LABELS=["Food seeking","Changing seasons","Obstacles & hazards","Brai
 const ENV_LABELS={"uniform":"Meadow","clustered":"Food clusters","sparse":"Scarcity","wide_clustered":"Wide clusters","barren":"Barren","seasonal":"Seasonal food"}
 const POLICY_LABELS={"selection":"Selected neural","neutral":"Neutral neural","random":"Random movement","greedy":"Greedy forager","founder":"Frozen founders","coevolution":"Co-evolution","group":"Group survival","individual":"Individual survival","funded":"Funded reproduction","clonal":"Clonal reproduction"}
 var desktop_hud
+var habitat_config_path=""
+var habitat_check: CheckBox
 var ecosystem_panel: PanelContainer
+var scenery_heading: Label
+var scenery_explanation: Label
 var scenery_status: Label
 var food_status: Label
 var event_list: ItemList
@@ -36,6 +40,8 @@ var immersive_start=false
 var quality_index=1
 var profile_path=""
 var frame_samples: Array=[]
+var render_samples: Array=[]
+var last_frame_us=0
 var landscape_label: Label
 var model=State.new()
 var bridge
@@ -110,6 +116,8 @@ func _ready() -> void:
 		elif arg.begins_with("--mode="):cli_mode=arg.trim_prefix("--mode=")
 		elif arg.begins_with("--config="):cli_config=arg.trim_prefix("--config=")
 		elif arg=="--immersive":immersive_start=true
+		elif arg.begins_with("--habitat-config="):habitat_config_path=arg.trim_prefix("--habitat-config=");habitat_check.button_pressed=true
+		elif arg=="--habitat":habitat_check.button_pressed=true
 		elif arg=="--workbench":immersive_start=false;cinematic_start=false
 		elif arg=="--ground-view":cinematic_start=true
 		elif arg=="--valley-view":valley_start=true
@@ -203,6 +211,7 @@ func _build_ui() -> void:
 	var stack=Control.new();stack.custom_minimum_size=Vector2(320,300);stack.size_flags_vertical=SIZE_EXPAND_FILL;world_panel.add_child(stack);view_home=stack
 	viewport_container=SubViewportContainer.new();viewport_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT);viewport_container.stretch=true;viewport_container.mouse_filter=MOUSE_FILTER_STOP;stack.add_child(viewport_container)
 	viewport=SubViewport.new();viewport.size=Vector2i(1000,650);viewport.render_target_update_mode=SubViewport.UPDATE_ALWAYS;viewport.own_world_3d=true;viewport_container.add_child(viewport)
+	RenderingServer.viewport_set_measure_render_time(viewport.get_viewport_rid(),true)
 	world_view=WorldView.new();viewport.add_child(world_view);world_view.set_model(model)
 	viewport_container.gui_input.connect(_view_input)
 	var overlay=VBoxContainer.new();overlay.position=Vector2(15,15);overlay.mouse_filter=MOUSE_FILTER_IGNORE;stack.add_child(overlay)
@@ -235,6 +244,7 @@ func _build_sidebar(parent: Node) -> void:
 		var option=OptionButton.new();box.add_child(option);model_controls[definition[0]]=option
 		option.item_selected.connect(func(_index):_choice_changed(definition[0]))
 	for i in range(MODES.size()):model_controls.mode.add_item(MODE_LABELS[i]);model_controls.mode.set_item_metadata(i,MODES[i])
+	habitat_check=CheckBox.new();habitat_check.text="Physical habitat (v2 rules)";habitat_check.tooltip_text="New Python terrain, wading and climate costs. Requires the separate v2 habitat replay.";habitat_check.toggled.connect(func(_value):_pending());box.add_child(habitat_check)
 	_spin("population","Founders",1,300,100,box)
 	_label("Random seed",box,12,MUTED)
 	var seed=LineEdit.new();seed.text="2801";seed.text_changed.connect(func(_text):_pending());box.add_child(seed);model_controls.seed=seed
@@ -367,7 +377,7 @@ func _on_catalog(_catalog: Dictionary) -> void:
 		for key in bridge.catalog.presets:preset_select.add_item(str(key).capitalize());preset_select.set_item_metadata(preset_select.item_count-1,key)
 		_set_draft(bridge.catalog.defaults,"2801")
 		if not cli_config.is_empty():
-			var result=await _call("configure",{"config_json":FileAccess.get_file_as_string(cli_config)})
+			var result=await _call("configure",{"config_json":FileAccess.get_file_as_string(cli_config),"habitat":_habitat_options()})
 			if not result.get("ok",false):return
 		elif not cli_environment.is_empty() or not cli_mode.is_empty():
 			if cli_environment in ["hazards","seasons"]:draft.mode="obstacles" if cli_environment=="hazards" else "seasons"
@@ -388,7 +398,7 @@ func _on_frame(data: Dictionary) -> void:
 	var changed=model.run_id!=str(data.run_id)
 	if not model.accept(data):return
 	if changed:
-		following=false;selected_id=model.selected;world_view.set_model(model);last_rate_ticks=model.ticks;last_rate_at=_now()
+		following=false;habitat_check.set_pressed_no_signal(model.habitat.get("enabled",false));selected_id=model.selected;world_view.set_model(model);last_rate_ticks=model.ticks;last_rate_at=_now()
 		if cinematic_start:
 			world_view.update_view(0);world_view.ground_view();cinematic_start=false
 		if valley_start:
@@ -415,7 +425,7 @@ func _call(command: String,data: Dictionary={},timeout: float=30.0) -> Dictionar
 
 func _new_run() -> void:
 	if draft.is_empty():return
-	var result=await _call("configure",{"config":_read_config(),"seed_text":model_controls.seed.text})
+	var result=await _call("configure",{"config":_read_config(),"seed_text":model_controls.seed.text,"habitat":_habitat_options()})
 	if result.get("ok",false):status_label.text="Python started "+str(model.config.mode)+" · seed "+model.seed_text
 
 func _apply_json() -> void:
@@ -427,6 +437,8 @@ func _toggle_pause() -> void:
 	if model.connected:await _control("paused",not model.paused)
 
 func _process(delta: float) -> void:
+	var frame_now=Time.get_ticks_usec();var wall_ms=(frame_now-last_frame_us)/1000.0 if last_frame_us>0 else delta*1000
+	last_frame_us=frame_now
 	world_view.selected_id=selected_id
 	if not model.run_id.is_empty():
 		world_view.update_view(delta if model.connected and not model.paused else 0.0)
@@ -443,7 +455,9 @@ func _process(delta: float) -> void:
 		if _now()-last_rate_at>=1:
 			measured=float(model.ticks-last_rate_ticks)/60/(_now()-last_rate_at);last_rate_at=_now();last_rate_ticks=model.ticks
 		frame_count+=1
-		if not profile_path.is_empty() and cli_quit_frames>0 and frame_count>90:frame_samples.append(delta*1000)
+		if not profile_path.is_empty() and cli_quit_frames>0 and frame_count>90 and not cli_done:
+			frame_samples.append(wall_ms)
+			render_samples.append([RenderingServer.viewport_get_measured_render_time_cpu(viewport.get_viewport_rid()),RenderingServer.viewport_get_measured_render_time_gpu(viewport.get_viewport_rid()),Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),Performance.get_monitor(Performance.TIME_PROCESS)*1000,world_view.last_update_ms,world_view.batch_ms,world_view.animal_ms])
 		if landscape_label:landscape_label.text="LIVING MEADOW   /   %d CREATURES   /   G%02d" % [int(model.metrics.population),model.generation]
 		if cli_quit_frames>0 and frame_count>=cli_quit_frames and not cli_done:_finish_cli()
 	elif cli_quit_frames>0 and _now()>startup_deadline and not cli_done:
@@ -464,6 +478,7 @@ func _refresh() -> void:
 		energy_bar.max_value=float(actor.capacity);energy_bar.value=float(actor.energy)
 		energy_label.text="Energy %.1f / %.1f · %s" % [actor.energy,actor.capacity,"living" if actor.active else "cohort ended" if actor.alive else str(actor.cause)]
 		specimen_details.text="Age %.1fs · Meals %d\nFitness %.1f\nParent %s\nRoot %s · depth %d\nSpeed %.1f px/s · radius %.1f px\nEnergy drain %.2f/s" % [actor.age,actor.meals,actor.fitness,str(actor.parent) if actor.parent!=null else "founder",actor.root,actor.depth,actor.speed,actor.radius*State.UNITS,actor.energy_cost]
+		if actor.has("habitat"):specimen_details.text+="\nWading %.2fm · habitat energy %.2f\nTerrain contacts %d" % [actor.habitat.water_depth,actor.habitat.uphill_energy+actor.habitat.water_energy+actor.habitat.weather_energy,int(actor.habitat.blocked)]
 		if actor.in_hazard or float(actor.hazard_loss)>0:specimen_details.text+="\nHAZARD LOSS %.1f / %.1fs" % [actor.hazard_loss,actor.hazard_seconds]
 		var visual=world_view.bodies.get(selected_id,world_view.remnants.get(selected_id))
 		if visual and is_instance_valid(visual):specimen_details.text+="\nActivity: "+visual.animation_state
@@ -561,10 +576,11 @@ func _finish_cli() -> void:
 		if not result.get("ok",false):await _shutdown(1);return
 		print("AE2_PYTHON_EXPORT ",last_export)
 	if not profile_path.is_empty() and not frame_samples.is_empty():
+		var measured_frames=frame_samples.duplicate()
 		frame_samples.sort()
 		var total=0.0
 		for value in frame_samples:total+=value
-		var profile={"frames":frame_samples.size(),"mean_ms":total/frame_samples.size(),"median_ms":frame_samples[frame_samples.size()/2],"p95_ms":frame_samples[mini(frame_samples.size()-1,int(frame_samples.size()*.95))],"quality":quality_index,"immersive":immersive,"scenery":world_view.nature.statistics,"animation":world_view.animation_summary(),"ecosystem":world_view.ecosystem_summary(),"renderer":RenderingServer.get_current_rendering_method(),"device":RenderingServer.get_video_adapter_name()}
+		var profile={"frame_ms":measured_frames,"p99_ms":frame_samples[mini(frame_samples.size()-1,int(frame_samples.size()*.99))],"max_ms":frame_samples[-1],"timing_source":"monotonic wall-clock; warmup and export excluded","render_samples":render_samples,"frames":frame_samples.size(),"mean_ms":total/frame_samples.size(),"median_ms":frame_samples[frame_samples.size()/2],"p95_ms":frame_samples[mini(frame_samples.size()-1,int(frame_samples.size()*.95))],"quality":quality_index,"immersive":immersive,"scenery":world_view.nature.statistics,"animation":world_view.animation_summary(),"ecosystem":world_view.ecosystem_summary(),"habitat":model.habitat,"renderer":RenderingServer.get_current_rendering_method(),"device":RenderingServer.get_video_adapter_name()}
 		var file=FileAccess.open(profile_path,FileAccess.WRITE)
 		if file:file.store_string(JSON.stringify(profile,"\t")+"\n");file.close()
 	print("AE2_PYTHON_VIEW ",JSON.stringify({"ticks":model.ticks,"frames":model.received_frames,"mode":model.config.mode,"engine":"Python ResearchSession"}))
@@ -630,8 +646,8 @@ func _build_ecosystem_panel() -> void:
 	event_list=ItemList.new();event_list.custom_minimum_size.y=170;event_list.size_flags_horizontal=SIZE_EXPAND_FILL;event_list.add_theme_font_size_override("font_size",12);box.add_child(event_list);event_list.item_selected.connect(_locate_event)
 	_wrap("Meal effects mark the creature's observed position; the engine does not identify the consumed plant. Lines show recorded paths and the nearest visible opponent, not a chosen target.",box,11)
 	box.add_child(HSeparator.new())
-	_label("DECORATIVE SCENERY",box,12,GOLD)
-	_wrap("Lighting, clouds, rain, snow, wind and seasonal colors affect this 3D view only. They never change food, energy, senses or evolution.",box,12)
+	scenery_heading=_label("DECORATIVE SCENERY",box,12,GOLD)
+	scenery_explanation=_wrap("Lighting, clouds, rain, snow, wind and seasonal colors affect this 3D view only. They never change food, energy, senses or evolution.",box,12)
 	var weather_menu=OptionButton.new();weather_menu.name="VisualWeather"
 	for label in ["Weather: automatic","Clear","Cloudy","Rain","Fog","Snow"]:weather_menu.add_item(label)
 	weather_menu.item_selected.connect(func(index):world_view.atmosphere.choose_weather(world_view.atmosphere.WEATHER[index]));box.add_child(weather_menu)
@@ -662,7 +678,9 @@ func _refresh_ecosystem() -> void:
 	if not ecosystem_panel.visible:return
 	var context=model.environment_context;var source_season=context.get("season")
 	scenery_status.text="%d living · %d edible plants · generation %d\n" % [int(model.metrics.get("population",0)),model.food_objects.size(),model.generation]
+	if model.habitat.get("enabled",false):scenery_status.text+="PHYSICAL HABITAT · Python %s · %.1fh\nTerrain/wading/climate affect motion and energy.\nUse v2 habitat replay for this run.\n" % [model.habitat.climate.weather,float(model.habitat.climate.hour)]
 	if source_season is Dictionary:scenery_status.text+="Python season: %s · food target %d" % [str(source_season.season).capitalize(),int(context.get("food_target",0))]
+	elif model.habitat.get("enabled",false):scenery_status.text+="Habitat season: "+str(model.habitat.climate.season).capitalize()
 	else:scenery_status.text+="No seasons in this Python mode."
 	var plant=model.food_objects.get(world_view.selected_food)
 	if plant:
@@ -670,6 +688,12 @@ func _refresh_ecosystem() -> void:
 	elif not world_view.selected_food.is_empty():food_status.text="Food %s was removed by Python. No plant was recreated." % world_view.selected_food
 	else:food_status.text="Click an edible fern in the arena to inspect its Python food identity."
 	var director=world_view.atmosphere
+	var physical=model.habitat.get("enabled",false)
+	scenery_heading.text="PYTHON CLIMATE / VISUAL OVERRIDES" if physical else "DECORATIVE SCENERY"
+	scenery_explanation.text="Auto weather and daylight follow the recorded Python habitat and its costs. Manual weather, hour and color overrides change presentation only; the source climate stays unchanged." if physical else "Lighting, clouds, rain, snow, wind and seasonal colors affect this 3D view only. They never change food, energy, senses or evolution."
+	visual_cycle.text="Follow Python daylight" if physical else "Day / night cycle · 4 minute day"
+	visual_motion.text="Scenery motion · wind, water and particles" if physical else "Scenery motion (independent of Python pause)"
+	visual_hour.tooltip_text="Turn off Follow Python daylight for a decorative hour override." if physical else "Decorative time of day"
 	visual_status.text="%02d:%02d · %s · %s (%s)" % [int(director.hour),int(fmod(director.hour,1)*60),director.weather,str(director.season).capitalize(),director.season_source]
 	visual_hour.set_value_no_signal(director.hour)
 	var latest=[]
@@ -728,3 +752,10 @@ func _open_original(arguments: PackedStringArray=PackedStringArray()) -> int:
 	var pid=OS.create_process(bridge.python,args)
 	status_label.text="Opened the original 2D simulator in its own process." if pid>0 else "Could not start the original 2D simulator."
 	return pid
+
+func _habitat_options() -> Dictionary:
+	if habitat_check.button_pressed and not habitat_config_path.is_empty():
+		var value=JSON.parse_string(FileAccess.get_file_as_string(habitat_config_path))
+		if value is Dictionary:return value.get("config",value)
+		return {"invalid_habitat_configuration":true}
+	return {"enabled":habitat_check.button_pressed}
