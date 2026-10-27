@@ -1,0 +1,9 @@
+.godot/
+.cache/
+build/
+exports/
+.tools/
+__pycache__/
+*.py[cod]
+*.blend1
+.DS_Store

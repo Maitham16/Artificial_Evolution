@@ -1,0 +1,12 @@
+{
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "godot": "4.7.2.stable.official.ed1daf0bf",
+  "blender": "Blender 5.2.3 LTS",
+  "original_python": "Python 3.13.17",
+  "original_launcher_version": "1.0.1",
+  "setup_rerun": "passed; verified existing applications and export templates, imported project, model tests passed",
+  "launcher_bash_syntax": "passed",
+  "python_utility_ast_syntax": "passed",
+  "scope": "All new repository files under v2/; original virtual environment unchanged."
+}

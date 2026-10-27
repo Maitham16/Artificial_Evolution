@@ -1,0 +1,35 @@
+; Artificial Evolution 2.0 is independent from the Python simulator.
+config_version=5
+
+[application]
+config/name="Artificial Evolution 2.0"
+config/version="2.0.0"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://assets/icon.svg"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="ArtificialEvolution2"
+
+[display]
+window/size/viewport_width=1520
+window/size/viewport_height=960
+window/size/window_width_override=1520
+window/size/window_height_override=960
+window/size/min_width=1160
+window/size/min_height=760
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+anti_aliasing/quality/msaa_3d=2
+textures/vram_compression/import_etc2_astc=true
+textures/vram_compression/import_s3tc_bptc=true
+textures/default_filters/anisotropic_filtering_level=2
+
+[physics]
+common/physics_ticks_per_second=60
+
+[filesystem]
+import/blender/enabled=false

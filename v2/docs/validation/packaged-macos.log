@@ -1,0 +1,62 @@
+x86_64 arm64
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_NATIVE_EXPORT /Users/maith/Desktop/Artificial_Evolution/v2/build/validation/native-uniform-1793077408993025000
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+{"ok":true,"ticks":111}
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_NATIVE_EXPORT /Users/maith/Desktop/Artificial_Evolution/v2/build/validation/native-hazards-1793077414136413000
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+{"ok":true,"ticks":117}
+{
+  "ok": true,
+  "archive": "build/Artificial Evolution 2.zip",
+  "archive_sha256": "08dec2448b9159ac3954a37a1397df22a24a48c80bcd1ee45754ad283096bee6",
+  "signature": "ad-hoc; codesign --verify --deep --strict passed after fresh extraction",
+  "architectures": "x86_64 arm64",
+  "execution_architecture": "arm64",
+  "native_runs": [
+    {
+      "environment": "uniform",
+      "screenshot": "../screenshots/world.png",
+      "bundle": "build/validation/native-uniform-1793077408993025000",
+      "export_files": [
+        "application.png",
+        "config.json",
+        "fitness.svg",
+        "generations.csv",
+        "individuals.csv",
+        "lineage.csv",
+        "population.csv",
+        "report.html",
+        "run.json",
+        "state.bin"
+      ],
+      "replayed_exactly": true
+    },
+    {
+      "environment": "hazards",
+      "screenshot": "../screenshots/hazards.png",
+      "bundle": "build/validation/native-hazards-1793077414136413000",
+      "export_files": [
+        "application.png",
+        "config.json",
+        "fitness.svg",
+        "generations.csv",
+        "individuals.csv",
+        "lineage.csv",
+        "population.csv",
+        "report.html",
+        "run.json",
+        "state.bin"
+      ],
+      "replayed_exactly": true
+    }
+  ],
+  "limitations": "Local packaged-app validation, not independent external reproduction. No manual mouse/keyboard QA: computer control was unavailable. x86_64 was not executed."
+}

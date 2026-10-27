@@ -1,0 +1,10 @@
+{
+  "usage_available": false,
+  "reason": "Host agent tool did not expose token usage",
+  "runs": [
+    {
+      "source_files": 91,
+      "documents": 6
+    }
+  ]
+}

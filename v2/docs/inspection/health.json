@@ -1,0 +1,216 @@
+{
+  "node_count": 1700,
+  "unverified_node_count": 0,
+  "raw_edge_count": 6924,
+  "non_object_edges": 0,
+  "missing_endpoint_edges": 0,
+  "dangling_endpoint_edges": 894,
+  "external_reference_edges": 0,
+  "self_loop_edges": 4,
+  "valid_candidate_edges": 6030,
+  "exact_duplicate_edges": 0,
+  "directed_unique_endpoint_pairs": 5814,
+  "directed_same_endpoint_collapsed_edges": 216,
+  "undirected_unique_endpoint_pairs": 5807,
+  "undirected_same_endpoint_collapsed_edges": 223,
+  "same_endpoint_group_count": 211,
+  "relation_variant_groups": 205,
+  "source_file_variant_groups": 0,
+  "source_location_variant_groups": 3,
+  "context_variant_groups": 3,
+  "post_build_graph_type": "Graph",
+  "post_build_node_count": 1742,
+  "post_build_edge_count": 6699,
+  "post_build_error": "",
+  "producer_suppression": {
+    "path": "/Users/maith/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages/graphify/extract.py",
+    "total_sites": 12,
+    "sites": [
+      {
+        "line": 1813,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 2377,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 2379,
+        "name": "seen_doc_refs",
+        "tuple_arity": 0,
+        "sample": "seen_doc_refs: set[str] = set()"
+      },
+      {
+        "line": 3046,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 3193,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n.get(\"id\") for n in nodes}"
+      },
+      {
+        "line": 4203,
+        "name": "seen_keys",
+        "tuple_arity": 0,
+        "sample": "seen_keys: set[tuple] = set()"
+      },
+      {
+        "line": 4389,
+        "name": "seen_keys",
+        "tuple_arity": 0,
+        "sample": "seen_keys: set[tuple] = set()"
+      },
+      {
+        "line": 7641,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 7749,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 7828,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 8343,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 8344,
+        "name": "seen_edges",
+        "tuple_arity": 4,
+        "sample": "seen_edges: set[tuple[str, str, str, str | None]] = set()"
+      }
+    ],
+    "error": ""
+  },
+  "examples": [
+    {
+      "source": "experiment_parameters_world_for",
+      "target": "world_world",
+      "edge_count": 3,
+      "relations": [
+        "calls",
+        "references",
+        "uses"
+      ],
+      "source_files": [
+        "experiment_parameters.py"
+      ],
+      "source_locations": [
+        "L59",
+        "L60"
+      ],
+      "contexts": [
+        "",
+        "call",
+        "return_type"
+      ]
+    },
+    {
+      "source": "test_food_still_creature",
+      "target": "creature_creature",
+      "edge_count": 3,
+      "relations": [
+        "calls",
+        "references",
+        "uses"
+      ],
+      "source_files": [
+        "test_food.py"
+      ],
+      "source_locations": [
+        "L14",
+        "L21"
+      ],
+      "contexts": [
+        "",
+        "call",
+        "return_type"
+      ]
+    },
+    {
+      "source": "test_movement_make_creature",
+      "target": "creature_creature",
+      "edge_count": 3,
+      "relations": [
+        "calls",
+        "references",
+        "uses"
+      ],
+      "source_files": [
+        "test_movement.py"
+      ],
+      "source_locations": [
+        "L14",
+        "L20"
+      ],
+      "contexts": [
+        "",
+        "call",
+        "return_type"
+      ]
+    },
+    {
+      "source": "test_selection_make_creature",
+      "target": "creature_creature",
+      "edge_count": 3,
+      "relations": [
+        "calls",
+        "references",
+        "uses"
+      ],
+      "source_files": [
+        "test_selection.py"
+      ],
+      "source_locations": [
+        "L16",
+        "L23"
+      ],
+      "contexts": [
+        "",
+        "call",
+        "return_type"
+      ]
+    },
+    {
+      "source": "test_survival_make_creature",
+      "target": "creature_creature",
+      "edge_count": 3,
+      "relations": [
+        "calls",
+        "references",
+        "uses"
+      ],
+      "source_files": [
+        "test_survival.py"
+      ],
+      "source_locations": [
+        "L18",
+        "L25"
+      ],
+      "contexts": [
+        "",
+        "call",
+        "return_type"
+      ]
+    }
+  ]
+}

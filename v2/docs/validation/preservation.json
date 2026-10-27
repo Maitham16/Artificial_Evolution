@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "baseline_commit": "f890b4f481a6659714dfae70e11f5b34f19a86f3",
+  "scope": "all pre-existing local files",
+  "files_checked": 1241,
+  "original_tracked_files": 591,
+  "problems": [],
+  "new_tracked_files_outside_v2": []
+}

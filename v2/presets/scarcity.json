@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "seed": 2801,
+  "population": 100,
+  "food_count": 50,
+  "environment": "sparse",
+  "algorithm": "selection",
+  "mutation_rate": 0.1,
+  "mutation_scale": 0.1,
+  "generation_limit": 10
+}
