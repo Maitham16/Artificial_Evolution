@@ -46,6 +46,10 @@ Historical native recordings retain the runtime requirements documented in
 [Reproducibility](docs/REPRODUCIBILITY.md). The full scientific studies remain
 separate from the bounded CI checks. The frozen v1.0.0 release is unchanged.
 
+## License
+
+This project is available under the [MIT License](LICENSE).
+
 ## Original single-mode viewer
 
 The original viewer and scientific scripts retain their published source versions:
