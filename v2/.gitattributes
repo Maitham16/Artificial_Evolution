@@ -1,0 +1,2 @@
+# Preserve license texts byte-for-byte from the checksum-pinned upstream archive.
+assets/runtime-licenses/* -whitespace

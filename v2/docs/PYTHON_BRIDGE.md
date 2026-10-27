@@ -44,3 +44,7 @@ The existing Graphify map guided the session boundary: ResearchSession (`researc
 ## Interactive ecosystem observations
 
 The [ecosystem observatory](INTERACTIVE_ECOSYSTEM.md) adds current food records with stable observer IDs, exact seasonal history, confirmed capture participants and passive nearest-visible-opponent observations. The original `food` rows and numerical state remain unchanged. Cosmetic settings live only in Godot; they are not Python configuration fields or commands. `environment_director.gd` cannot send simulation commands. See [current ecosystem validation](ecosystem-validation/README.md) for native scene profiles and preservation checks.
+
+## Standalone desktop payload
+
+The current [desktop application](DESKTOP_APP.md) bundles a relocatable interpreter, pinned dependencies and byte-for-byte original source/preset copies. Exported launches prefer that payload; source launches keep the original `.venv`. Remembered development settings are saved atomically and are never truncated or replaced by bundled launches. See [runtime provenance](BUNDLED_RUNTIME.md) and [current standalone validation](desktop-validation/README.md).

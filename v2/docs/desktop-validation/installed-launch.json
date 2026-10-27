@@ -1,0 +1,74 @@
+{
+  "ok": true,
+  "launcher": "v2/Launch 3D Application.command via macOS LaunchServices",
+  "application": "/Users/maith/Applications/Artificial Evolution 2.0.app",
+  "bundled_engine_connected": true,
+  "signature_valid_after_launch": true,
+  "manual_os_input_tested": false,
+  "profile": {
+    "animation": {
+      "active_models": 100,
+      "death_remnants": 0,
+      "detailed_skeletons": 5,
+      "event_gaps": 0,
+      "events": {
+        "meal": 210
+      },
+      "food_uploads": 183,
+      "gpu_bone_models": 95,
+      "observed_visual_states": [
+        "Awaiting movement",
+        "Running",
+        "Turning right",
+        "Turning left",
+        "Eating"
+      ],
+      "terrain_pose_updates": 18300
+    },
+    "device": "Apple M3",
+    "ecosystem": {
+      "bounded_event_effects": 16,
+      "python_food_plants": 150,
+      "recent_confirmed_events": 209,
+      "scenery": {
+        "cycle_enabled": true,
+        "daylight_source": "decorative",
+        "hour": 11.0219571333333,
+        "motion_enabled": true,
+        "rain": 0.0,
+        "season": "summer",
+        "season_source": "decorative",
+        "snow": 0.0,
+        "source_context": {
+          "actual_food": 150.0,
+          "daylight_simulated": false,
+          "food_target": 150.0,
+          "season": null,
+          "source": "Python simulation",
+          "weather_simulated": false
+        },
+        "weather": "clear",
+        "weather_source": "decorative",
+        "wind": 1.19567594718035
+      },
+      "selected_food": "",
+      "source": "Python journal and snapshots; weather/daylight are decorative"
+    },
+    "frames": 93,
+    "immersive": true,
+    "mean_ms": 23.3779426523297,
+    "median_ms": 22.9166666666667,
+    "p95_ms": 26.2573333333333,
+    "quality": 1,
+    "renderer": "gl_compatibility",
+    "scenery": {
+      "build_ms": 1022.582,
+      "draw_batches": 187,
+      "ferns": 62,
+      "flowers": 306,
+      "grass_clumps": 25817,
+      "rocks": 89,
+      "trees": 398
+    }
+  }
+}

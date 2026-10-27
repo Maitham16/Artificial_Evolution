@@ -37,8 +37,12 @@ func discover() -> Dictionary:
 	var settings={}
 	var path="user://engine.json"
 	if FileAccess.file_exists(path):
-		var parsed=JSON.parse_string(FileAccess.get_file_as_string(path))
-		if parsed is Dictionary:settings=parsed
+		var parser=JSON.new()
+		if parser.parse(FileAccess.get_file_as_string(path))==OK and parser.data is Dictionary:settings=parser.data
+	# Exported app prefers its self-contained payload over remembered development paths.
+	var bundled=OS.get_executable_path().get_base_dir().path_join("../Resources").simplify_path()
+	if FileAccess.file_exists(bundled.path_join("engine/research_session.py")) and FileAccess.file_exists(bundled.path_join("python/bin/python3")):
+		settings={"repository":bundled.path_join("engine"),"python":bundled.path_join("python/bin/python3"),"bundled":true}
 	var source=ProjectSettings.globalize_path("res://").trim_suffix("/").get_base_dir()
 	if FileAccess.file_exists(source.path_join("research_session.py")):settings.repository=source
 	if not OS.get_environment("AE_ENGINE_ROOT").is_empty():settings.repository=OS.get_environment("AE_ENGINE_ROOT")
@@ -63,16 +67,24 @@ func launch(repository: String,interpreter: String) -> void:
 	DirAccess.make_dir_recursive_absolute(directory)
 	endpoint_path=directory.path_join("endpoint-%d-%s.json" % [OS.get_process_id(),Crypto.new().generate_random_bytes(8).hex_encode()])
 	var exports=ProjectSettings.globalize_path("user://python-runs")
-	var args=PackedStringArray(["-u",engine_root.path_join("v2/backend/engine_bridge.py"),"--ready-file",endpoint_path,"--export-root",exports,"--owner-pid",str(OS.get_process_id())])
+	var args=PackedStringArray(["-E","-s","-B","-u",engine_root.path_join("v2/backend/engine_bridge.py"),"--ready-file",endpoint_path,"--export-root",exports,"--owner-pid",str(OS.get_process_id())])
 	if not auto_save:args.append("--no-auto-save")
+	# Matplotlib caches belong to user data, never the signed app or source checkout.
+	OS.set_environment("MPLCONFIGDIR",ProjectSettings.globalize_path("user://cache/matplotlib"))
 	backend_pid=OS.create_process(python,args)
 	if backend_pid<=0:_set_status("error","Could not start Python. Verify the interpreter and dependencies.");return
 	started_at=_now();last_message=started_at
 	_set_status("starting","Starting the existing Python simulation engine…")
 
 func remember() -> void:
-	var file=FileAccess.open("user://engine.json",FileAccess.WRITE)
-	if file:file.store_string(JSON.stringify({"repository":engine_root,"python":python},"\t")+"\n");file.close()
+	# A bundled launch must never replace a developer's external engine paths.
+	if engine_root.contains(".app/Contents/Resources/engine"):return
+	var path=ProjectSettings.globalize_path("user://engine.json")
+	var temporary=path+".%d.tmp" % OS.get_process_id()
+	var file=FileAccess.open(temporary,FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify({"repository":engine_root,"python":python},"\t")+"\n");file.close()
+		DirAccess.rename_absolute(temporary,path)
 
 func reconnect() -> void:
 	if backend_pid>0 and OS.is_process_running(backend_pid):

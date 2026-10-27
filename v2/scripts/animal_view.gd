@@ -4,6 +4,7 @@ const COAT=preload("res://assets/materials/animal_skin.gdshader")
 const MODELS={"doe":preload("res://assets/animals/skeletal/doe/doe.gltf"),"stag":preload("res://assets/animals/skeletal/stag/stag.gltf"),"wolf":preload("res://assets/animals/skeletal/wolf/wolf.gltf")}
 const HERBIVORE_COATS=[Color(.90,.83,.73),Color(1.04,.97,.87),Color(.78,.72,.66),Color(.98,.89,.76),Color(1.02,1.0,.95)]
 const PREDATOR_COATS=[Color(.84,.88,.92),Color(.87,.81,.71),Color(.66,.67,.65),Color(1.0,.98,.92)]
+var shadows_enabled=true
 var detailed=false
 var detail_initialized=false
 var previous_clip="Rest"
@@ -170,6 +171,11 @@ func present(actor: Dictionary,pose: Dictionary,sim_time: float,delta: float,cam
 	angular_velocity=angle_difference(last_heading,heading)/simulation_delta if simulation_delta>.000001 else 0.0
 	last_position=position_xz;last_heading=heading;last_sim_time=sim_time
 	if delta<=0:return
+	# Distant bodies retain GPU skeletal motion; only nearby bodies spend shadow passes.
+	var cast=camera_distance<34 if shadows_enabled else camera_distance<30
+	if cast!=shadows_enabled:
+		shadows_enabled=cast
+		for mesh in meshes:mesh.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var physical_scale=maxf(.1,global_basis.x.length()*appearance_size*growth)
 	var next="Rest" if observed_speed<.025 and float(actor.get("speed",0))<.5 else "Run" if observed_speed>(1.35 if base_clip in ["Run","Hunt","Escape"] else 1.65)*physical_scale else "Walk"
 	var visible=float(pose.get("opponent_visible_seconds",last_visible));var toward=float(pose.get("toward_seconds",last_toward));var away=float(pose.get("away_seconds",last_away))

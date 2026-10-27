@@ -5,11 +5,17 @@ var nature
 var atmosphere
 var recent_events: Array=[]
 var food_ages={}
+var food_render_revision=-1
+var food_growth_until=0.0
+var body_poses={}
+var terrain_pose_updates=0
+var food_uploads=0
 var selected_food=""
 var trails={}
 var trail_clock=0.0
 var effects: Node3D
 var observation_lines: MeshInstance3D
+var camera_smoothing=8.0
 var camera_focus=Vector3.ZERO
 var camera: Camera3D
 var model
@@ -150,7 +156,7 @@ func update_view(delta: float) -> void:
 		for body in bodies.values():body.queue_free()
 		bodies.clear()
 		for body in remnants.values():body.queue_free()
-		remnants.clear();missing_since.clear();activity_counts.clear();event_counts.clear();recent_events.clear();food_ages.clear();trails.clear();selected_food=""
+		remnants.clear();missing_since.clear();activity_counts.clear();event_counts.clear();recent_events.clear();food_ages.clear();body_poses.clear();food_render_revision=-1;trails.clear();selected_food=""
 		for effect in effects.get_children():effect.queue_free()
 		reset_camera();source_run=model.run_id
 	var poses=model.sample_display()
@@ -161,11 +167,15 @@ func update_view(delta: float) -> void:
 		if not bodies.has(id):
 			var body=Animal.new();add_child(body);body.configure(actor);bodies[id]=body
 		var pose=poses.get(id,{"position":actor.position,"heading":actor.heading});var position: Vector2=pose.position
-		var body=bodies[id];body.position=Vector3(position.x,surface_height(position)+.015,position.y)
-		var normal: Vector3=nature.normal_at(position)
-		var direction=Vector3(cos(float(pose.heading)),0,sin(float(pose.heading)))
-		var forward=direction.slide(normal).normalized();var side=forward.cross(normal).normalized()
-		body.basis=Basis(forward,side.cross(forward).normalized(),side).scaled(Vector3.ONE*float(actor.radius)/.45)
+		var body=bodies[id]
+		var pose_key=[position,float(pose.heading),float(actor.radius)]
+		if body_poses.get(id)!=pose_key:
+			body_poses[id]=pose_key;terrain_pose_updates+=1
+			body.position=Vector3(position.x,surface_height(position)+.015,position.y)
+			var normal: Vector3=nature.normal_at(position)
+			var direction=Vector3(cos(float(pose.heading)),0,sin(float(pose.heading)))
+			var forward=direction.slide(normal).normalized();var side=forward.cross(normal).normalized()
+			body.basis=Basis(forward,side.cross(forward).normalized(),side).scaled(Vector3.ONE*float(actor.radius)/.45)
 		body.set_detailed(id==selected_id or id in detailed_ids)
 		body.present(actor,pose,model.display_sim_time,delta,camera.global_position.distance_to(body.global_position))
 		activity_counts[body.animation_state]=int(activity_counts.get(body.animation_state,0))+1
@@ -188,9 +198,9 @@ func update_view(delta: float) -> void:
 			var point=model.point(float(event.x),float(event.y))
 			body.position=Vector3(point.x,surface_height(point)+.015,point.y)
 			body.rotation.y=-float(event.heading);body.scale=Vector3.ONE*float(event.radius)/State.UNITS/.45
-			body.set_detailed(false);body.event(event);remnants[id]=body;bodies.erase(id);missing_since.erase(id)
+			body.set_detailed(false);body.event(event);remnants[id]=body;bodies.erase(id);body_poses.erase(id);missing_since.erase(id)
 		elif event.kind=="retire":
-			if bodies.has(id):bodies[id].queue_free();bodies.erase(id)
+			if bodies.has(id):bodies[id].queue_free();bodies.erase(id);body_poses.erase(id)
 			missing_since.erase(id)
 		elif bodies.has(id):bodies[id].event(event)
 	for id in bodies.keys():
@@ -199,22 +209,27 @@ func update_view(delta: float) -> void:
 			if not missing_since.has(id):missing_since[id]=0.0
 			missing_since[id]+=delta
 			# Unknown removals (e.g. a journal gap) never invent a death.
-			if missing_since[id]>.35:bodies[id].queue_free();bodies.erase(id);missing_since.erase(id)
+			if missing_since[id]>.35:bodies[id].queue_free();bodies.erase(id);body_poses.erase(id);missing_since.erase(id)
 	for id in remnants.keys():
 		remnants[id]._present_death(delta)
 		activity_counts[remnants[id].animation_state]=int(activity_counts.get(remnants[id].animation_state,0))+1
 		if remnants[id].expired:remnants[id].queue_free();remnants.erase(id)
-	if food_meshes.multimesh.instance_count!=model.food_objects.size():food_meshes.multimesh.instance_count=model.food_objects.size()
-	var plant_index=0;var living_food={}
-	for id in model.food_objects:
-		var plant=model.food_objects[id];var position: Vector2=plant.position;living_food[id]=true
-		food_ages[id]=float(food_ages.get(id,.35 if food_ages.is_empty() else 0.0))+delta
-		var scale=(.65+.12*sin(float(str(id).hash()%100)))*smoothstep(0,.35,float(food_ages[id]))
-		var basis=Basis(Vector3.UP,float(str(id).hash()%628)*.01).scaled(Vector3.ONE*maxf(.01,scale))
-		food_meshes.multimesh.set_instance_transform(plant_index,Transform3D(basis,Vector3(position.x,surface_height(position)-.025,position.y)))
-		plant_index+=1
-	for id in food_ages.keys():
-		if not living_food.has(id):food_ages.erase(id)
+	var food_changed=food_render_revision!=model.food_revision
+	if food_changed:
+		food_growth_until=visual_time+.35;food_render_revision=model.food_revision
+	if food_changed or (delta>0 and visual_time<=food_growth_until) or food_meshes.multimesh.instance_count!=model.food_objects.size():
+		if food_meshes.multimesh.instance_count!=model.food_objects.size():food_meshes.multimesh.instance_count=model.food_objects.size()
+		var plant_index=0;var living_food={}
+		food_uploads+=1
+		for id in model.food_objects:
+			var plant=model.food_objects[id];var position: Vector2=plant.position;living_food[id]=true
+			food_ages[id]=float(food_ages.get(id,.35 if food_ages.is_empty() else 0.0))+delta
+			var scale=(.65+.12*sin(float(str(id).hash()%100)))*smoothstep(0,.35,float(food_ages[id]))
+			var basis=Basis(Vector3.UP,float(str(id).hash()%628)*.01).scaled(Vector3.ONE*maxf(.01,scale))
+			food_meshes.multimesh.set_instance_transform(plant_index,Transform3D(basis,Vector3(position.x,surface_height(position)-.025,position.y)))
+			plant_index+=1
+		for id in food_ages.keys():
+			if not living_food.has(id):food_ages.erase(id)
 	_update_observation_trails(delta)
 	transfers.mesh.clear_surfaces()
 	var vertices=PackedVector3Array()
@@ -228,7 +243,7 @@ func update_view(delta: float) -> void:
 		transfers.mesh.surface_end()
 	var groups=decor.get_node_or_null("GroupBoundaries")
 	if groups:groups.visible=research_guides
-	selection.visible=selected!=null and research_guides;sensing.visible=selected!=null and research_guides
+	selection.visible=selected!=null;sensing.visible=selected!=null and research_guides
 	if selected:
 		var position: Vector2=poses.get(str(selected.id),{"position":selected.position}).position
 		selection.position=Vector3(position.x,surface_height(position)+.1,position.y);selection.scale=Vector3.ONE*maxf(.5,float(selected.radius)/.35)
@@ -246,7 +261,7 @@ func _process(delta: float) -> void:
 	if atmosphere:atmosphere.step(delta)
 	var desired=target+Vector3(sin(yaw)*cos(pitch),sin(pitch),cos(yaw)*cos(pitch))*distance
 	desired.y=maxf(desired.y,surface_height(Vector2(desired.x,desired.z))+.65)
-	var weight=1-exp(-delta*8)
+	var weight=1-exp(-delta*camera_smoothing)
 	camera.position=camera.position.lerp(desired,weight);camera.position.y=maxf(camera.position.y,surface_height(Vector2(camera.position.x,camera.position.z))+.4);camera_focus=camera_focus.lerp(target,weight)
 	if camera.position.distance_squared_to(camera_focus)>.01:camera.look_at(camera_focus)
 
@@ -273,7 +288,8 @@ func pan(motion: Vector2) -> void:
 	var right=camera.global_basis.x;var forward=Vector3(camera.global_basis.z.x,0,camera.global_basis.z.z).normalized()
 	target-=right*motion.x*distance*.001;target-=forward*motion.y*distance*.001;target.y=surface_height(Vector2(target.x,target.z))+.4;_update_camera()
 
-func reset_camera() -> void:
+func reset_camera(immediate: bool=true) -> void:
+	var previous_transform=camera.transform;var previous_focus=camera_focus
 	yaw=.65;pitch=.70;target=Vector3(0,surface_height(Vector2.ZERO)+.35,0)
 	distance=maxf(36,maxf(float(model.width),float(model.height))/State.UNITS*1.02) if model!=null else 51
 	var half=Vector2(float(model.width),float(model.height))/State.UNITS/2 if model!=null else Vector2(25,15)
@@ -287,6 +303,8 @@ func reset_camera() -> void:
 				if not safe.has_point(camera.unproject_position(Vector3(x,surface_height(Vector2(x,z)),z))):fits=false
 		if fits:break
 		distance*=1.07
+
+	if not immediate:camera.transform=previous_transform;camera_focus=previous_focus
 
 func pick(point: Vector2) -> String:
 	if model==null:return ""
@@ -304,7 +322,7 @@ func animation_summary() -> Dictionary:
 	var detailed=0
 	for body in bodies.values():
 		if body.detailed:detailed+=1
-	return {"active_models":bodies.size(),"detailed_skeletons":detailed,"gpu_bone_models":bodies.size()-detailed,"death_remnants":remnants.size(),"events":event_counts.duplicate(),"observed_visual_states":activity_counts.keys(),"event_gaps":model.animation_gaps if model else 0}
+	return {"terrain_pose_updates":terrain_pose_updates,"food_uploads":food_uploads,"active_models":bodies.size(),"detailed_skeletons":detailed,"gpu_bone_models":bodies.size()-detailed,"death_remnants":remnants.size(),"events":event_counts.duplicate(),"observed_visual_states":activity_counts.keys(),"event_gaps":model.animation_gaps if model else 0}
 
 func _record_event(event: Dictionary) -> void:
 	# Only confirmed journal receipts create effects. No inferred plant contact or kills.
@@ -321,6 +339,8 @@ func _record_event(event: Dictionary) -> void:
 	p.finished.connect(p.queue_free)
 
 func _update_observation_trails(delta: float) -> void:
+	if not research_guides:
+		observation_lines.mesh.clear_surfaces();return
 	trail_clock+=delta
 	var actor=model.actor(selected_id);var ids=[selected_id]
 	if actor and actor.get("observed_opponent") is Dictionary:ids.append(str(actor.observed_opponent.id))

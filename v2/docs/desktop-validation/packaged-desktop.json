@@ -1,0 +1,750 @@
+{
+  "ok": true,
+  "archive_sha256": "1a8efc9af597ad659ee0b8b15118a59f29b6874ce5fda75d5cb3f3c8a1b9a85d",
+  "architecture": "arm64",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "self_contained": true,
+  "engine_sources_verified": 95,
+  "development_registry_unchanged": true,
+  "original_2d_independent_replay": true,
+  "signature_valid_after_launches": true,
+  "profiles": [
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 423
+        },
+        "food_uploads": 482,
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating"
+        ],
+        "terrain_pose_updates": 48400
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 0,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 256,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.03499969323082
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 469,
+      "immersive": true,
+      "mean_ms": 23.9295796527566,
+      "median_ms": 25.0,
+      "p95_ms": 28.412,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1037.45,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "foraging",
+      "mode": "foraging",
+      "mean_fps": 41.789283995417094,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "python_ticks": 839,
+      "verified_and_replayed_exactly": true,
+      "checkout_and_homebrew_reads_denied": true,
+      "screenshot": "../screenshots/desktop-foraging.png"
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 204
+        },
+        "food_uploads": 242,
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating"
+        ],
+        "terrain_pose_updates": 24400
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 0,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 201,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "spring",
+          "season_source": "Python",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": {
+              "cluster_centers": [
+                [
+                  500.588213459455,
+                  404.015842061543
+                ],
+                [
+                  569.788016898409,
+                  164.987805117799
+                ],
+                [
+                  395.764098108427,
+                  145.227566708142
+                ],
+                [
+                  224.362936710856,
+                  213.29556840529
+                ]
+              ],
+              "cycle": 1.0,
+              "food_count": 150.0,
+              "generation": 1.0,
+              "season": "spring",
+              "season_index": 0.0
+            },
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.2196962273502
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 229,
+      "immersive": true,
+      "mean_ms": 21.2383658418243,
+      "median_ms": 21.6666666666667,
+      "p95_ms": 26.4716666666667,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1028.816,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "seasons",
+      "mode": "seasons",
+      "mean_fps": 47.0846018685072,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "python_ticks": 453,
+      "verified_and_replayed_exactly": true,
+      "checkout_and_homebrew_reads_denied": true,
+      "screenshot": "../screenshots/desktop-seasons.png"
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 254
+        },
+        "food_uploads": 243,
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning left",
+          "Turning right",
+          "Eating",
+          "Walking"
+        ],
+        "terrain_pose_updates": 24400
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 0,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 252,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.21966786792768
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 216,
+      "immersive": true,
+      "mean_ms": 22.3407156084656,
+      "median_ms": 22.2222222222222,
+      "p95_ms": 25.0510000000001,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1026.857,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "obstacles",
+      "mode": "obstacles",
+      "mean_fps": 44.76132356391791,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "python_ticks": 462,
+      "verified_and_replayed_exactly": true,
+      "checkout_and_homebrew_reads_denied": true,
+      "screenshot": "../screenshots/desktop-obstacles.png"
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 220
+        },
+        "food_uploads": 243,
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating",
+          "Walking"
+        ],
+        "terrain_pose_updates": 24400
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 0,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 219,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.2193991476924
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 219,
+      "immersive": true,
+      "mean_ms": 22.4792531709792,
+      "median_ms": 22.2222222222222,
+      "p95_ms": 26.3888888888889,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1031.782,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "traits",
+      "mode": "traits",
+      "mean_fps": 44.4854636581523,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "python_ticks": 459,
+      "verified_and_replayed_exactly": true,
+      "checkout_and_homebrew_reads_denied": true,
+      "screenshot": "../screenshots/desktop-traits.png"
+    },
+    {
+      "animation": {
+        "active_models": 69,
+        "death_remnants": 6,
+        "detailed_skeletons": 4,
+        "event_gaps": 0,
+        "events": {
+          "capture": 31,
+          "death": 31,
+          "meal": 140
+        },
+        "food_uploads": 242,
+        "gpu_bone_models": 65,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Escaping",
+          "Turning left",
+          "Turning right",
+          "Hunting",
+          "Eating",
+          "Dying",
+          "Dead"
+        ],
+        "terrain_pose_updates": 18396
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 0,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 202,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.21997378647395
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 227,
+      "immersive": true,
+      "mean_ms": 20.5204331864904,
+      "median_ms": 20.3703703703704,
+      "p95_ms": 25.0,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1033.808,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "predator_prey",
+      "mode": "predator_prey",
+      "mean_fps": 48.731914717002596,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "python_ticks": 435,
+      "verified_and_replayed_exactly": true,
+      "checkout_and_homebrew_reads_denied": true,
+      "screenshot": "../screenshots/desktop-predator_prey.png"
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 138
+        },
+        "food_uploads": 242,
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning left",
+          "Turning right",
+          "Walking",
+          "Eating"
+        ],
+        "terrain_pose_updates": 24400
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 0,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 137,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.21617114605725
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 226,
+      "immersive": true,
+      "mean_ms": 22.7838443665479,
+      "median_ms": 24.0172222222222,
+      "p95_ms": 27.7777777777778,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1032.029,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "social",
+      "mode": "social",
+      "mean_fps": 43.89074924810485,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "python_ticks": 489,
+      "verified_and_replayed_exactly": true,
+      "checkout_and_homebrew_reads_denied": true,
+      "screenshot": "../screenshots/desktop-social.png"
+    },
+    {
+      "animation": {
+        "active_models": 44,
+        "death_remnants": 6,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "birth": 31,
+          "death": 11,
+          "meal": 115,
+          "reproduce": 31
+        },
+        "food_uploads": 475,
+        "gpu_bone_models": 39,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating",
+          "Growing",
+          "Reproducing",
+          "Dying",
+          "Dead"
+        ],
+        "terrain_pose_updates": 22050
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 0,
+        "python_food_plants": 120,
+        "recent_confirmed_events": 187,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 120.0,
+            "daylight_simulated": false,
+            "food_target": 120.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.10400918977081
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 486,
+      "immersive": true,
+      "mean_ms": 20.3420484029003,
+      "median_ms": 21.6666666666667,
+      "p95_ms": 25.0,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1026.507,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "continuous",
+      "mode": "continuous",
+      "mean_fps": 49.159257720447826,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "python_ticks": 742,
+      "verified_and_replayed_exactly": true,
+      "checkout_and_homebrew_reads_denied": true,
+      "screenshot": "../screenshots/desktop-continuous.png"
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 3,
+        "event_gaps": 0,
+        "events": {
+          "meal": 376
+        },
+        "food_uploads": 483,
+        "gpu_bone_models": 97,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating",
+          "Walking"
+        ],
+        "terrain_pose_updates": 48400
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 0,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 256,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.12191950255808
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 473,
+      "immersive": true,
+      "mean_ms": 20.4821437632136,
+      "median_ms": 20.0,
+      "p95_ms": 26.816,
+      "quality": 0,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 974.788,
+        "draw_batches": 165,
+        "ferns": 24,
+        "flowers": 98,
+        "grass_clumps": 12079,
+        "rocks": 52,
+        "trees": 222
+      },
+      "case": "foraging-performance",
+      "mode": "foraging",
+      "mean_fps": 48.82301440516314,
+      "render_pixels": [
+        1520,
+        960
+      ],
+      "python_ticks": 722,
+      "verified_and_replayed_exactly": true,
+      "checkout_and_homebrew_reads_denied": true,
+      "screenshot": "../screenshots/desktop-foraging-performance.png"
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 248
+        },
+        "food_uploads": 243,
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating",
+          "Walking"
+        ],
+        "terrain_pose_updates": 24400
+      },
+      "device": "Apple M3",
+      "ecosystem": {
+        "bounded_event_effects": 0,
+        "python_food_plants": 150,
+        "recent_confirmed_events": 248,
+        "scenery": {
+          "cycle_enabled": false,
+          "daylight_source": "decorative",
+          "hour": 11.0,
+          "motion_enabled": true,
+          "rain": 0.0,
+          "season": "summer",
+          "season_source": "decorative",
+          "snow": 0.0,
+          "source_context": {
+            "actual_food": 150.0,
+            "daylight_simulated": false,
+            "food_target": 150.0,
+            "season": null,
+            "source": "Python simulation",
+            "weather_simulated": false
+          },
+          "weather": "clear",
+          "weather_source": "decorative",
+          "wind": 1.21912363031772
+        },
+        "selected_food": "",
+        "source": "Python journal and snapshots; weather/daylight are decorative"
+      },
+      "frames": 225,
+      "immersive": true,
+      "mean_ms": 22.5544207407408,
+      "median_ms": 23.6111111111111,
+      "p95_ms": 26.6666666666667,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1031.801,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "case": "foraging-small",
+      "mode": "foraging",
+      "mean_fps": 44.337206062387,
+      "render_pixels": [
+        1160,
+        732
+      ],
+      "python_ticks": 462,
+      "verified_and_replayed_exactly": true,
+      "checkout_and_homebrew_reads_denied": true,
+      "screenshot": "../screenshots/desktop-foraging-small.png"
+    }
+  ],
+  "method": "Fresh signed ZIP extraction; nine sequential native runs, checkout + /opt/homebrew + /usr/local reads denied by macOS sandbox-exec. No AE path overrides, system-only PATH, invalid PYTHONHOME/PYTHONPATH (ignored by owned interpreter). Each original export verified and replayed exactly. First 90 displayed frames excluded from timing.",
+  "limitations": "Local Apple M3 checks; not independent replication, Intel execution, Apple notarization or manual operating-system mouse/keyboard QA."
+}

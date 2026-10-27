@@ -1,0 +1,51 @@
+{
+  "python": {
+    "version": "3.13.18",
+    "release": "20261026",
+    "architecture": "arm64",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.13.18%2B20261026-aarch64-apple-darwin-install_only_stripped.tar.gz",
+    "sha256": "8392b6ea51d94391befb2c31ebe75463f045d0b69dfcf5e1bb3234e1f5fa3405"
+  },
+  "requirements_sha256": "8aa864a697af5562a918aecceccd173d92090de28dc71bff4ae31a489884f7e2",
+  "wheels": {
+    "contourpy-1.4.0-cp313-cp313-macosx_11_0_arm64.whl": "196759a3e4db60e1546167e361090ebb6d199aa3aafc9e34ea17a5ac3b23e814",
+    "cycler-0.12.1-py3-none-any.whl": "85cef7cff222d8644161529808465972e51340599459b8ac3ccbac5a854e0d30",
+    "fonttools-4.67.0-cp313-cp313-macosx_10_13_universal2.whl": "8239e2ca24878715a19f061d065b5721e87da81d145e48b3418f771a469b5a24",
+    "kiwisolver-1.5.1-cp313-cp313-macosx_11_0_arm64.whl": "77a4c8187a5948d7f8795adb765a3c7b553d07d86d88e43038fc32fc1fb9a3f3",
+    "matplotlib-3.11.2-cp313-cp313-macosx_11_0_arm64.whl": "2a8285cea8ef4d92aa041d1c33788bcae82248503300f93f1ca2136b9049452f",
+    "numpy-2.5.4-cp313-cp313-macosx_14_0_arm64.whl": "6d6a71b9d9a97c03633aa12565ef2825ffa036cc1d99cfd50dacf0f128af4fe2",
+    "packaging-26.3-py3-none-any.whl": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+    "pillow-13.0.0-cp313-cp313-macosx_11_0_arm64.whl": "f11a3c1358bb3c68012a7b1f41b223c3db9f7bfde90b481df028cfe1c3363313",
+    "pygame-2.6.1-cp313-cp313-macosx_11_0_arm64.whl": "2a3a1288e2e9b1e5834e425bedd5ba01a3cd4902b5c2bff8ed4a740ccfe98171",
+    "pyparsing-3.3.3-py3-none-any.whl": "ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4",
+    "python_dateutil-3.0.0-py2.py3-none-any.whl": "3c79630202e4152c6add678446984236efe4f57e84d8e892aab0637bab82e9fd",
+    "six-1.17.0-py2.py3-none-any.whl": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+    "tzdata-2026.5-py2.py3-none-any.whl": "b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac"
+  },
+  "license_source": {
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.13.18%2B20261026-aarch64-apple-darwin-pgo%2Blto-full.tar.zst",
+    "sha256": "5706f1fdf82f7ea10b56a9b9cbadfa5f372010568a9794f19e0af4c48d975f34"
+  },
+  "license_files": {
+    "LICENSE.bdb.txt": "3bdff06e69991c94664f2ef5c5f8096f60b7dbec071756ea6cc26b445e06ec5b",
+    "LICENSE.bzip2.txt": "1f38bbc7caacafd65169276d759c0d88c991b753b643ce35d0e45ea1971dd441",
+    "LICENSE.cpython.txt": "86e61415828a8b5b06ec8d024e6f086ce155a8b85fd0c419c0ba4dc004e74fdd",
+    "LICENSE.expat.txt": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534",
+    "LICENSE.libX11.txt": "2daec087a88e7c9b8082557cdeebad5bbb8155a4137472f0b22e269cd99d0c1e",
+    "LICENSE.libXau.txt": "56abe29bb1d9806a9e04fa9f80fed2c0f18027594df3f098148d814aef6bddfa",
+    "LICENSE.libedit.txt": "29cea33c32bbc9785142386377915612a2fa786482c46843383384aded2e09b1",
+    "LICENSE.libffi.txt": "deaf3a42effb551a5b140fa9afefed183a27f1341c6d1bf430d106a5e6931fc0",
+    "LICENSE.liblzma.txt": "9a4062de0a2c388a98cf35a35d348b62fa97c838a71c3c28ee1a2d7d0a565b02",
+    "LICENSE.libuuid.txt": "122ee1f7e258f2c3c0e538a75c037684f420454bf3850ddc74ce750bbf5fe86b",
+    "LICENSE.libxcb.txt": "c5ffbfeaa501071ceeb97b7de2c0d703fdaa35de01c0fb6cbac1c28453a3e9fd",
+    "LICENSE.mpdecimal.txt": "669512af7219f58be03a398766d7c9da11a3b3df9d3f05cb74c5ceca25c8da3b",
+    "LICENSE.ncurses.txt": "87a4c4442337b8968ef956031c406b74f9cb7149b7ba87311bdaba534816201c",
+    "LICENSE.openssl-3.txt": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+    "LICENSE.sqlite.txt": "38bef3d28b24f145ea293bd3b6eb4b20396982abc8303128fb493986ea5bc719",
+    "LICENSE.tcl.txt": "c0a69a2bfd757361ec7e6143973b103c90409316b49e9c88db26ad6388e79f16",
+    "LICENSE.tix.txt": "3ac5cdd0bef6c43ce34c6a7ced452081d9e5a0bf94082b9f9147d23ec9e214f5",
+    "LICENSE.zlib-ng.txt": "6c9f0d975b41afaa34d22f55bb8986ce69e5cb7ad327cb2b28820cd425edf5ee",
+    "LICENSE.zlib.txt": "818922b2620f12801a12bf78e399644a30990e66824abd8ca8ec24d451d6f92c",
+    "LICENSE.zstd.txt": "7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8"
+  }
+}

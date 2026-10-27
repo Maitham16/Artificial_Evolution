@@ -13,6 +13,7 @@ const MODES=["foraging","seasons","obstacles","traits","predator_prey","social",
 const MODE_LABELS=["Food seeking","Changing seasons","Obstacles & hazards","Brains & bodies","Predator & prey","Social behavior","Continuous ecosystem"]
 const ENV_LABELS={"uniform":"Meadow","clustered":"Food clusters","sparse":"Scarcity","wide_clustered":"Wide clusters","barren":"Barren","seasonal":"Seasonal food"}
 const POLICY_LABELS={"selection":"Selected neural","neutral":"Neutral neural","random":"Random movement","greedy":"Greedy forager","founder":"Frozen founders","coevolution":"Co-evolution","group":"Group survival","individual":"Individual survival","funded":"Funded reproduction","clonal":"Clonal reproduction"}
+var desktop_hud
 var ecosystem_panel: PanelContainer
 var scenery_status: Label
 var food_status: Label
@@ -95,6 +96,8 @@ var frame_count=0
 var startup_deadline=0.0
 
 func _ready() -> void:
+	immersive_start=not OS.has_feature("editor")
+	cinematic_start=immersive_start
 	_install_theme();_build_ui()
 	bridge=Bridge.new();add_child(bridge)
 	bridge.frame_received.connect(_on_frame);bridge.response_received.connect(_on_response)
@@ -107,6 +110,7 @@ func _ready() -> void:
 		elif arg.begins_with("--mode="):cli_mode=arg.trim_prefix("--mode=")
 		elif arg.begins_with("--config="):cli_config=arg.trim_prefix("--config=")
 		elif arg=="--immersive":immersive_start=true
+		elif arg=="--workbench":immersive_start=false;cinematic_start=false
 		elif arg=="--ground-view":cinematic_start=true
 		elif arg=="--valley-view":valley_start=true
 		elif arg.begins_with("--quality="):quality_index=clampi(int(arg.trim_prefix("--quality=")),0,2)
@@ -121,7 +125,7 @@ func _ready() -> void:
 	bridge.launch(repository_edit.text,python_edit.text)
 	startup_deadline=_now()+60
 	world_view.nature.quality=quality_index
-	_sync_quality_menus()
+	_apply_quality(quality_index)
 	_apply_visual_options(cli_visuals)
 	ecosystem_panel.visible=cli_ecosystem_panel
 	if immersive_start:_toggle_immersive()
@@ -205,8 +209,8 @@ func _build_ui() -> void:
 	biome_label=_label("WAITING FOR PYTHON",overlay,12,INK);biome_label.mouse_filter=MOUSE_FILTER_IGNORE
 	var instruction=_label("Inspect: left click   ·   Orbit: right drag   ·   Zoom: scroll   ·   Pan: middle drag",center,11,MUTED);instruction.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	var camera_row=HBoxContainer.new();center.add_child(camera_row)
-	_button("Overview",camera_row,func():world_view.reset_camera();following=false)
-	_button("Follow",camera_row,func():following=not following)
+	_button("Overview",camera_row,func():world_view.reset_camera(false);following=false)
+	_button("Follow",camera_row,_toggle_follow)
 	_button("Ground view",camera_row,func():world_view.ground_view();following=false)
 	_button("Ecosystem",camera_row,_toggle_ecosystem)
 	_quality_menu(camera_row)
@@ -295,9 +299,10 @@ func _build_connection(parent: Node) -> void:
 	var row=HBoxContainer.new();content.add_child(row)
 	_button("Connect",row,func():bridge.launch(repository_edit.text,python_edit.text),true)
 	_button("Reconnect",row,func():bridge.reconnect())
+	_button("Open original 2D",row,_open_original)
 	connection_details=_wrap("",content,13)
 	_wrap("Snapshots arrive at up to 30 Hz. The 3D view interpolates positions and the shortest heading angle with a 100 ms display delay. It never sends poses or calculated decisions back to Python. A lost connection freezes the view and pauses Python.",content,13)
-	_wrap("The standalone app requires the repository and its Python environment. Setup records their paths for launches from Finder. The original Pygame application runs independently.",content,13,GOLD)
+	_wrap("The desktop app includes Python and an unchanged engine snapshot. These paths are optional development overrides. Open original 2D launches the original interface in its own independent process.",content,13,GOLD)
 
 func _pending() -> void:
 	if status_label and not updating_controls:status_label.text="Settings pending. Start a new population to apply them."
@@ -383,7 +388,7 @@ func _on_frame(data: Dictionary) -> void:
 	var changed=model.run_id!=str(data.run_id)
 	if not model.accept(data):return
 	if changed:
-		selected_id=model.selected;world_view.set_model(model);last_rate_ticks=model.ticks;last_rate_at=_now()
+		following=false;selected_id=model.selected;world_view.set_model(model);last_rate_ticks=model.ticks;last_rate_at=_now()
 		if cinematic_start:
 			world_view.update_view(0);world_view.ground_view();cinematic_start=false
 		if valley_start:
@@ -425,11 +430,16 @@ func _process(delta: float) -> void:
 	world_view.selected_id=selected_id
 	if not model.run_id.is_empty():
 		world_view.update_view(delta if model.connected and not model.paused else 0.0)
+		var followed=model.actor(selected_id)
+		if following and (followed==null or not followed.active):following=false
+		world_view.camera_smoothing=12*sqrt(float(model.speed)) if following else 8.0
 		if following and model.displayed.has(selected_id):
 			var pos=model.displayed[selected_id].position
-			world_view.target=world_view.target.lerp(Vector3(pos.x,world_view.surface_height(pos)+.4,pos.y),1-exp(-6*delta));world_view._update_camera()
+			world_view.target=Vector3(pos.x,world_view.surface_height(pos)+.4,pos.y);world_view._update_camera()
 		ui_clock+=delta
-		if ui_clock>.15:ui_clock=0;_refresh();_refresh_ecosystem()
+		if ui_clock>.15:
+			ui_clock=0;_refresh();_refresh_ecosystem()
+			if desktop_hud and immersive:desktop_hud.refresh()
 		if _now()-last_rate_at>=1:
 			measured=float(model.ticks-last_rate_ticks)/60/(_now()-last_rate_at);last_rate_at=_now();last_rate_ticks=model.ticks
 		frame_count+=1
@@ -465,8 +475,10 @@ func _refresh() -> void:
 	else:specimen_label.text="Click a creature";specimen_details.text="";energy_bar.value=0;neural_plot.activation=PackedFloat64Array()
 	connection_details.text="Engine %s\nSimulation: %d fixed ticks / %.2f seconds\nReceived snapshots: %d\nLast update: %.0f ms ago\nDisplay delay: %.0f ms\nLive founder families: %d\nNeural diversity (RMS): %s" % [str(bridge.catalog.get("engine_version","—")),model.ticks,float(model.ticks)/60,model.received_frames,(_now()-model.last_received)*1000,model.interpolation_delay*1000,int(model.metrics.families),str(model.metrics.neural_rms)]
 	plots[1].title="MEAN LIFETIME FITNESS" if model.config.mode=="continuous" else "COMPLETED GENERATION FITNESS"
-	for plot in plots:plot.queue_redraw()
-	neural_plot.queue_redraw();lineage_view.queue_redraw()
+	if not immersive:
+		for plot in plots:plot.queue_redraw()
+		neural_plot.queue_redraw()
+		if lineage_panel.visible:lineage_view.queue_redraw()
 
 func _tab_changed(index: int) -> void:
 	if world_panel:world_panel.visible=index==0
@@ -477,14 +489,21 @@ func _tab_changed(index: int) -> void:
 func _view_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index==MOUSE_BUTTON_LEFT and event.pressed:
-			var id=world_view.pick(event.position)
+			var id=world_view.pick(_view_point(event.position))
 			if not id.is_empty():
 				selected_id=id;world_view.selected_food="";bridge.request("select",{"key":id});_refresh()
+				if desktop_hud and immersive:desktop_hud.inspect();desktop_hud.refresh()
+				if event.double_click:_focus_selected()
 			else:
-				var plant=world_view.pick_food(event.position)
+				var plant=world_view.pick_food(_view_point(event.position))
 				if not plant.is_empty():ecosystem_panel.show();_refresh_ecosystem()
-		if event.pressed and event.button_index==MOUSE_BUTTON_WHEEL_UP:world_view.zoom(-1)
-		if event.pressed and event.button_index==MOUSE_BUTTON_WHEEL_DOWN:world_view.zoom(1)
+		if event.pressed and event.button_index==MOUSE_BUTTON_WHEEL_UP:world_view.zoom(-maxf(.01,event.factor))
+		if event.pressed and event.button_index==MOUSE_BUTTON_WHEEL_DOWN:world_view.zoom(maxf(.01,event.factor))
+	elif event is InputEventMagnifyGesture:
+		if event.factor>0:world_view.zoom(-log(event.factor)/log(1.1))
+	elif event is InputEventPanGesture:
+		if event.shift_pressed:following=false;world_view.pan(event.delta*12)
+		else:world_view.orbit(event.delta*6)
 	elif event is InputEventMouseMotion:
 		if event.button_mask & MOUSE_BUTTON_MASK_RIGHT:world_view.orbit(event.relative)
 		elif event.button_mask & MOUSE_BUTTON_MASK_MIDDLE:following=false;world_view.pan(event.relative)
@@ -494,8 +513,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if focus is LineEdit or focus is TextEdit:return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode==KEY_SPACE:_toggle_pause();accept_event()
-		elif event.keycode==KEY_R:world_view.reset_camera();following=false
-		elif event.keycode==KEY_F:following=not following
+		elif event.keycode==KEY_R:world_view.reset_camera(false);following=false
+		elif event.keycode==KEY_F:_toggle_follow()
+		elif event.keycode==KEY_I:_focus_selected()
+		elif event.keycode==KEY_ENTER and (event.ctrl_pressed or event.meta_pressed):_toggle_fullscreen()
 		elif event.keycode==KEY_E:_export()
 		elif event.keycode==KEY_V:_toggle_immersive()
 		elif event.keycode==KEY_N:_toggle_ecosystem()
@@ -526,7 +547,7 @@ func _load_config() -> void:
 
 func _help() -> void:
 	var dialog=AcceptDialog.new();dialog.title="Python-powered vivarium"
-	dialog.dialog_text="SPACE — pause/resume Python\nLeft click — inspect a creature or an edible plant\nN — ecosystem / scenery and confirmed event log\nRight drag — orbit; middle drag — pan; scroll — zoom\nR — reset; F — follow; E — export the Python run\n\nPython owns all neural decisions, movement, meals, survival, births, deaths and interactions.\nGodot interpolates received positions and headings for display.\n\nChoose modes and policies in the sidebar. Run settings exposes the existing Python presets and complete configuration.\nUse Connection to set the repository and Python interpreter."
+	dialog.dialog_text="SPACE — pause/resume Python\nLeft click — inspect a creature or an edible plant\nN — ecosystem / scenery and confirmed event log\nRight drag / two-finger gesture — orbit; middle drag / Shift-gesture — pan\nScroll / pinch — zoom; double-click / I — focus; F — follow\nR — reset; F — follow; E — export the Python run\n\nPython owns all neural decisions, movement, meals, survival, births, deaths and interactions.\nGodot interpolates received positions and headings for display.\n\nChoose modes and policies in the sidebar. Run settings exposes the existing Python presets and complete configuration.\nUse Connection to set the repository and Python interpreter."
 	add_child(dialog);dialog.confirmed.connect(dialog.queue_free);dialog.popup_centered()
 
 func _finish_cli() -> void:
@@ -571,7 +592,7 @@ func _quality_menu(parent: Node) -> void:
 	var options=OptionButton.new();options.add_to_group("landscape_quality")
 	for title in ["Performance","Balanced","Lush"]:options.add_item(title)
 	options.select(quality_index)
-	options.item_selected.connect(func(index):quality_index=index;world_view.set_quality(index);_sync_quality_menus())
+	options.item_selected.connect(_apply_quality)
 	parent.add_child(options)
 
 func _sync_quality_menus() -> void:
@@ -585,21 +606,13 @@ func _toggle_immersive() -> void:
 			immersive_layer=Control.new();immersive_layer.set_anchors_and_offsets_preset(PRESET_FULL_RECT);immersive_layer.z_index=50;add_child(immersive_layer)
 		viewport_container.reparent(immersive_layer);viewport_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 		workbench_root.hide();immersive_layer.show()
-		var bar=HBoxContainer.new();bar.name="LandscapeControls";bar.set_anchors_and_offsets_preset(PRESET_TOP_WIDE);bar.offset_left=24;bar.offset_top=20;bar.offset_right=-24;bar.mouse_filter=MOUSE_FILTER_IGNORE;immersive_layer.add_child(bar)
-		landscape_label=_label("LIVING MEADOW / PYTHON SIMULATION",bar,14,Color("f0f0dc"));landscape_label.size_flags_horizontal=SIZE_EXPAND_FILL
-		_button("Workbench",bar,_toggle_immersive)
-		_button("Ecosystem",bar,_toggle_ecosystem)
-		_button("Overview",bar,func():world_view.reset_camera();following=false)
-		_button("Valley",bar,func():world_view.valley_view();following=false)
-		_button("Ground view",bar,func():world_view.ground_view();following=false)
-		_quality_menu(bar)
-		var hint=_label("Right drag: orbit    Scroll: zoom    Middle drag: pan    C: ground view    F: follow    N: ecosystem    Space: pause    Esc: workbench",immersive_layer,13,Color("e8e8d0"))
-		hint.name="LandscapeHint";hint.set_anchors_and_offsets_preset(PRESET_BOTTOM_WIDE);hint.offset_left=24;hint.offset_top=-40;hint.offset_bottom=-16;hint.mouse_filter=MOUSE_FILTER_IGNORE
+		desktop_hud=preload("res://scripts/desktop_hud.gd").new();immersive_layer.add_child(desktop_hud);desktop_hud.bind(self);desktop_hud.refresh()
+
 	else:
 		viewport_container.reparent(view_home);viewport_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 		workbench_root.show()
 		for node in immersive_layer.get_children():node.queue_free()
-		immersive_layer.hide();landscape_label=null
+		immersive_layer.hide();landscape_label=null;desktop_hud=null
 
 func _build_ecosystem_panel() -> void:
 	ecosystem_panel=PanelContainer.new();ecosystem_panel.name="EcosystemPanel";ecosystem_panel.z_index=100;add_child(ecosystem_panel)
@@ -680,3 +693,38 @@ func _locate_event(index: int) -> void:
 	following=false
 	if not id.is_empty():selected_id=id;bridge.request("select",{"key":id});_refresh()
 	elif event.has("x"):status_label.text="Recorded %s location · %.1fs · %s" % [event.kind,float(event.get("time",0)),event.id]
+
+func _view_point(point: Vector2) -> Vector2:
+	return point*Vector2(viewport.size)/viewport_container.size.max(Vector2.ONE)
+
+func _toggle_follow() -> void:
+	var actor=model.actor(selected_id)
+	following=not following if actor and actor.active else false
+	if following:_focus_selected()
+	if desktop_hud and immersive:desktop_hud.refresh()
+
+func _focus_selected() -> void:
+	var actor=model.actor(selected_id)
+	if actor==null or not actor.active:return
+	var position: Vector2=model.displayed.get(selected_id,{"position":actor.position}).position
+	world_view.target=Vector3(position.x,world_view.surface_height(position)+.5,position.y)
+	world_view.distance=clampf(world_view.distance,5.0,10.0)
+	world_view.pitch=clampf(world_view.pitch,.14,.55)
+	if desktop_hud and immersive:desktop_hud.inspect()
+
+func _toggle_fullscreen() -> void:
+	var mode=DisplayServer.window_get_mode()
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if mode==DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+func _apply_quality(index: int) -> void:
+	quality_index=clampi(index,0,2);world_view.set_quality(quality_index)
+	viewport_container.stretch_shrink=2 if quality_index==0 else 1
+	_sync_quality_menus()
+
+func _open_original(arguments: PackedStringArray=PackedStringArray()) -> int:
+	# Independent process; closing the 3D viewer does not terminate the original UI.
+	if bridge==null or not FileAccess.file_exists(bridge.engine_root.path_join("simulator.py")):return -1
+	var args=PackedStringArray(["-E","-s","-B",bridge.engine_root.path_join("simulator.py")]);args.append_array(arguments)
+	var pid=OS.create_process(bridge.python,args)
+	status_label.text="Opened the original 2D simulator in its own process." if pid>0 else "Could not start the original 2D simulator."
+	return pid

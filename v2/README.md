@@ -2,7 +2,7 @@
 
 The 3D application now runs the repository's **existing Python simulation engine**. Python owns brains, creature movement, food, energy, survival, selection, reproduction, mutation, seasons, hazards, body traits, predation, cooperation, and continuous ecosystems. Godot renders the state it receives and interpolates movement between snapshots.
 
-![Living 3D landscape](docs/screenshots/valley.png)
+![Standalone desktop application](docs/screenshots/desktop-foraging.png)
 
 The new [living landscape](docs/NATURAL_WORLD.md) adds rolling green terrain, scanned trees and plants, wind-blown grass, mountains, water, sunlight and atmospheric lighting. Click **Landscape view** or press **V**, then choose **Valley** or **Ground view**. Three scenery quality profiles adjust rendering cost without changing Python.
 
@@ -12,34 +12,37 @@ The [interactive ecosystem observatory](docs/INTERACTIVE_ECOSYSTEM.md) adds edib
 
 All integration changes are under `v2/`. The root Python application, engine, tests, dependencies, configurations, results, and published 1.x releases are unchanged.
 
-## Run on this Mac
+## Run both versions on this Mac
 
-From the repository root:
-
-```bash
-# Python simulation with the new 3D view
-./"v2/Run Artificial Evolution 2.command"
-
-# Original Python/Pygame application
-./.venv/bin/python simulator.py
-```
-
-Finder launchers are also in this folder:
-
-- **Run Artificial Evolution 2.command** starts Godot, which starts the existing Python engine in a separate process.
-- **Run Original Simulator.command** starts the unchanged original application.
-- **Open Godot Editor.command** opens the 3D project.
-- **Open Blender Models.command** opens the editable creature model.
-
-The standalone app at `~/Applications/Artificial Evolution 2.0.app` uses the same repository and Python environment. Setup records these paths for launches from Finder. Both applications can run independently, with separate simulation sessions and export directories.
+**3D desktop application:** double-click **Artificial Evolution 2.0** in `~/Applications`, or double-click [Launch 3D Application.command](Launch%203D%20Application.command). It opens in the landscape view with pause, speed, camera controls and a live creature inspector. The app bundles Python, pinned libraries and an unchanged snapshot of the original engine. It runs offline without this checkout, `.venv`, Godot, Blender or Homebrew.
 
 ```bash
 open "$HOME/Applications/Artificial Evolution 2.0.app"
 ```
 
+**Original 2D application:** double-click [Run Original Simulator.command](Run%20Original%20Simulator.command), or run:
+
+```bash
+./.venv/bin/python simulator.py
+```
+
+The original source, environment, tests, results and interface remain unchanged. **Research → Connection → Open original 2D** can also start the unchanged original interface with the bundled runtime as a separate process; it remains independent when the 3D viewer closes.
+
+For source development, which uses the existing root `.venv` and an installed Godot:
+
+```bash
+./"v2/Run Artificial Evolution 2.command"
+./"v2/Open Godot Editor.command"
+./"v2/Open Blender Models.command"
+```
+
+To reinstall the checked desktop ZIP, double-click **Install Desktop App.command** or run `python3 v2/tools/install_macos.py`. The installer verifies the archive when its build checksum is present, checks the app signature and engine hashes, and restores the previous app if final verification fails. It does not install or modify the original Python environment.
+
+The current standalone build targets **Apple Silicon (arm64), macOS 13+**. It is locally ad-hoc signed, not Apple-notarized. Intel execution is not supported by this runtime package.
+
 ## Setup and dependencies
 
-The verified Mac toolchain is Godot 4.7.2 standard, Blender 5.2.3 LTS, Python 3.13.17, and the unchanged root dependency pins. Godot uses its Compatibility renderer. Blender is needed for authoring assets, not during simulation.
+The authoring toolchain is Godot 4.7.2 standard, Blender 5.2.3 LTS, and the existing Python 3.13.17 environment with unchanged root dependency pins. The desktop build uses a separate pinned, relocatable CPython 3.13.18 runtime; it never upgrades the original `.venv`. Godot uses its Compatibility renderer. Blender is needed for authoring assets, not during simulation.
 
 If the original environment already works, keep it. To create it on another checkout:
 
@@ -64,9 +67,9 @@ To update the recorded repository/interpreter paths after moving the checkout:
 python3 v2/tools/configure_engine.py --python /absolute/path/to/python
 ```
 
-Paths are stored in `~/Library/Application Support/ArtificialEvolution2/engine.json`. You can also edit them in the app's **Connection** tab. Source launches discover their own repository; `AE_ENGINE_ROOT` and `AE_PYTHON`, or `-- --engine-root=/path --python=/path`, provide explicit overrides. The standalone app needs access to the repository and its Python environment.
+Optional development paths are stored in `~/Library/Application Support/ArtificialEvolution2/engine.json`. You can also edit them in the app's **Connection** tab. Source launches discover their own repository; `AE_ENGINE_ROOT` and `AE_PYTHON`, or `-- --engine-root=/path --python=/path`, provide explicit overrides. The packaged app prefers its bundled engine and never replaces saved development paths. Explicit environment/CLI overrides can still select an external checkout.
 
-**First Finder launch:** macOS requests **Desktop folder access** because this Mac's repository and `.venv` are on Desktop. Click **Allow** on that macOS prompt for **Artificial Evolution 2.0**. If access was denied, use **System Settings → Privacy & Security → Files & Folders → Artificial Evolution 2.0 → Desktop Folder**. Python cannot open the environment until macOS grants that access. The app keeps waiting and connects automatically after approval; **Reconnect** can also retry. Launching the same application through the Terminal launcher is already validated. This is a macOS privacy requirement, not a change to the Python engine.
+**Finder launch:** the self-contained app starts its bundled engine without reading the Desktop checkout. macOS may request access if you explicitly select a Desktop file or external development engine. The user data directory holds exports, connection endpoints and caches; the signed app remains unchanged while running.
 
 ## Controls
 
@@ -74,8 +77,10 @@ Paths are stored in `~/Library/Application Support/ArtificialEvolution2/engine.j
 | --- | --- |
 | Inspect a creature / edible plant | Left-click its displayed body / fern |
 | Ecosystem events and scenery | N or **Ecosystem**; click a confirmed event to locate it |
-| Orbit / pan | Right drag / middle drag |
-| Zoom | Scroll |
+| Orbit / pan | Right drag or two-finger gesture / middle drag or Shift-gesture |
+| Zoom | Scroll, pinch, or the − / + buttons |
+| Focus a creature | Double-click its body, I, or **Focus** |
+| Fullscreen | ⛶ or Ctrl/Cmd + Enter |
 | Overview / follow | R / F, or the camera buttons |
 | Landscape / workbench | V / Esc |
 | Ground camera | C or **Ground view** |
@@ -86,7 +91,7 @@ Paths are stored in `~/Library/Application Support/ArtificialEvolution2/engine.j
 | Manual reproduction | Disable **Automatic reproduction**, then **Next generation** when a cohort completes |
 | Single step | Pause, then **Single physics tick** |
 
-The sidebar scrolls to expose all controls on smaller windows. Choose a mode, environment, controller, founder count, seed, food stock, and mutation settings, then press **Start new population**. Python validates the configuration and archives the previous run before replacing it. A failed archive leaves the previous run available.
+The desktop HUD keeps pause, speed, inspection and cameras visible. **Research** restores the full workbench; **V** switches views. The sidebar scrolls to expose all research controls on smaller windows. Choose a mode, environment, controller, founder count, seed, food stock, and mutation settings, then press **Start new population**. Python validates the configuration and archives the previous run before replacing it. A failed archive leaves the previous run available.
 
 **Run settings** loads presets directly from the original `configs/` folder and exposes the full existing Python JSON schema. **Load configuration** validates an external JSON configuration through Python before populating the controls. Seeds retain the engine's full 63-bit range. Food stock `−1` in the sidebar means use the environment default (`null` in the Python schema).
 
@@ -108,7 +113,7 @@ The existing engine's rules and fitness definitions apply. Fixed-speed foraging 
 
 ## Real-time connection and recovery
 
-Godot starts `v2/backend/engine_bridge.py` with the existing `.venv/bin/python`. This adapter imports `ResearchSession`, `RunConfig`, and the original export functions directly from the repository root. It contains no replacement physics or evolutionary algorithm. The previous GDScript simulation and brain implementation have been removed.
+In source mode Godot starts `v2/backend/engine_bridge.py` with the existing `.venv/bin/python`. The standalone app starts the same adapter from `Contents/Resources/engine/` with its bundled interpreter. All original root Python sources and presets are copied byte-for-byte during packaging and recorded in `engine-manifest.json`. This adapter imports `ResearchSession`, `RunConfig`, and the original export functions directly from the repository root. It contains no replacement physics or evolutionary algorithm. The previous GDScript simulation and brain implementation have been removed.
 
 Python retains its 1/60-second physics step. Up to 30 snapshots per wall-clock second carry current poses, food, geometry, telemetry, and ancestry. Godot interpolates position and shortest-angle heading with a 100 ms display delay. Births, deaths, and new cohorts use their actual Python identities. Energy, age, fitness, and decisions are never calculated by the renderer. World coordinates are displayed at 20 Python pixels per Godot unit.
 
@@ -160,11 +165,14 @@ python3 v2/tools/verify_original.py --all-existing
 ./v2/tools/build_macos.sh
 ./.venv/bin/python v2/tools/validate_macos.py
 ./.venv/bin/python v2/tools/validate_ecosystem_macos.py
+./.venv/bin/python v2/tools/validate_desktop_macos.py
+python3 v2/tools/install_macos.py
+python3 v2/tools/validate_installed_macos.py
 ```
 
 On another checkout, omit `--all-existing`; the original Mac's untracked experiment files are not required there. Rebuilding Blender assets deliberately regenerates the editable `.blend` files and optimized `.glb` files, so preserve hand edits before running the generator.
 
-The Mac builder produces `v2/build/Artificial Evolution 2.zip`, a locally ad-hoc signed universal arm64/x86_64 app. Extract into `~/Applications` or `/Applications`; iCloud-managed Desktop folders can interfere with Mac app signing. Only Apple Silicon execution has been tested. The app is not Apple-notarized or published as a new release. Use this v2 builder rather than the original 1.x release builder.
+The Mac builder produces `v2/build/Artificial Evolution 2.zip` and `desktop-manifest.json`. It uses checksum-pinned runtime/wheel downloads in a private ignored cache, includes CPython and dependency licenses, signs all nested native binaries, then signs and verifies the outer app. Extract into `~/Applications` or use the installer; iCloud-managed Desktop folders can interfere with Mac bundle signing. No system Python or root dependency changes occur. See [Desktop application](docs/DESKTOP_APP.md), [runtime lock](runtime.lock.json) and [current desktop validation](docs/desktop-validation/README.md).
 
 For bounded native validation, the app accepts `-- --frames=180 --mode=obstacles --screenshot=/absolute/world.png --export=/absolute/new-export-root`. The exported bundle is a unique child of that export root. It pauses Python before capture, saves the authoritative Python bundle, and shuts down the owned backend. `--no-auto-save` is intended for disposable automated test sessions.
 
@@ -172,4 +180,4 @@ See the [connection architecture](docs/PYTHON_BRIDGE.md), [current validation](d
 
 ## Licenses
 
-Project code and original generated art use the copied [MIT license](LICENSE). [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) contains bundled engine notices. Godot is [MIT licensed](https://godotengine.org/license/); Blender is an external [GPL authoring tool](https://www.blender.org/about/license/). The landscape includes [CC0 Poly Haven scans and textures](assets/nature/LICENSE.md), bundled locally with [source attribution and checksums](assets/nature/ASSET_SOURCES.json). The [animal models](assets/animals/LICENSE.md) are also CC0, with editable Blender rigs, [source credits and checksums](assets/animals/ASSET_SOURCES.json). No runtime art downloads are required.
+The desktop runtime bundles the CPython/license texts and wheel dependency licenses; see [runtime provenance](docs/BUNDLED_RUNTIME.md). Project code and original generated art use the copied [MIT license](LICENSE). [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) contains bundled engine notices. Godot is [MIT licensed](https://godotengine.org/license/); Blender is an external [GPL authoring tool](https://www.blender.org/about/license/). The landscape includes [CC0 Poly Haven scans and textures](assets/nature/LICENSE.md), bundled locally with [source attribution and checksums](assets/nature/ASSET_SOURCES.json). The [animal models](assets/animals/LICENSE.md) are also CC0, with editable Blender rigs, [source credits and checksums](assets/animals/ASSET_SOURCES.json). No runtime art downloads are required.
