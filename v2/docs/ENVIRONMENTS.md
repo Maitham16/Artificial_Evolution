@@ -4,6 +4,12 @@
 
 There are three distinct layers: the Python food/interaction arena, the Godot landscape around it, and the optional physical-habitat extension. Choosing a camera or a weather effect does not silently change the numerical model.
 
+| Living valley | Decorative winter |
+| --- | --- |
+| [![Actual valley camera with forests, river and mountains](media/gallery/valley-thumb.jpg)](media/gallery/valley.jpg) | [![Manual winter scenery in a real foraging run](media/gallery/winter-weather-thumb.jpg)](media/gallery/winter-weather.jpg) |
+
+*Real application captures. Winter here is a visual override. [See the gallery for automatic Python habitat rain and capture settings](GALLERY.md#landscapes-and-weather).*
+
 ## Python food environments
 
 | Interface label | `environment` | Arena, Python px | Display size | Food layout | Default stock |

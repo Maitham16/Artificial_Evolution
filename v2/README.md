@@ -9,13 +9,15 @@ Inspect the animals. Follow their lives. Keep the science reproducible.
 
 [![Python engine CI](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml) [![Godot](https://img.shields.io/badge/Godot-4.7.2-478cbf?style=flat-square&logo=godotengine&logoColor=white)](project.godot) [![Python](https://img.shields.io/badge/Python-powered-527d60?style=flat-square&logo=python&logoColor=white)](backend/engine_bridge.py) [![MIT License](https://img.shields.io/badge/License-MIT-64766a?style=flat-square)](LICENSE)
 
-**[Get started](#start-the-application)** · **[All guides](docs/README.md)** · **[Controls](#controls-at-a-glance)** · **[Original 2D simulator](../docs/USER_GUIDE.md)**
+**[Get started](#start-the-application)** · **[Visual gallery](docs/GALLERY.md)** · **[All guides](docs/README.md)** · **[Controls](#controls-at-a-glance)** · **[Original 2D simulator](../docs/USER_GUIDE.md)**
 
 </div>
 
-![Living World with detailed deer, vegetation, atmospheric lighting and real-time creature inspection](docs/screenshots/habitat-metal-seed-2801.png)
+![Living World with detailed deer, vegetation, atmospheric lighting and real-time creature inspection](docs/media/gallery/living-world.jpg)
 
-<p align="center"><sub>Real Python identities and decisions · Godot rendering · Detailed skeletal animals · An inspectable ecosystem</sub></p>
+<p align="center"><sub>Actual application capture · 100 Python creatures · Ground camera · Lush quality</sub></p>
+
+**[Open the visual gallery →](docs/GALLERY.md)** · [Animal movement · MP4](docs/media/gallery/animal-follow.mp4) · [Continuous growth · MP4](docs/media/gallery/continuous.mp4) · [Controls · MP4](docs/media/gallery/controls.mp4)
 
 ## A new view of artificial life
 
@@ -45,10 +47,10 @@ Explore the world with smooth cameras, follow an individual, inspect its state a
 
 | Predators and prey | Terrain, water and source climate |
 | --- | --- |
-| ![Wolves and deer in a Python-controlled predator–prey run](docs/screenshots/habitat-legacy-predator_prey.png) | ![Optional physical habitat with river, rain and inspected animals](docs/screenshots/habitat-physical-foraging.png) |
+| [![Wolves and deer in a Python-controlled predator–prey run](docs/media/gallery/predator-prey-thumb.jpg)](docs/media/gallery/predator-prey.jpg) | [![Optional physical habitat with river, rain and inspected animals](docs/media/gallery/physical-habitat-thumb.jpg)](docs/media/gallery/physical-habitat.jpg) |
 | Separate evolving gene pools, confirmed captures and observed pursuit/escape. | Explicitly enabled slope/wading/climate costs; manual visual overrides remain cosmetic. |
 
-Screenshots show actual application runs. Art galleries and synthetic IK fixtures are labeled separately in the [animation documentation](docs/ANIMALS_AND_ANIMATION.md).
+Screenshots show actual application runs. **[The gallery](docs/GALLERY.md)** includes all seven modes, a V1/V2 comparison, five real recordings, captions and capture provenance. Art references and synthetic IK fixtures are identified in the [animation documentation](docs/ANIMALS_AND_ANIMATION.md).
 
 ## Start the application
 
@@ -187,6 +189,7 @@ Runtime art is committed; launching does not require asset regeneration. Blender
 
 | Use the application | Understand the implementation |
 | --- | --- |
+| [Visual gallery and demonstrations](docs/GALLERY.md) | [Capture method and reproduction](docs/GALLERY.md#capture-method-and-reproduction) |
 | [Installation](docs/INSTALLATION.md) · [User guide](docs/USER_GUIDE.md) | [Architecture](docs/ARCHITECTURE.md) · [Python bridge](docs/PYTHON_BRIDGE.md) |
 | [Animals and animation](docs/ANIMALS_AND_ANIMATION.md) | [Evolution and brains](docs/EVOLUTION_AND_BRAINS.md) |
 | [Environments](docs/ENVIRONMENTS.md) · [Physical habitat](docs/PHYSICAL_HABITAT.md) | [Research and validation](docs/RESEARCH_AND_VALIDATION.md) |

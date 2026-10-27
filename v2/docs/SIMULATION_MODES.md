@@ -126,7 +126,7 @@ Watch real sharing links and inspector totals. A visible group is not evidence t
 
 ## Continuous ecosystem
 
-This model removes synchronized replacement. Real births and deaths overlap in one persistent habitat. It uses inherited brains/bodies, food capacity, finite `regrowth_rate`, maturity, birth cooldown and a population cap. It ends at `duration` or total lineage extinction. Its displayed generation represents ancestry depth rather than a global replacement round.
+This model removes synchronized replacement. Real births and deaths overlap in one persistent habitat. It uses inherited brains/bodies, food capacity, finite `regrowth_rate`, maturity, birth cooldown and a population cap. It ends at `duration` or total lineage extinction. Individual generation and ancestry depth describe descent rather than synchronized replacement. The world header can remain `G01` while those individual lineages deepen.
 
 Birth eligibility requires maturity, cooldown and at least 80% of parent energy capacity. A candidate child carries inherited/mutated genes and must fit available space. The parent funds 40% of the child's capacity as endowment plus development/overhead, retaining a parent reserve. Failed capacity, placement or energy attempts are recorded in the canonical report. Food and births are not unlimited.
 

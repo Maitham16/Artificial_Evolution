@@ -8,13 +8,15 @@ Explore how behavior changes through evolution—with a reproducible 2D research
 
 [![Python CI](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml) [![V2 Living World](https://img.shields.io/badge/V2-3D_Living_World-3d7053?style=flat-square)](v2/README.md) [![V1 release](https://img.shields.io/badge/V1_release-1.0.1-526b86?style=flat-square)](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1) [![MIT License](https://img.shields.io/badge/License-MIT-64766a?style=flat-square)](LICENSE)
 
-**[Explore V2](v2/README.md)** · **[Quick start](#quick-start)** · **[Documentation](#documentation)** · **[V1 research archive](#v1-research-archive)**
+**[Explore V2](v2/README.md)** · **[Visual gallery](v2/docs/GALLERY.md)** · **[Quick start](#quick-start)** · **[Documentation](#documentation)** · **[V1 research archive](#v1-research-archive)**
 
 </div>
 
-![V2 Living World: evolving deer in a forested valley, with real-time Python state and creature inspection](v2/docs/screenshots/habitat-metal-seed-2801.png)
+![V2 Living World: Python-controlled deer in a forested valley, with real-time Python state and creature inspection](v2/docs/media/gallery/living-world.jpg)
 
-<p align="center"><sub>Artificial Evolution 2.0 · Real Python creatures, detailed skeletal animals and a living Godot landscape.</sub></p>
+<p align="center"><sub>Actual application capture · 100 Python creatures · Ground camera · Lush quality</sub></p>
+
+**[Explore 14 real screenshots →](v2/docs/GALLERY.md)** · [Animals in motion · MP4](v2/docs/media/gallery/animal-follow.mp4) · [Births and growth · MP4](v2/docs/media/gallery/continuous.mp4)
 
 ## One project, two experiences
 
@@ -43,8 +45,10 @@ The project investigates adaptive behavior under specific conditions. A successf
 
 | V2 · Animals and environmental interactions | V1 · Research workbench |
 | --- | --- |
-| ![V2 physical habitat with animals, river and source climate](v2/docs/screenshots/habitat-physical-foraging.png) | ![Original V1 research workbench with population, controls and scientific plots](results/step28-workbench.png) |
+| [![V2 physical habitat with animals, river and source climate](v2/docs/media/gallery/physical-habitat-thumb.jpg)](v2/docs/media/gallery/physical-habitat.jpg) | [![Original V1 research workbench with population, controls and scientific plots](v2/docs/media/gallery/v1-original-thumb.jpg)](v2/docs/media/gallery/v1-original.jpg) |
 | Optional Python terrain, wading and climate effects; manual scenery overrides remain decorative. | The original interface, data workflows and published research remain available. |
+
+[Compare the interfaces, explore all seven modes and watch real demonstrations →](v2/docs/GALLERY.md)
 
 ## Architecture
 
@@ -115,6 +119,7 @@ For real terrain/wading/climate effects, select **Research → Physical habitat 
 
 | Start with V2 | Keep exploring V1 |
 | --- | --- |
+| [Visual gallery and recordings](v2/docs/GALLERY.md) | [V1 / V2 visual comparison](v2/docs/GALLERY.md#one-engine-two-views) |
 | [Documentation index](v2/docs/README.md) | [Original user guide](docs/USER_GUIDE.md) |
 | [Installation and launch](v2/docs/INSTALLATION.md) | [Reproducibility and research protocols](docs/REPRODUCIBILITY.md) |
 | [Controls and user guide](v2/docs/USER_GUIDE.md) | [Full research archive below](#v1-research-archive) |

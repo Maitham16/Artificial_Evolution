@@ -4,7 +4,16 @@
 
 Animals represent existing Python agents. Their source identity, energy, decisions and interactions remain in the engine; Godot supplies anatomical meshes, materials, poses and terrain alignment.
 
-![Deer and wolf asset close-ups](screenshots/animals.png)
+[![Actual deer population with an individual creature followed and inspected](media/gallery/animal-follow-thumb.jpg)](media/gallery/animal-follow.jpg)
+
+*Live application capture. [Watch actual movement, predator–prey and continuous growth recordings](GALLERY.md#animals-in-motion).*
+
+<details>
+<summary>Model asset reference · separate from the live simulation captures</summary>
+
+![Deer and wolf asset close-ups in the asset reference scene](screenshots/animals.png)
+
+</details>
 
 ## Models and appearance
 

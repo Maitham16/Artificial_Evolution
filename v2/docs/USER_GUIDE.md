@@ -4,6 +4,10 @@
 
 V2 offers an immersive animal landscape and a research workbench over the same Python session. Switching views changes presentation, not the experiment.
 
+[![Actual Research workbench with controls, 3D population, creature telemetry and live plots](media/gallery/workbench-thumb.jpg)](media/gallery/workbench.jpg)
+
+*Actual application capture. [Watch the Ecosystem drawer, scrolling and pause/resume demonstration](GALLERY.md#explore-and-inspect).*
+
 ## A first session
 
 Open **Artificial Evolution 2.0.app** from `~/Applications`. Wait for **PYTHON ENGINE** and a living population. The header shows run state, generation and living count; the badge below shows environment, edible plants and measured Python rate.

@@ -172,3 +172,7 @@ Keep guides source-backed. Include actual UI labels, argument delimiters, workin
 For the repository's requested workflow: implement only the requested step, check the intended changes, preserve unrelated edits, then commit/push to `master`. Build/cache files stay ignored. Verify original-file hashes before completing work. A documentation-only change should not require modifying the original V1 docs or rebuilding its released archives.
 
 The [repository review](REPOSITORY_REVIEW.md) lists current implementation/documentation mismatches and [troubleshooting](TROUBLESHOOTING.md) gives operational remedies without changing the original engine.
+
+## Documentation media
+
+The [visual gallery](GALLERY.md) contains real native application captures. Its [capture and publishing procedure](GALLERY.md#capture-method-and-reproduction) uses `v2/tools/capture_gallery.py`, the real Godot Main scene and the original Pygame application. Exported runs must pass their declared numerical replay before publication. `v2/tools/publish_gallery.py` produces small JPEGs, sampled GIF previews and timestamped H.264 videos using the included Swift/AVFoundation encoder. Keep raw lossless frames and export bundles under ignored `.cache/`; commit only reviewed media and its hash/configuration manifest.
