@@ -1,179 +1,162 @@
-# Artificial Evolution 2.0 — 3D desktop vivarium
+# Artificial Evolution 2.0 — Python engine, Godot 3D view
 
-A separate Godot application with 100 procedurally modeled creatures, local food sensors, neural steering, natural selection, mutation, and visible founder families. The original Python/Pygame simulator and its research results remain in the repository root, unchanged.
+The 3D application now runs the repository's **existing Python simulation engine**. Python owns brains, creature movement, food, energy, survival, selection, reproduction, mutation, seasons, hazards, body traits, predation, cooperation, and continuous ecosystems. Godot renders the state it receives and interpolates movement between snapshots.
 
-![Godot desktop application](docs/screenshots/world.png)
+![Python-powered desktop application](docs/screenshots/world.png)
 
-## Run either version on this Mac
+All integration changes are under `v2/`. The root Python application, engine, tests, dependencies, configurations, results, and published 1.x releases are unchanged.
 
-From Finder, double-click either launcher in this folder:
+## Run on this Mac
 
-- **Run Artificial Evolution 2.command** — the new 3D application.
-- **Run Original Simulator.command** — the original Python application, using its existing `.venv`.
-- **Open Godot Editor.command** — edit the new Godot project.
-- **Open Blender Models.command** — edit the creature's Blender source.
-
-Or, from the repository root:
+From the repository root:
 
 ```bash
+# Python simulation with the new 3D view
 ./"v2/Run Artificial Evolution 2.command"
+
+# Original Python/Pygame application
 ./.venv/bin/python simulator.py
 ```
 
-A standalone Mac application is also installed at `~/Applications/Artificial Evolution 2.0.app`. It runs without Python, Blender, or the Godot editor. Open it in Finder, or use:
+Finder launchers are also in this folder:
+
+- **Run Artificial Evolution 2.command** starts Godot, which starts the existing Python engine in a separate process.
+- **Run Original Simulator.command** starts the unchanged original application.
+- **Open Godot Editor.command** opens the 3D project.
+- **Open Blender Models.command** opens the editable creature model.
+
+The standalone app at `~/Applications/Artificial Evolution 2.0.app` uses the same repository and Python environment. Setup records these paths for launches from Finder. Both applications can run independently, with separate simulation sessions and export directories.
 
 ```bash
 open "$HOME/Applications/Artificial Evolution 2.0.app"
 ```
 
-The standalone build is generated locally, ad-hoc signed, and not Apple-notarized. It is not a published GitHub release. The original 1.x releases are unchanged.
+## Setup and dependencies
 
-## Install on another Mac
+The verified Mac toolchain is Godot 4.7.2 standard, Blender 5.2.3 LTS, Python 3.13.17, and the unchanged root dependency pins. Godot uses its Compatibility renderer. Blender is needed for authoring assets, not during simulation.
 
-The verified development toolchain is **Godot 4.7.2 standard**, **Blender 5.2.3 LTS**, and macOS on Apple Silicon. The project uses GDScript, Godot's Compatibility renderer, and bundled GLB models. No .NET, Python neural-network library, API key, asset download, or Godot plugin is needed to run v2.
+If the original environment already works, keep it. To create it on another checkout:
+
+```bash
+python3.13 -m venv .venv
+./.venv/bin/python -m pip install -r requirements.txt
+```
 
 With [Homebrew](https://brew.sh) installed:
 
 ```bash
 ./v2/tools/setup_macos.sh
-./"v2/Run Artificial Evolution 2.command"
 ```
 
-Setup installs missing Godot and Blender applications, imports the project, verifies the pinned macOS export template, and runs the v2 model tests. If Homebrew supplies a newer Godot, setup downloads the pinned version into ignored `v2/.tools/` without replacing the installed editor. Checksummed download versions are recorded in [toolchain.lock.json](toolchain.lock.json). Blender is used only to edit/rebuild assets; the current Blender version is reported by setup. The committed GLBs run independently of Blender.
+Setup installs missing Godot/Blender applications, verifies the original Python environment, records the engine paths, installs verified export templates, imports the project, and runs the bridge tests. It does not upgrade an existing `.venv`. Checked tool downloads are listed in [toolchain.lock.json](toolchain.lock.json).
 
-To prepare the **original Python version** on a new checkout, run these commands from the repository root. Skip this if its existing environment already works:
+To update the recorded repository/interpreter paths after moving the checkout:
 
 ```bash
-python3.13 -m venv .venv
-./.venv/bin/python -m pip install -r requirements.txt
-./.venv/bin/python simulator.py
+./.venv/bin/python v2/tools/configure_engine.py
+# Or choose another compatible interpreter:
+python3 v2/tools/configure_engine.py --python /absolute/path/to/python
 ```
 
-See the original [README](../README.md) and [user guide](../docs/USER_GUIDE.md) for the full Python research application. Its dependency pins and environment are separate from v2.
+Paths are stored in `~/Library/Application Support/ArtificialEvolution2/engine.json`. You can also edit them in the app's **Connection** tab. Source launches discover their own repository; `AE_ENGINE_ROOT` and `AE_PYTHON`, or `-- --engine-root=/path --python=/path`, provide explicit overrides. The standalone app needs access to the repository and its Python environment.
 
-## Controls and workflow
+## Controls
 
 | Action | Control |
 | --- | --- |
-| Inspect a creature | Left-click its body |
-| Orbit camera | Right-button drag |
-| Pan camera | Middle-button drag |
+| Inspect a creature | Left-click its displayed body |
+| Orbit / pan | Right drag / middle drag |
 | Zoom | Scroll |
-| Reset camera | R or **Reset camera** |
-| Follow selected creature | F or **Follow specimen** |
-| Pause/resume | Space or the top button |
-| Change simulation rate | 1× / 4× / 12× selector |
-| Export a run | E or **Export run** |
+| Reset / follow | R / F, or the camera buttons |
+| Pause/resume Python | Space or the top button |
+| Simulation rate | 1× / 5× / 20×, matching the Python engine |
+| Export the Python run | E or **Export run** |
+| Manual reproduction | Disable **Automatic reproduction**, then **Next generation** when a cohort completes |
+| Single step | Pause, then **Single physics tick** |
 
-Choose an environment, controller, founder count, seed, food stock, generation limit, and mutation settings in the left panel. Scroll the panel to reach all controls on smaller windows. Press **Start new population** to apply changes. The previous run is archived first; normal window closure also saves a changed run. Starting a new population resets its training history.
+The sidebar scrolls to expose all controls on smaller windows. Choose a mode, environment, controller, founder count, seed, food stock, and mutation settings, then press **Start new population**. Python validates the configuration and archives the previous run before replacing it. A failed archive leaves the previous run available.
 
-The right panel shows the selected creature's energy, age, meals, fitness, parent, founding family, and eight hidden-neuron activations. Colors identify founding families. **Lineages** shows the largest 12 families across the last eight birth cohorts; complete individual ancestry is exported. Bottom charts show population, completed-generation fitness, and meals. Current-cohort fitness is provisional and resets with each birth cohort.
+**Run settings** loads presets directly from the original `configs/` folder and exposes the full existing Python JSON schema. **Load configuration** validates an external JSON configuration through Python before populating the controls. Seeds retain the engine's full 63-bit range. Food stock `−1` in the sidebar means use the environment default (`null` in the Python schema).
 
-The simulator retains fixed physics steps when the requested speed exceeds the computer's capacity. The displayed actual speed can be below the target; simulation ticks are not skipped.
+All seven existing modes are available:
 
-## Environments and controllers
-
-| Environment | Conditions |
+| Python mode | Display and behavior |
 | --- | --- |
-| Meadow (`uniform`) | Uniform food distribution |
-| Food clusters (`clustered`) | Four concentrated food patches |
-| Scarcity (`sparse`) | Food stock capped at 50 |
-| Hazards & barriers (`hazards`) | Solid barriers, two damaging areas, extra obstacle/risk inputs |
-| Changing seasons (`seasons`) | Stock cycles through 100%, 130%, 50%, 17%; clusters move between generations |
-| Barren (`barren`) | No food; useful negative control |
+| `foraging` | Selection, neutral inheritance, random movement, greedy food seeking, frozen founders |
+| `seasons` | Original seasonal stock and cluster movement |
+| `obstacles` | Original barriers and damaging areas; geometry and damage come from Python |
+| `traits` | Original inherited speeds, body sizes, sensor ranges, and energy costs |
+| `predator_prey` | Original hunting and escape; predators are tinted red |
+| `social` | Original group boundaries, signaling and food sharing; recent sharing links are shown |
+| `continuous` | Original simultaneous births, deaths, ancestry and finite regrowth |
 
-Presets are in [presets/](presets/). **Load configuration** accepts a preset or exported `config.json`, then **Start new population** applies it.
+The right panel shows Python's live energy, capacity, age, meals, fitness, lineage, and mode-specific telemetry. Hidden-neuron activations are calculated by NumPy using the same passive preview as the original interface. **Lineages** uses Python's birth ledger and shows the largest 12 living families across eight ancestry generations. Full ancestry remains in the export.
 
-All five controllers have identical speed, body radius, energy cost, sensory range, and lifespan distribution:
+The existing engine's rules and fitness definitions apply. Fixed-speed foraging comparisons keep their existing constraints; body-trait modes use inherited speeds and costs. Social fitness is survival age, and predator/prey scores retain their original definitions. Live plots describe one run and do not establish an evolutionary advantage.
 
-- **Selected neural:** top 20% of all completed lifetimes reproduce, with balanced shuffled offspring and independent weight mutations.
-- **Neutral neural:** a random 20% reproduce with the same offspring counts and mutation rules; parent sampling has its own random stream.
-- **Random movement:** persistent random turns, sampled every 0.75–2 seconds.
-- **Greedy forager:** turns toward the nearest detected food; random turns when none is detected.
-- **Frozen founders:** unchanged initial neural genomes across cohorts.
+## Real-time connection and recovery
 
-The **Transfer check** tab pauses training and tests the entire current birth cohort, random movement, greedy foraging, and the original founders on three new matched layouts for 30 simulated seconds each. It saves all 12 rows, including physical-start hashes. The brains stay frozen during testing. Cancellation preserves partial results.
+Godot starts `v2/backend/engine_bridge.py` with the existing `.venv/bin/python`. This adapter imports `ResearchSession`, `RunConfig`, and the original export functions directly from the repository root. It contains no replacement physics or evolutionary algorithm. The previous GDScript simulation and brain implementation have been removed.
 
-These are descriptive layout repeats from one training run, not independent training replications or a statistical proof of learning. Before training, current and founder banks should match. Use the original Python study suite for the established multi-seed scientific protocols.
+Python retains its 1/60-second physics step. Up to 30 snapshots per wall-clock second carry current poses, food, geometry, telemetry, and ancestry. Godot interpolates position and shortest-angle heading with a 100 ms display delay. Births, deaths, and new cohorts use their actual Python identities. Energy, age, fitness, and decisions are never calculated by the renderer. World coordinates are displayed at 20 Python pixels per Godot unit.
 
-## Export, verify, and replay
+The view holds the last known pose when updates stop and does not extrapolate new motion. Python pauses when the viewer disconnects. **Reconnect** retains the same session while its Python process is still alive. A crashed or terminated Python process cannot retain an in-memory run: connect a new process, then start a new population or use the original replay workflow on an exported run. The app never falls back to a second simulation engine.
 
-V2 outputs are isolated at:
+The connection is local to `127.0.0.1`, uses a randomly assigned port and a per-process token, and supports one controlling viewer. Temporary endpoint files are private and removed on shutdown. Normal app closure waits for Python to save the changed run and exit. A save error keeps the application open and Python paused so the error can be resolved. Python also checks its parent process and attempts to save if the viewer exits unexpectedly.
+
+If the target speed exceeds available CPU capacity, the actual displayed speed falls below the target. The engine continues using fixed physics ticks. The renderer can discard superseded presentation snapshots without discarding physics steps.
+
+## Export and replay with the original application
+
+New 3D-view runs are written to:
 
 ```text
-~/Library/Application Support/ArtificialEvolution2/
-  runs/run-.../
-  transfer-checks/check-.../
+~/Library/Application Support/ArtificialEvolution2/python-runs/run-.../
 ```
 
-Use **Open export folder** in the sidebar. Each run contains:
+Use **Open export folder**. Exports are produced by the original `research_session.export_bundle` and include `run.json`, `config.json`, `genomes.npz`, lifetime/lineage/population/telemetry CSVs, PNG/SVG/PDF plots, `report.html`, checksums, and a Godot screenshot for native GUI exports. Living or cohort-censored lifetimes retain the original engine's censoring fields.
 
-- `config.json`, `run.json`, and lossless `state.bin` with birth genomes and lifetimes.
-- `individuals.csv`, `lineage.csv`, `population.csv`, `generations.csv`.
-- `fitness.svg`, a self-contained `report.html`, and `application.png` for GUI exports.
-- `manifest.json` with SHA-256 checksums.
-
-A bundle is assembled in a `.pending` directory, checked, and renamed. Existing completed exports are never overwritten. Living individuals have `right_censored=true`; their age is not a completed lifespan. An export can stop mid-generation, so `generations.csv` may contain fewer completed cohorts than the current generation number.
-
-For automated runs, from the repository root:
+From the repository root, use the existing commands:
 
 ```bash
-./"v2/Run Artificial Evolution 2.command" --headless --script tools/headless.gd -- \
-  --config=presets/clustered.json --ticks=600 --out=/tmp/ae2-new-run
+./.venv/bin/python simulator.py --verify-bundle /absolute/path/to/run-bundle
+./.venv/bin/python simulator.py --replay /absolute/path/to/run-bundle/run.json --headless
 
-./"v2/Run Artificial Evolution 2.command" --headless --script tools/headless.gd -- \
-  --verify=/tmp/ae2-new-run
-
-./"v2/Run Artificial Evolution 2.command" --headless --script tools/headless.gd -- \
-  --replay=/tmp/ae2-new-run
+# Automated simulation using the same engine:
+./.venv/bin/python simulator.py --headless --config configs/obstacles.json \
+  --ticks 600 --export-root /tmp/ae-python-experiment
 ```
 
-Use a fresh output directory each time. `--verify` checks hashes and readable/binary consistency; `--replay` additionally reconstructs the model from its seed and compares the full state exactly. Replay is verified with the pinned engine on this Mac, not promised bit-for-bit across engine versions or CPU architectures. Lossless binary state avoids the final-bit rounding that occurs when Godot parses JSON floats. The JSON copy is checked against it with an absolute tolerance of 1e-12 plus relative 1e-14.
+Historical exports from the initial independent Godot prototype remain under `ArtificialEvolution2/runs/`. Existing root exports/results are unchanged. Current 3D-view runs use the original Python bundle format; the historical Godot format is not silently converted.
 
-`headless.gd` paths are relative to the Godot project (`v2/`), not the shell's working directory. Absolute paths also work. The headless tools are development sources and are excluded from the standalone app.
-
-## Model and scope
-
-This is an independent **ground-plane foraging model rendered in 3D**, not flying creatures or a bitwise port of the Python simulation. Bodies move across a 50 × 30 metre arena with 60 fixed steps per simulated second. All policies move at 3 m/s. Eight sensory inputs feed an 8-neuron hidden layer and two outputs; steering uses the first output, while throttle remains fixed. Hazard environments use 16 inputs. Food visibility is local within 8 metres and does not model optical occlusion.
-
-Energy starts at 100, drains at 5/s, and gains 20 per meal up to capacity. Hazards drain an additional 12/s while occupied; barrier collisions cost 2 energy. Lifespans are uniformly sampled from 60–120 seconds. Fitness is survival seconds + 10 × meals − 5 × hazard seconds − 2 × barrier collisions. Food is continuously replenished after eating. Bodies do not block one another.
-
-Generations are synchronized and replaced when all individuals die. A new cohort is generated from saved parents even if none survived, so barren conditions cause cohort failure, not permanent ecosystem extinction. Seasons change between cohorts. Continuous reproduction, predator–prey, cooperation, heritable morphology, and the full scientific study catalog remain features of the original Python application. The original saved populations/results are not imported into this different neural model.
-
-The 3D world makes behavior observable. It does not establish general intelligence or transfer the original scientific conclusions to a new implementation.
-
-## Develop and build
+## Test, edit, and build
 
 ```bash
+# New transport, authority, interpolation and interface tests
+./v2/tools/test.sh
+
+# Original tests and preservation checks
+./.venv/bin/python -m unittest discover -v
+python3 v2/tools/verify_original.py --all-existing
+
+# Edit and regenerate 3D assets
 ./"v2/Open Godot Editor.command"
 ./"v2/Open Blender Models.command"
 ./v2/tools/rebuild_assets.sh
-./v2/tools/test.sh
-./"v2/Run Artificial Evolution 2.command" --headless --script tests/ui_smoke.gd
+
+# Build and test the actual Mac app ZIP
 ./v2/tools/build_macos.sh
+./.venv/bin/python v2/tools/validate_macos.py
 ```
 
-The Blender generator creates the editable `.blend` files and optimized `.glb` runtime assets. Rebuilding deliberately regenerates them; save hand edits elsewhere before running the generator. Godot does not automatically import the `.blend` source directory.
+On another checkout, omit `--all-existing`; the original Mac's untracked experiment files are not required there. Rebuilding Blender assets deliberately regenerates the editable `.blend` files and optimized `.glb` files, so preserve hand edits before running the generator.
 
-Use this dedicated v2 builder; the original root release builder remains a 1.x tool.
+The Mac builder produces `v2/build/Artificial Evolution 2.zip`, a locally ad-hoc signed universal arm64/x86_64 app. Extract into `~/Applications` or `/Applications`; iCloud-managed Desktop folders can interfere with Mac app signing. Only Apple Silicon execution has been tested. The app is not Apple-notarized or published as a new release. Use this v2 builder rather than the original 1.x release builder.
 
-The build produces `v2/build/Artificial Evolution 2.zip`, a universal arm64/x86_64 Mac app. Only the Apple Silicon execution path has been tested. Extract it into `~/Applications` or `/Applications`. The build signs in a temporary directory because iCloud-managed Desktop folders can recreate Finder metadata that invalidates app signing. Build outputs, export data, tool downloads, import caches, and Blender backups stay out of Git.
+For bounded native validation, the app accepts `-- --frames=180 --mode=obstacles --screenshot=/absolute/world.png --export=/absolute/new-export-root`. The exported bundle is a unique child of that export root. It pauses Python before capture, saves the authoritative Python bundle, and shuts down the owned backend. `--no-auto-save` is intended for disposable automated test sessions.
 
-For bounded native validation, the app accepts `-- --frames=120 --screenshot=/absolute/world.png --export=/absolute/new-bundle`, optionally `--environment=hazards`. These arguments also work with the source launcher. The regular interactive launch needs none of them.
-
-## Preservation and validation
-
-The original baseline is commit `f890b4f481a6659714dfae70e11f5b34f19a86f3`. The [inspection report](docs/INSPECTION.md) explains the source/data survey, architecture, and graph limitations. [Validation records](docs/validation/) contain the original test rerun, v2 tests, native build checks, and preservation hashes.
-
-```bash
-./.venv/bin/python -m unittest discover -v
-python3 v2/tools/verify_original.py
-# On the original working Mac, include all pre-existing local data:
-python3 v2/tools/verify_original.py --all-existing
-```
-
-All implementation, documentation, assets, and launchers for this work live under `v2/`. No original tracked file, test, interface, result, root workflow, or release has been changed.
+See the [connection architecture](docs/PYTHON_BRIDGE.md), [current validation](docs/bridge-validation/README.md), and [original repository inspection](docs/INSPECTION.md). The original [README](../README.md) and [user guide](../docs/USER_GUIDE.md) remain the reference for the established research workflows.
 
 ## Licenses
 
-Project code and generated creature/food/rock assets use the copied [MIT license](LICENSE). Bundled engine copyrights and license texts are in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt). Godot is [MIT licensed](https://godotengine.org/license/); Blender is [GPL licensed](https://www.blender.org/about/license/). Blender is an external authoring tool and is not bundled in the app. Runtime assets are authored by this project's generator, with no third-party art dependencies. Tool setup follows the official [Godot macOS downloads](https://godotengine.org/download/macos/), [Blender LTS](https://www.blender.org/download/LTS/), and [Godot glTF import documentation](https://docs.godotengine.org/en/stable/tutorials/assets_pipeline/importing_3d_scenes/available_formats.html).
+Project code and generated art use the copied [MIT license](LICENSE). [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) contains bundled engine notices. Godot is [MIT licensed](https://godotengine.org/license/); Blender is an external [GPL authoring tool](https://www.blender.org/about/license/). No third-party art assets are required.

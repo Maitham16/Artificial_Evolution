@@ -1,8 +1,8 @@
 extends Node3D
-const Sim = preload("res://scripts/simulation.gd")
+const State = preload("res://scripts/python_state.gd")
 var camera: Camera3D
 var model
-var bodies: Array = []
+var bodies: Dictionary = {}
 var food_meshes: MultiMeshInstance3D
 var decor: Node3D
 var selection: MeshInstance3D
@@ -11,7 +11,10 @@ var yaw: float = 0.65
 var pitch: float = 0.84
 var distance: float = 51.0
 var target := Vector3.ZERO
-var tracked_generation: int = -1
+var arena: Node3D
+var transfers: MeshInstance3D
+var geometry_signature=""
+var source_run=""
 var selected_id: String = ""
 var visual_time: float = 0.0
 var body_scene = preload("res://assets/models/creature.glb")
@@ -33,17 +36,13 @@ func _ready() -> void:
 	sun.shadow_enabled=true;sun.directional_shadow_max_distance=100;add_child(sun)
 	var fill=DirectionalLight3D.new();fill.rotation_degrees=Vector3(-35,130,0);fill.light_color=Color("acc9dc");fill.light_energy=.16;add_child(fill)
 	ground_material=ShaderMaterial.new();ground_material.shader=load("res://assets/materials/ground.gdshader")
-	var plane=MeshInstance3D.new();var mesh=PlaneMesh.new();mesh.size=Vector2(50,30);plane.mesh=mesh;plane.material_override=ground_material;add_child(plane)
-	_box(Vector3(0,-.8,0),Vector3(52,1.55,32),Color("273d3c"),self)
-	for side in [-1,1]:
-		_box(Vector3(side*25.2,.12,0),Vector3(.15,.28,30.7),Color("a6af8d"),self)
-		_box(Vector3(0,.12,side*15.2),Vector3(50.7,.28,.15),Color("a6af8d"),self)
-	for i in range(12):
-		var rock=rock_scene.instantiate();rock.position=Vector3(-24+i*4.4,-.05,-15.8 if i%2==0 else 15.8);rock.scale=Vector3.ONE*.5;add_child(rock)
+	arena=Node3D.new();add_child(arena)
 	camera=Camera3D.new();camera.fov=48;camera.near=.1;camera.far=200;add_child(camera);camera.make_current()
 	selection=_ring(.58,.64,Color("f8e2af"));selection.position.y=.08;selection.visible=false
 	sensing=_ring(7.96,8.0,Color(.65,.82,.74,.28));sensing.position.y=.035;sensing.visible=false
 	decor=Node3D.new();add_child(decor)
+	transfers=MeshInstance3D.new();transfers.mesh=ImmediateMesh.new();add_child(transfers)
+	var transfer_material=StandardMaterial3D.new();transfer_material.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED;transfer_material.albedo_color=Color("e3d49e");transfers.material_override=transfer_material
 	_update_camera()
 
 func _box(pos: Vector3, dimensions: Vector3, color: Color, parent: Node3D) -> MeshInstance3D:
@@ -57,31 +56,34 @@ func _ring(inner: float, outer: float, color: Color) -> MeshInstance3D:
 	node.material_override=mat;add_child(node);return node
 
 func set_model(value) -> void:
-	model=value;tracked_generation=-1;selected_id="";target=Vector3.ZERO
+	model=value;geometry_signature="";selected_id="";target=Vector3.ZERO
 
-func _rebuild() -> void:
-	for body in bodies:body.queue_free()
-	bodies.clear()
+func _rebuild_arena() -> void:
+	for child in arena.get_children():child.queue_free()
 	for child in decor.get_children():child.queue_free()
-	for c in model.agents:
-		var body=body_scene.instantiate();add_child(body)
-		var material=StandardMaterial3D.new();material.albedo_color=family_color(c.root).darkened(.20);material.roughness=.7
-		_tint(body,material)
-		bodies.append(body)
+	var width=float(model.width)/State.UNITS;var height=float(model.height)/State.UNITS
+	var plane=MeshInstance3D.new();var mesh=PlaneMesh.new();mesh.size=Vector2(width,height);plane.mesh=mesh;plane.material_override=ground_material;arena.add_child(plane)
+	_box(Vector3(0,-.8,0),Vector3(width+2,1.55,height+2),Color("273d3c"),arena)
+	for side in [-1,1]:
+		_box(Vector3(side*(width/2+.2),.12,0),Vector3(.15,.28,height+.7),Color("a6af8d"),arena)
+		_box(Vector3(0,.12,side*(height/2+.2)),Vector3(width+.7,.28,.15),Color("a6af8d"),arena)
+	for i in range(12):
+		var rock=rock_scene.instantiate();rock.position=Vector3(-width/2+1+i*(width-2)/11,-.05,-height/2-.8 if i%2==0 else height/2+.8);rock.scale=Vector3.ONE*.5;arena.add_child(rock)
+	for region in model.groups:
+		for side in [-1,1]:
+			_box(Vector3(region.get_center().x+side*region.size.x/2,.045,region.get_center().y),Vector3(.06,.06,region.size.y),Color("718779"),decor)
+			_box(Vector3(region.get_center().x,.045,region.get_center().y+side*region.size.y/2),Vector3(region.size.x,.06,.06),Color("718779"),decor)
 	for box in model.barriers:
 		_box(Vector3(box.get_center().x,.6,box.get_center().y),Vector3(box.size.x,1.2,box.size.y),Color("556865"),decor)
-	for h in model.hazards:
-		var area=MeshInstance3D.new();var mesh=PlaneMesh.new();mesh.size=Vector2.ONE*h.radius*2;area.mesh=mesh;area.position=Vector3(h.position.x,.025,h.position.y)
-		var mat=ShaderMaterial.new();mat.shader=load("res://assets/materials/hazard.gdshader");area.material_override=mat;decor.add_child(area)
-		var label=Label3D.new();label.text="−12 energy/s";label.font_size=42;label.pixel_size=.025;label.outline_size=3;label.no_depth_test=true;label.position=area.position+Vector3(0,.8,0);label.billboard=BaseMaterial3D.BILLBOARD_ENABLED;label.modulate=Color("ffa7a0");decor.add_child(label)
-	if food_meshes:food_meshes.queue_free()
-	food_meshes=MultiMeshInstance3D.new()
-	# MultiMesh represents pellets; detailed Blender nutrient mesh is shared.
-	var source_mesh=_first_mesh(food_scene.instantiate())
-	var multi=MultiMesh.new();multi.transform_format=MultiMesh.TRANSFORM_3D;multi.mesh=source_mesh;multi.instance_count=model.food.size();food_meshes.multimesh=multi
-	var material=StandardMaterial3D.new();material.albedo_color=Color("9fdb78");material.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED;material.emission_enabled=true;material.emission=Color("78a548");material.emission_energy_multiplier=.35;material.roughness=.4;food_meshes.material_override=material;add_child(food_meshes)
-	tracked_generation=model.generation
-	var colors={"uniform":Color("334937"),"clustered":Color("2f473a"),"sparse":Color("625d41"),"hazards":Color("40534c"),"seasons":Color("52634c"),"barren":Color("655c4c")}
+	for hazard in model.hazards:
+		var area=MeshInstance3D.new();var disc=PlaneMesh.new();disc.size=Vector2.ONE*hazard.radius*2;area.mesh=disc;area.position=Vector3(hazard.position.x,.025,hazard.position.y)
+		var material=ShaderMaterial.new();material.shader=load("res://assets/materials/hazard.gdshader");area.material_override=material;decor.add_child(area)
+		var label=Label3D.new();label.text="−%.0f energy/s" % model.hazard_cost;label.font_size=42;label.pixel_size=.025;label.outline_size=3;label.no_depth_test=true;label.position=area.position+Vector3(0,.8,0);label.billboard=BaseMaterial3D.BILLBOARD_ENABLED;label.modulate=Color("ffa7a0");decor.add_child(label)
+	if food_meshes==null:
+		food_meshes=MultiMeshInstance3D.new()
+		var multi=MultiMesh.new();multi.transform_format=MultiMesh.TRANSFORM_3D;multi.mesh=_first_mesh(food_scene.instantiate());food_meshes.multimesh=multi
+		var material=StandardMaterial3D.new();material.albedo_color=Color("9fdb78");material.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED;material.roughness=.4;food_meshes.material_override=material;add_child(food_meshes)
+	var colors={"uniform":Color("334937"),"clustered":Color("2f473a"),"sparse":Color("625d41"),"barren":Color("655c4c"),"seasonal":Color("52634c")}
 	ground_material.set_shader_parameter("soil_color",colors.get(model.config.environment,Color("334937")))
 
 func _first_mesh(node: Node) -> Mesh:
@@ -104,24 +106,48 @@ func _tint(node: Node, mat: Material) -> void:
 	for child in node.get_children():_tint(child,mat)
 
 func update_view(delta: float) -> void:
-	if model==null or camera==null:return
+	if model==null or model.run_id.is_empty() or camera==null:return
 	visual_time+=delta
-	if tracked_generation!=model.generation:_rebuild()
-	var selected=null
-	for i in range(model.agents.size()):
-		var c=model.agents[i];var body=bodies[i]
-		body.visible=c.alive
-		body.position=Vector3(c.position.x,.025+sin(visual_time*11+c.slot)*.025,c.position.y)
-		body.rotation.y=-c.heading
-		body.rotation.z=sin(visual_time*9+c.slot)*.035
-		if c.id==selected_id and c.alive:selected=c
+	var signature=model.run_id+str(model.generation)+str(model.width)+str(model.height)+str(model.barriers)+str(model.hazards)+str(model.groups)
+	if signature!=geometry_signature:
+		_rebuild_arena();geometry_signature=signature
+	if source_run!=model.run_id:
+		for body in bodies.values():body.queue_free()
+		bodies.clear();reset_camera();source_run=model.run_id
+	var poses=model.sample_display()
+	var living={};var selected=null
+	for actor in model.agents:
+		if not actor.active:continue
+		var id=str(actor.id);living[id]=true
+		if not bodies.has(id):
+			var body=body_scene.instantiate();add_child(body)
+			var material=StandardMaterial3D.new();material.albedo_color=Color("c96f60") if actor.species=="predator" else family_color(str(actor.root)).darkened(.20);material.roughness=.7
+			_tint(body,material);bodies[id]=body
+		var pose=poses.get(id,{"position":actor.position,"heading":actor.heading});var position: Vector2=pose.position
+		var body=bodies[id];body.position=Vector3(position.x,.025+sin(visual_time*11+actor.slot)*.025,position.y)
+		body.scale=Vector3.ONE*float(actor.radius)/.35;body.rotation.y=-float(pose.heading);body.rotation.z=sin(visual_time*9+actor.slot)*.035
+		if id==selected_id:selected=actor
+	for id in bodies.keys():
+		if not living.has(id):bodies[id].queue_free();bodies.erase(id)
+	if food_meshes.multimesh.instance_count!=model.food.size():food_meshes.multimesh.instance_count=model.food.size()
 	for i in range(model.food.size()):
-		var p: Vector2=model.food[i]
-		var transform=Transform3D(Basis().scaled(Vector3.ONE*.8),Vector3(p.x,.12+sin(visual_time*2+i)*.04,p.y))
-		food_meshes.multimesh.set_instance_transform(i,transform)
+		var position: Vector2=model.food[i]
+		food_meshes.multimesh.set_instance_transform(i,Transform3D(Basis().scaled(Vector3.ONE*.65),Vector3(position.x,.1,position.y)))
+	transfers.mesh.clear_surfaces()
+	var vertices=PackedVector3Array()
+	for edge in model.sharing:
+		if poses.has(str(edge[0])) and poses.has(str(edge[1])):
+			var a: Vector2=poses[str(edge[0])].position;var b: Vector2=poses[str(edge[1])].position
+			vertices.append(Vector3(a.x,.32,a.y));vertices.append(Vector3(b.x,.32,b.y))
+	if not vertices.is_empty():
+		transfers.mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+		for vertex in vertices:transfers.mesh.surface_add_vertex(vertex)
+		transfers.mesh.surface_end()
 	selection.visible=selected!=null;sensing.visible=selected!=null
 	if selected:
-		selection.position=Vector3(selected.position.x,.08,selected.position.y);sensing.position=Vector3(selected.position.x,.035,selected.position.y)
+		var position: Vector2=poses.get(str(selected.id),{"position":selected.position}).position
+		selection.position=Vector3(position.x,.08,position.y);selection.scale=Vector3.ONE*maxf(.5,float(selected.radius)/.35)
+		sensing.position=Vector3(position.x,.035,position.y);sensing.scale=Vector3.ONE*float(selected.vision)/8
 
 func _update_camera() -> void:
 	if camera==null:return
@@ -139,16 +165,29 @@ func pan(motion: Vector2) -> void:
 	target-=right*motion.x*distance*.001;target-=forward*motion.y*distance*.001;target.y=0;_update_camera()
 
 func reset_camera() -> void:
-	yaw=.65;pitch=.84;distance=51;target=Vector3.ZERO;_update_camera()
+	yaw=.65;pitch=.84;target=Vector3.ZERO
+	distance=maxf(36,maxf(float(model.width),float(model.height))/State.UNITS*1.02) if model!=null else 51
+	var half=Vector2(float(model.width),float(model.height))/State.UNITS/2 if model!=null else Vector2(25,15)
+	for attempt in range(20):
+		_update_camera()
+		var size=camera.get_viewport().get_visible_rect().size
+		if size.x<2 or size.y<2:break
+		var safe=Rect2(size*.06,size*.88);var fits=true
+		for x in [-half.x,half.x]:
+			for z in [-half.y,half.y]:
+				if not safe.has_point(camera.unproject_position(Vector3(x,0,z))):fits=false
+		if fits:break
+		distance*=1.07
 
 func pick(point: Vector2) -> String:
 	if model==null:return ""
 	var origin=camera.project_ray_origin(point);var direction=camera.project_ray_normal(point)
 	if abs(direction.y)<.00001:return ""
 	var hit=origin+direction*((.3-origin.y)/direction.y)
-	var best=.9*.9;var result=""
-	for c in model.agents:
-		if not c.alive:continue
-		var d=Vector2(hit.x,hit.z).distance_squared_to(c.position)
-		if d<best:best=d;result=c.id
+	var best=INF;var result=""
+	for actor in model.agents:
+		if not actor.active:continue
+		var position: Vector2=model.displayed.get(str(actor.id),{"position":actor.position}).position
+		var d=Vector2(hit.x,hit.z).distance_squared_to(position)
+		if d<pow(maxf(.5,float(actor.radius)*1.6),2) and d<best:best=d;result=str(actor.id)
 	selected_id=result;return result

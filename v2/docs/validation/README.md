@@ -1,4 +1,6 @@
-# Validation record — 27 October 2026
+# Historical prototype validation — 27 October 2026
+
+This record describes the initial independent Godot prototype at commit `81782f1`. Current Python-engine connection checks are recorded in [bridge-validation](../bridge-validation/README.md).
 
 All checks were performed locally on the user's Apple M3 Mac. This is implementation validation, not independent external scientific reproduction.
 

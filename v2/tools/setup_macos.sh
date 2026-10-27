@@ -30,6 +30,7 @@ print('Godot:',version);print('Blender:',blender_version)
 (root/'.tools').mkdir(exist_ok=True)
 (root/'.tools/installation.json').write_text(json.dumps({'godot':str(godot),'godot_version':version,'blender':str(blender),'blender_version':blender_version},indent=2)+'\n')
 PY
+"$AE_PYTHON" "$AE_V2_ROOT/tools/configure_engine.py"
 "$AE_PYTHON" "$AE_V2_ROOT/tools/install_templates.py"
 "$AE_V2_ROOT/Run Artificial Evolution 2.command" --headless --editor --import
 "$AE_V2_ROOT/tools/test.sh"

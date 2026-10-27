@@ -1,0 +1,105 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | Started Registering global classes... (8 steps)[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  11% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  22% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  33% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  44% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  55% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  66% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  77% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[92m[ DONE ][39m [1mupdate_scripts_classes[22m
+[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Started Scanning actions... (4 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | basalt.glb[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | creature.glb[39m[0m
+[  40% ] [90m[1m_update_scan_actions[22m | nutrient.glb[39m[0m
+[  60% ] [90m[1m_update_scan_actions[22m | icon.svg[39m[0m
+[92m[ DONE ][39m [1m_update_scan_actions[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (4 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  20% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  40% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  60% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing pre-reimport operations...[39m[0m
+[   0% ] [90m[1mpreload_reimporting_scene[22m | Started Preparing scenes for reload (1 steps)[39m[0m
+[   0% ] [90m[1mpreload_reimporting_scene[22m | Analyzing scene [empty][39m[0m
+[  50% ] [90m[1mpreload_reimporting_scene[22m | Preparation done.[39m[0m
+[92m[ DONE ][39m [1mpreload_reimporting_scene[22m
+[0m
+[   0% ] [90m[1mreimport[22m | icon.svg[39m[0m
+[  20% ] [90m[1mreimport[22m | basalt.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  40% ] [90m[1mreimport[22m | creature.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  60% ] [90m[1mreimport[22m | nutrient.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  80% ] [90m[1mreimport[22m | Finalizing Asset Import...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (4 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing post-reimport operations...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+test_failed_archive_keeps_previous_run_and_reports_shutdown_failure (test_engine_bridge.ArchivingTests.test_failed_archive_keeps_previous_run_and_reports_shutdown_failure) ... ok
+test_reconnect_during_archive_does_not_lose_new_run_ancestry (test_engine_bridge.ArchivingTests.test_reconnect_during_archive_does_not_lose_new_run_ancestry) ... ok
+test_replacement_archives_original_python_run_before_switching (test_engine_bridge.ArchivingTests.test_replacement_archives_original_python_run_before_switching) ... ok
+test_shutdown_saves_a_replayable_python_bundle (test_engine_bridge.ArchivingTests.test_shutdown_saves_a_replayable_python_bundle) ... ok
+test_all_foraging_policies_reuse_original_reproduction_across_cohorts (test_engine_bridge.ObservationTests.test_all_foraging_policies_reuse_original_reproduction_across_cohorts) ... ok
+test_all_seven_modes_match_direct_python_even_with_repeated_observation (test_engine_bridge.ObservationTests.test_all_seven_modes_match_direct_python_even_with_repeated_observation) ... ok
+test_continuous_births_and_ancestry_are_observed_from_original_registry (test_engine_bridge.ObservationTests.test_continuous_births_and_ancestry_are_observed_from_original_registry) ... ok
+test_frame_exposes_original_hazard_cost_geometry_and_contact_damage (test_engine_bridge.ObservationTests.test_frame_exposes_original_hazard_cost_geometry_and_contact_damage) ... ok
+test_predation_deaths_and_captures_are_observed_from_existing_physics (test_engine_bridge.ObservationTests.test_predation_deaths_and_captures_are_observed_from_existing_physics) ... ok
+test_protocol_rejects_nonfinite_or_nonobject_json (test_engine_bridge.ObservationTests.test_protocol_rejects_nonfinite_or_nonobject_json) ... ok
+test_social_sharing_is_read_from_existing_interaction (test_engine_bridge.ObservationTests.test_social_sharing_is_read_from_existing_interaction) ... ok
+test_bad_configuration_cannot_replace_live_session (test_engine_bridge.TransportTests.test_bad_configuration_cannot_replace_live_session) ... ok
+test_disconnect_pauses_and_reconnect_retains_same_run (test_engine_bridge.TransportTests.test_disconnect_pauses_and_reconnect_retains_same_run) ... ok
+test_export_is_the_original_verifiable_and_replayable_bundle (test_engine_bridge.TransportTests.test_export_is_the_original_verifiable_and_replayable_bundle) ... ok
+test_fragmented_utf8_and_many_coalesced_commands (test_engine_bridge.TransportTests.test_fragmented_utf8_and_many_coalesced_commands) ... ok
+test_full_precision_seed_survives_configuration_text (test_engine_bridge.TransportTests.test_full_precision_seed_survives_configuration_text) ... ok
+test_invalid_token_is_rejected (test_engine_bridge.TransportTests.test_invalid_token_is_rejected) ... ok
+test_paused_steps_over_socket_match_direct_python_and_reject_pose_writes (test_engine_bridge.TransportTests.test_paused_steps_over_socket_match_direct_python_and_reject_pose_writes) ... ok
+test_second_client_cannot_take_control (test_engine_bridge.TransportTests.test_second_client_cannot_take_control) ... ok
+test_wire_supports_every_existing_mode (test_engine_bridge.TransportTests.test_wire_supports_every_existing_mode) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 16.992s
+
+OK
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+AE2_VIEW_TEST_RESULT {"checks":18,"failures":0}
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+AE2_UI_TEST_RESULT {"checks":22,"engine_ticks":0,"failures":0}

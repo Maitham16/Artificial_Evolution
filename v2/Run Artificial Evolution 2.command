@@ -20,4 +20,6 @@ if [[ "$AE_GODOT_VERSION" != 4.* ]]; then
   echo "Artificial Evolution 2 requires Godot 4; found $AE_GODOT_VERSION"
   exit 1
 fi
+export AE_ENGINE_ROOT="${AE_ENGINE_ROOT:-$(cd "$AE_V2_ROOT/.." && pwd)}"
+export AE_PYTHON="${AE_PYTHON:-$AE_ENGINE_ROOT/.venv/bin/python}"
 exec "$AE_GODOT" --path "$AE_V2_ROOT" "$@"

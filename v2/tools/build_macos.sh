@@ -6,6 +6,7 @@ AE_V2_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 AE_STAGE="$(mktemp -d /private/tmp/artificial-evolution-build.XXXXXX)"
 trap 'rm -rf "$AE_STAGE"' EXIT
 mkdir -p "$AE_V2_ROOT/build"
+touch "$AE_V2_ROOT/build/.gdignore"
 "$AE_V2_ROOT/Run Artificial Evolution 2.command" --headless --editor --import
 "$AE_V2_ROOT/Run Artificial Evolution 2.command" --headless --export-release macOS "$AE_STAGE/Artificial Evolution 2.zip"
 /usr/bin/ditto -x -k "$AE_STAGE/Artificial Evolution 2.zip" "$AE_STAGE"

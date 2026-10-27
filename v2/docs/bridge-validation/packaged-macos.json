@@ -1,0 +1,74 @@
+{
+  "ok": true,
+  "archive": "build/Artificial Evolution 2.zip",
+  "archive_sha256": "0fe07d24f0d17e9ea13c6204dba58d0525a51f19a2acc2c2c92cd7dd8aa4e415",
+  "signature": "ad-hoc; fresh extraction passed codesign --verify --deep --strict",
+  "architectures": "x86_64 arm64",
+  "executed_architecture": "arm64",
+  "native_runs": [
+    {
+      "mode": "foraging",
+      "screenshot": "../screenshots/world.png",
+      "bundle": "build/bridge-validation/foraging-1793080591961238000/run-21870a58dfee-0b5efb",
+      "ticks": 125,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "seasons",
+      "screenshot": "../screenshots/seasons.png",
+      "bundle": "build/bridge-validation/seasons-1793080597799959000/run-016950403879-b44b87",
+      "ticks": 125,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "obstacles",
+      "screenshot": "../screenshots/hazards.png",
+      "bundle": "build/bridge-validation/obstacles-1793080601859158000/run-fb250253f609-a045e5",
+      "ticks": 134,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "traits",
+      "screenshot": "../screenshots/traits.png",
+      "bundle": "build/bridge-validation/traits-1793080606309684000/run-8f85139fb112-c512c4",
+      "ticks": 125,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "predator_prey",
+      "screenshot": "../screenshots/predator_prey.png",
+      "bundle": "build/bridge-validation/predator_prey-1793080610419264000/run-229f24d45bb9-52c73a",
+      "ticks": 125,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "social",
+      "screenshot": "../screenshots/social.png",
+      "bundle": "build/bridge-validation/social-1793080614487353000/run-3cc0b6d50d01-bf20e2",
+      "ticks": 124,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "continuous",
+      "screenshot": "../screenshots/continuous.png",
+      "bundle": "build/bridge-validation/continuous-1793080618394265000/run-bfcdf93a8e6d-1b6837",
+      "ticks": 125,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    }
+  ],
+  "limitations": "Local packaged-app validation; no manual mouse/keyboard QA. x86_64 and Apple notarization were not tested."
+}
