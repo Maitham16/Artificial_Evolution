@@ -1,0 +1,246 @@
+{
+  "ok": true,
+  "archive_sha256": "8b9e4036706662940fc09dc61c62a36d75226d5a6b24061f620d8ae5fba9346e",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "nominal_window_pixels": [
+    1520,
+    960
+  ],
+  "method": "Five sequential signed-package runs at Balanced quality, 480 frames each, first 90 excluded; live Python simulation. Fresh extraction outside the checkout.",
+  "animation": "Actual Skeleton3D near the camera and shared GPU bone matrices farther away, with event-driven blended states.",
+  "profiles": [
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 408
+        },
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating"
+        ]
+      },
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 24.1303256997455,
+      "median_ms": 24.0740740740741,
+      "p95_ms": 29.242,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1035.827,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "mode": "foraging",
+      "view": "ground",
+      "mean_fps": 41.441628780441484,
+      "render_pixels": [
+        1520,
+        960
+      ]
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 1,
+        "event_gaps": 0,
+        "events": {
+          "meal": 401
+        },
+        "gpu_bone_models": 99,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating",
+          "Walking"
+        ]
+      },
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 23.0973462983157,
+      "median_ms": 22.7272727272727,
+      "p95_ms": 26.6666666666667,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1029.347,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "mode": "foraging",
+      "view": "valley",
+      "mean_fps": 43.29501697227104,
+      "render_pixels": [
+        1520,
+        960
+      ]
+    },
+    {
+      "animation": {
+        "active_models": 52,
+        "death_remnants": 12,
+        "detailed_skeletons": 4,
+        "event_gaps": 0,
+        "events": {
+          "capture": 48,
+          "death": 48,
+          "meal": 195
+        },
+        "gpu_bone_models": 48,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Escaping",
+          "Turning left",
+          "Turning right",
+          "Hunting",
+          "Eating",
+          "Dying",
+          "Dead"
+        ]
+      },
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 20.2599474130619,
+      "median_ms": 20.3703703703704,
+      "p95_ms": 23.514,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1030.653,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "mode": "predator_prey",
+      "view": "ground",
+      "mean_fps": 49.35846967476749,
+      "render_pixels": [
+        1520,
+        960
+      ]
+    },
+    {
+      "animation": {
+        "active_models": 100,
+        "death_remnants": 0,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "meal": 372
+        },
+        "gpu_bone_models": 95,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Walking",
+          "Eating"
+        ]
+      },
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 22.8583545377439,
+      "median_ms": 22.2222222222222,
+      "p95_ms": 26.631,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1032.143,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "mode": "traits",
+      "view": "ground",
+      "mean_fps": 43.74768089053794,
+      "render_pixels": [
+        1520,
+        960
+      ]
+    },
+    {
+      "animation": {
+        "active_models": 42,
+        "death_remnants": 6,
+        "detailed_skeletons": 5,
+        "event_gaps": 0,
+        "events": {
+          "birth": 29,
+          "death": 11,
+          "meal": 101,
+          "reproduce": 29
+        },
+        "gpu_bone_models": 37,
+        "observed_visual_states": [
+          "Awaiting movement",
+          "Running",
+          "Turning right",
+          "Turning left",
+          "Eating",
+          "Growing",
+          "Reproducing",
+          "Walking",
+          "Dying",
+          "Dead"
+        ]
+      },
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 19.6285372812091,
+      "median_ms": 20.5096363636364,
+      "p95_ms": 25.487,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1029.144,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "mode": "continuous",
+      "view": "ground",
+      "mean_fps": 50.946231279155256,
+      "render_pixels": [
+        1520,
+        960
+      ]
+    }
+  ],
+  "limitations": "Local Apple M3 tests; no manual OS mouse/keyboard QA, x86_64 execution, or Apple notarization. Anatomy, coat morphs and gait are presentation only."
+}

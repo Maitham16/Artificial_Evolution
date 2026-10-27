@@ -6,6 +6,12 @@ var camera_focus=Vector3.ZERO
 var camera: Camera3D
 var model
 var bodies: Dictionary = {}
+var activity_counts={}
+var event_counts={}
+var detail_clock=0.0
+var detailed_ids: Array=[]
+var remnants: Dictionary = {}
+var missing_since: Dictionary = {}
 var food_meshes: MultiMeshInstance3D
 var decor: Node3D
 var selection: MeshInstance3D
@@ -129,7 +135,9 @@ func update_view(delta: float) -> void:
 		_rebuild_arena();geometry_signature=signature
 	if source_run!=model.run_id:
 		for body in bodies.values():body.queue_free()
-		bodies.clear();reset_camera();source_run=model.run_id
+		bodies.clear()
+		for body in remnants.values():body.queue_free()
+		remnants.clear();missing_since.clear();activity_counts.clear();event_counts.clear();reset_camera();source_run=model.run_id
 	var poses=model.sample_display()
 	var living={};var selected=null
 	for actor in model.agents:
@@ -143,10 +151,43 @@ func update_view(delta: float) -> void:
 		var direction=Vector3(cos(float(pose.heading)),0,sin(float(pose.heading)))
 		var forward=direction.slide(normal).normalized();var side=forward.cross(normal).normalized()
 		body.basis=Basis(forward,side.cross(forward).normalized(),side).scaled(Vector3.ONE*float(actor.radius)/.45)
-		body.present(position,delta,camera.global_position.distance_to(body.global_position))
+		body.set_detailed(id==selected_id or id in detailed_ids)
+		body.present(actor,pose,model.display_sim_time,delta,camera.global_position.distance_to(body.global_position))
+		activity_counts[body.animation_state]=int(activity_counts.get(body.animation_state,0))+1
 		if id==selected_id:selected=actor
+	detail_clock+=delta
+	if detail_clock>.4:
+		detail_clock=0;detailed_ids.clear()
+		var candidates=bodies.keys()
+		candidates.sort_custom(func(a,b):return camera.global_position.distance_squared_to(bodies[a].global_position)<camera.global_position.distance_squared_to(bodies[b].global_position))
+		for id in candidates.slice(0,[2,4,6][nature.quality]):
+			if camera.global_position.distance_to(bodies[id].global_position)<22:detailed_ids.append(id)
+	for event in model.take_animation_events():
+		event_counts[event.kind]=int(event_counts.get(event.kind,0))+int(event.get("count",1))
+		var id=str(event.id)
+		if event.kind=="death":
+			var body=bodies.get(id)
+			if body==null:
+				body=Animal.new();add_child(body);body.configure(event)
+			var point=model.point(float(event.x),float(event.y))
+			body.position=Vector3(point.x,surface_height(point)+.015,point.y)
+			body.rotation.y=-float(event.heading);body.scale=Vector3.ONE*float(event.radius)/State.UNITS/.45
+			body.set_detailed(false);body.event(event);remnants[id]=body;bodies.erase(id);missing_since.erase(id)
+		elif event.kind=="retire":
+			if bodies.has(id):bodies[id].queue_free();bodies.erase(id)
+			missing_since.erase(id)
+		elif bodies.has(id):bodies[id].event(event)
 	for id in bodies.keys():
-		if not living.has(id):bodies[id].queue_free();bodies.erase(id)
+		if living.has(id):missing_since.erase(id)
+		else:
+			if not missing_since.has(id):missing_since[id]=0.0
+			missing_since[id]+=delta
+			# Unknown removals (e.g. a journal gap) never invent a death.
+			if missing_since[id]>.35:bodies[id].queue_free();bodies.erase(id);missing_since.erase(id)
+	for id in remnants.keys():
+		remnants[id]._present_death(delta)
+		activity_counts[remnants[id].animation_state]=int(activity_counts.get(remnants[id].animation_state,0))+1
+		if remnants[id].expired:remnants[id].queue_free();remnants.erase(id)
 	if food_meshes.multimesh.instance_count!=model.food.size():food_meshes.multimesh.instance_count=model.food.size()
 	for i in range(model.food.size()):
 		var position: Vector2=model.food[i]
@@ -233,3 +274,9 @@ func pick(point: Vector2) -> String:
 			var distance_to_hit=origin.distance_squared_to(body.global_transform*hit)
 			if distance_to_hit<best:best=distance_to_hit;result=id
 	selected_id=result;return result
+
+func animation_summary() -> Dictionary:
+	var detailed=0
+	for body in bodies.values():
+		if body.detailed:detailed+=1
+	return {"active_models":bodies.size(),"detailed_skeletons":detailed,"gpu_bone_models":bodies.size()-detailed,"death_remnants":remnants.size(),"events":event_counts.duplicate(),"observed_visual_states":activity_counts.keys(),"event_gaps":model.animation_gaps if model else 0}

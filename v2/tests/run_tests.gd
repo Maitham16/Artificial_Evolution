@@ -5,7 +5,7 @@ var failures=0
 func check(value: bool,message: String) -> void:
 	checks+=1
 	if not value:failures+=1;printerr("FAIL: "+message)
-func frame(time: float,x: float,heading: float=0.0,run_id: String="a",generation: int=1) -> Dictionary:
+static func frame(time: float,x: float,heading: float=0.0,run_id: String="a",generation: int=1) -> Dictionary:
 	return {"stream_id":"fixture","run_id":run_id,"wall_time":time,"ticks":int(time*60),"generation":generation,
 		"config":{"mode":"foraging","environment":"uniform","algorithm":"selection"},"seed_text":"9223372036854775807",
 		"width":1000,"height":600,"paused":false,"speed":1,"automatic":true,"finished":false,"extinct":false,"awaiting_generation":false,

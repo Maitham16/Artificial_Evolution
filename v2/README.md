@@ -6,7 +6,7 @@ The 3D application now runs the repository's **existing Python simulation engine
 
 The new [living landscape](docs/NATURAL_WORLD.md) adds rolling green terrain, scanned trees and plants, wind-blown grass, mountains, water, sunlight and atmospheric lighting. Click **Landscape view** or press **V**, then choose **Valley** or **Ground view**. Three scenery quality profiles adjust rendering cost without changing Python.
 
-The [animal models](docs/ANIMAL_MODELS.md) now use detailed, textured deer for herbivores and wolves for predators, with natural coat/size variations and efficient animated gaits. Editable Blender files and CC0 source/license records are included.
+The [animal models](docs/ANIMAL_MODELS.md) now use detailed, textured deer for herbivores and wolves for predators, with natural coat/size variations and [event-driven skeletal animation](docs/CREATURE_ANIMATION.md). Walk/run/turn, feeding, pursuit/escape, rest, real continuous births, age-based visual growth and confirmed deaths follow Python observations. Editable Blender files and CC0 source/license records are included.
 
 All integration changes are under `v2/`. The root Python application, engine, tests, dependencies, configurations, results, and published 1.x releases are unchanged.
 

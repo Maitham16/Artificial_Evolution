@@ -1,0 +1,7 @@
+{
+  "ok": true,
+  "baseline_commit": "8930e07d5b5457b4761f403ed87b88f9a7f34acc",
+  "original_tracked_files_checked": 591,
+  "changed": [],
+  "scope": "Every tracked original file outside v2; the Python observation adapter under v2 intentionally adds passive telemetry."
+}

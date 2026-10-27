@@ -86,12 +86,57 @@ class EngineAdapter:
         self.selected = self.session.key(self.session.world.creatures[0])
         self.sequence = 0
         self.chart_stamp = None
+        self.view_sequence = 0
+        self.view_events = deque(maxlen=4096)
+        self.view_seen_births = len(self.session.births)
+        self.view_watch = {key: (c, c.food_eaten, getattr(c, 'captures', 0))
+                           for key, c in self.session.actors.items()}
 
     def update(self, seconds):
         self.session.update(seconds, max_ticks=32)
 
-    def frame(self, seen_births=0, full=False):
+    def observe_animation_events(self):
+        """Read actual counters/ledgers. Never alter creatures or run extra decisions."""
+        s = self.session
+        living = {s.key(c) for c in s.world.creatures}
+        births = list(s.births.values())
+        new_births = births[self.view_seen_births:]
+        self.view_seen_births = len(births)
+
+        def event(kind, key, **extra):
+            c = s.actors[key]
+            self.view_sequence += 1
+            birth = s.births[key]
+            self.view_events.append(dict(seq=self.view_sequence, kind=kind, id=key,
+                time=s.elapsed, x=c.x, y=c.y, heading=c.heading, radius=float(c.radius),
+                age=c.age, root=birth['founder'], parent=birth['parent'],
+                species=getattr(c, 'species', None), cause=c.death_cause,
+                maturity_age=getattr(s.world, 'maturity_age', None), **extra))
+
+        for birth in new_births:
+            key = birth['key']; c = s.actors[key]
+            self.view_watch[key] = (c, 0, 0)
+            event('birth', key, born_at=birth['born_at'], continuous=s.config.mode == 'continuous')
+            # Continuous births are funded clonal reproduction. Cohort replacement
+            # is selection/copying, not physical mating and not a death.
+            if s.config.mode == 'continuous' and birth['parent'] in s.actors:
+                event('reproduce', birth['parent'], child=key)
+        for key, (c, meals, captures) in list(self.view_watch.items()):
+            if c.food_eaten > meals: event('meal', key, count=c.food_eaten-meals)
+            if getattr(c, 'captures', 0) > captures:
+                event('capture', key, count=c.captures-captures)
+            if not c.alive:
+                event('death', key)
+                del self.view_watch[key]
+            elif key not in living:
+                event('retire', key)
+                del self.view_watch[key]
+            else:
+                self.view_watch[key] = (c, c.food_eaten, getattr(c, 'captures', 0))
+
+    def frame(self, seen_births=0, full=False, seen_animation=0):
         s, w = self.session, self.session.world
+        self.observe_animation_events()
         living_keys = {s.key(c) for c in w.creatures}
         # Current bodies only. Historical ancestry is sent separately and is never
         # reconstructed from display interpolation.
@@ -109,7 +154,13 @@ class EngineAdapter:
                                root=birth['founder'], parent=birth['parent'], depth=birth['depth'],
                                generation=c.generation, species=getattr(c, 'species', None),
                                group=getattr(c, 'group_id', None), cause=c.death_cause,
-                               speed=c.speed, vision=w.vision_range_for(c),
+                               speed=c.speed, max_speed=c.max_speed, turn_rate=c.turn_rate,
+                               toward_seconds=getattr(c, 'toward_seconds', 0.),
+                               away_seconds=getattr(c, 'away_seconds', 0.),
+                               opponent_visible_seconds=getattr(c, 'opponent_visible_seconds', 0.),
+                               born_at=birth['born_at'],
+                               maturity_age=getattr(w, 'maturity_age', None),
+                               vision=w.vision_range_for(c),
                                energy_cost=c.energy_cost_per_second,
                                in_hazard=getattr(c, 'in_danger', False),
                                hazard_loss=getattr(c, 'hazard_energy_lost', 0.),
@@ -134,6 +185,8 @@ class EngineAdapter:
         self.sequence += 1
         frame = dict(type='frame', protocol=PROTOCOL, seq=self.sequence, run_id=s.run_id,
                      ticks=s.ticks, time=s.elapsed, generation=w.generation,
+                     animation_events=[e for e in self.view_events if e["seq"] > seen_animation], animation_sequence=self.view_sequence,
+                     animation_floor=self.view_events[0]['seq'] if self.view_events else self.view_sequence+1,
                      config=s.config.to_dict(), seed_text=str(s.config.seed),
                      paused=s.paused, speed=s.speed, automatic=s.automatic, finished=s.finished,
                      extinct=getattr(w, 'lineage_extinct', False),
@@ -167,6 +220,7 @@ class Peer:
         self.current = b''
         self.authenticated = False
         self.seen_births = 0
+        self.seen_animation = 0
         self.seen_run = None
         self.last_seen = time.monotonic()
 
@@ -256,7 +310,8 @@ class BridgeServer:
         if self.active.seen_run != self.adapter.session.run_id:
             self.active.seen_run = self.adapter.session.run_id
             self.active.seen_births = 0
-        frame = self.adapter.frame(self.active.seen_births, full=full)
+            self.active.seen_animation = 0
+        frame = self.adapter.frame(self.active.seen_births, full=full, seen_animation=self.active.seen_animation)
         frame['wall_time'] = time.monotonic() - self.start
         frame['stream_id'] = self.stream_id
         self.frame_sequence += 1
@@ -292,6 +347,9 @@ class BridgeServer:
             count = request.get('count')
             if self.adapter and request.get('run_id') == self.adapter.session.run_id and type(count) is int and 0 <= count <= len(self.adapter.session.births):
                 peer.seen_births = max(peer.seen_births, count)
+                sequence = request.get('animation_sequence')
+                if type(sequence) is int and 0 <= sequence <= self.adapter.view_sequence:
+                    peer.seen_animation = max(peer.seen_animation, sequence)
             return
         if command == 'validate_config':
             config = configuration(request)
@@ -315,6 +373,7 @@ class BridgeServer:
                 return
             self.adapter = candidate
             peer.seen_births = 0
+            peer.seen_animation = 0
             self.last_export = None
             self.last = time.monotonic()
             peer.latest = None
@@ -405,6 +464,7 @@ class BridgeServer:
                     self.last_export = None
                     if owner.sock in self.peers:
                         owner.seen_births = 0
+                        owner.seen_animation = 0
                         owner.latest = None
                         owner.response(dict(type='response', id=rid, ok=True, frame=self.frame(full=True)))
                     else:

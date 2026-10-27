@@ -12,6 +12,8 @@ func _build() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--screenshot="):output=arg.trim_prefix("--screenshot=")
 		elif arg=="--run":review_clip="Run";review_phase=.25
+		elif arg.begins_with("--clip="):review_clip=arg.trim_prefix("--clip=")
+		elif arg.begins_with("--phase="):review_phase=float(arg.trim_prefix("--phase="))
 	var stage=Node3D.new();root.add_child(stage)
 	var environment=WorldEnvironment.new();var settings=Environment.new();environment.environment=settings
 	settings.background_mode=Environment.BG_COLOR;settings.background_color=Color("b6c8c6")
@@ -30,7 +32,7 @@ func _build() -> void:
 	var camera=Camera3D.new();stage.add_child(camera);camera.fov=34;camera.position=Vector3(.8,2.1,6.4);camera.look_at(Vector3(0,.63,0));camera.make_current()
 	var canvas=CanvasLayer.new();root.add_child(canvas)
 	var title=Label.new();title.text="ARTIFICIAL EVOLUTION  /  ANIMAL MODELS";title.position=Vector2(32,28);title.add_theme_font_size_override("font_size",24);title.add_theme_color_override("font_color",Color("233a30"));canvas.add_child(title)
-	var caption=Label.new();caption.text="Blender asset review · CC0 models by CDmir / TinyWorlds and NewDLC · Natural coat variations · GPU gait animation";caption.position=Vector2(32,70);caption.add_theme_font_size_override("font_size",16);caption.add_theme_color_override("font_color",Color("3b5548"));canvas.add_child(caption)
+	var caption=Label.new();caption.text="Blender asset review · CC0 models by CDmir / TinyWorlds and NewDLC · Natural coat variations · Skeletal clip review";caption.position=Vector2(32,70);caption.add_theme_font_size_override("font_size",16);caption.add_theme_color_override("font_color",Color("3b5548"));canvas.add_child(caption)
 func _process(delta: float) -> bool:
 	if animals.is_empty():return false
 	elapsed+=delta;frames+=1

@@ -77,6 +77,116 @@
       "sha256": "8161237772062323f9817dbcb917996474cb232d472004d9a38a2ae73eb42c9c"
     },
     {
+      "path": "v2/assets/animals/skeletal/doe/bones.exr",
+      "bytes": 328861,
+      "sha256": "1f2b160c4b8938a8a7805634dfb47e5bf7f1daf64287b9800526c4a159ece60d"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/doe/doe-body.png",
+      "bytes": 1430240,
+      "sha256": "097921cbd1cdfe5877c8677918b4b8feea72ecef557869e2c6243f97fae7037e"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/doe/doe-head.png",
+      "bytes": 1230375,
+      "sha256": "1a52cbc6a2d97854b96c7bc16170063516cdf578d1b3a0c4c04245869ed5a965"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/doe/doe.bin",
+      "bytes": 265648,
+      "sha256": "5fb7fb4c2d9fddf6e1bdea4abd74bf235eee9081cee11cc0853e2a9c9f5538ff"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/doe/doe.gltf",
+      "bytes": 244223,
+      "sha256": "b040262e58984bef01d49b802369539dce813818d6ecf6d5cdc11f510f2605bd"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/doe/poses.res",
+      "bytes": 209972,
+      "sha256": "72552665fcd90cb5a857359add5f018ac163ad046014ff825088e8b5f20e04fd"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/bones.exr",
+      "bytes": 321492,
+      "sha256": "6f2a518b02a38bf358dd410122c5727802f8ae7afabcfb1996984547640d1ff0"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/deer-antlers-normal.png",
+      "bytes": 435179,
+      "sha256": "b096d6ce2ba1252b06ed91aff0d372d154192ddae7e09a52483995d5c2b7b4f0"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/deer-antlers.png",
+      "bytes": 704007,
+      "sha256": "58ec07546dc52e93477977e04cfe208f034568beeac3e797d09b9636d8858931"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/deer-body-normal.png",
+      "bytes": 294473,
+      "sha256": "e644483f98647e9ecc69c4602e7ffbeb7c3ce774cd3d1244e7ab0fd595bcbfd1"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/deer-body.png",
+      "bytes": 1155256,
+      "sha256": "d463ce30c8a7d7f9d70203ec776802a66ffca92a75654a47ee0818277f39b8a5"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/deer-head-normal.png",
+      "bytes": 327549,
+      "sha256": "8a1f532969fe707e679d1286b659e32b53308a9b69762da490d2b62054c91982"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/deer-head.png",
+      "bytes": 1216980,
+      "sha256": "973a68e27063e81f7fa93ddedc7a66db7a953c17983f7e04957391be1aa29193"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/poses.res",
+      "bytes": 202081,
+      "sha256": "452bdf84c7868b0ecc72f05450c56501703765f24e1b06a5929c9b8cca68bf6d"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/stag.bin",
+      "bytes": 290348,
+      "sha256": "4c9e144ae322ce799f533fdd3f517e0000dda89818607559359dcf643bf71426"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/stag/stag.gltf",
+      "bytes": 243573,
+      "sha256": "c9dba9b0ee6435ef21e21e2e0b83fac9fc8d76a1978a43d9113535c5bb032028"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/wolf/bones.exr",
+      "bytes": 361925,
+      "sha256": "2e3134f6d4cfa7d7ee548d707a48792ff77b20b681270684a38955b1bad7e76f"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/wolf/dog2Color.png",
+      "bytes": 289490,
+      "sha256": "a04c1da566be5c50a42f62b66199f97c13ad3f5ce2dde0f84ed75a61b0e292cb"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/wolf/dog2Normal.png",
+      "bytes": 675541,
+      "sha256": "6d536f2279b816aca1556e9eee72f472e2d091c14127f988991d87e78d083347"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/wolf/poses.res",
+      "bytes": 267606,
+      "sha256": "14d9648c264852e4cd527514a3d60a3bffd485bc37fa683cd4b31c787366fff1"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/wolf/wolf.bin",
+      "bytes": 271440,
+      "sha256": "1a3c93412b1f96e278ed4085a6cc178086373dad8a68e5017855035c874f8865"
+    },
+    {
+      "path": "v2/assets/animals/skeletal/wolf/wolf.gltf",
+      "bytes": 268060,
+      "sha256": "9f73ccc10988ee1802b3ce1a432b7a2984068dfaf5513c22a8bd147a46cd16fb"
+    },
+    {
       "path": "v2/assets/animals/stag/deer-antlers-normal.png",
       "bytes": 435179,
       "sha256": "b096d6ce2ba1252b06ed91aff0d372d154192ddae7e09a52483995d5c2b7b4f0"
@@ -172,7 +282,22 @@
       "path": "v2/art_source/animals/wolf.blend",
       "bytes": 3476649,
       "sha256": "635cf116bc618f28ec229f0f8e2952b63e3fe4224f04bc55da6e1d048e441d09"
+    },
+    {
+      "path": "v2/art_source/animation/doe.blend",
+      "bytes": 10027203,
+      "sha256": "ff5bb147343f925d0b4f7976ec1585b1bc7af691d77412494a8d37c7565b5e1b"
+    },
+    {
+      "path": "v2/art_source/animation/stag.blend",
+      "bytes": 12104655,
+      "sha256": "0fbf44a4fd0a2fe21118e0f9f24cfbb19c770f6f749d2f52b18c1c21b4a89690"
+    },
+    {
+      "path": "v2/art_source/animation/wolf.blend",
+      "bytes": 12474431,
+      "sha256": "3c7dddb873fe20bcbafeffc0c80ea53cc2f718245d2c57c3d1e1eae4d233219d"
     }
   ],
-  "processing": "Blender 5.2.3; prepare_animal_assets.py. GPU pose data is linear, lossless floating point with no mipmaps. All source and derived animal art is CC0."
+  "processing": "Blender 5.2.3 animal assets and skeletal action rigs; Godot 4.7.2 shared bone-pose libraries and GPU skin-matrix palettes. See prepare_animation_rigs.py and bake_skeletal_poses.gd. Bone data is linear lossless floating point without mipmaps. Source and derived animal art is CC0."
 }

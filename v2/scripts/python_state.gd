@@ -37,6 +37,11 @@ var interpolation_delay=.10
 var frames: Array=[]
 var displayed={}
 var connected=false
+var display_sim_time=0.0
+var display_wall_time=0.0
+var animation_sequence=0
+var animation_events: Array=[]
+var animation_gaps=0
 
 func point(x: float,y: float) -> Vector2:return Vector2((x-width/2)/UNITS,(y-height/2)/UNITS)
 
@@ -48,8 +53,14 @@ func accept(data: Dictionary,received_at: float=-1.0) -> bool:
 	stream_id=incoming_stream;latest_wall_time=float(data.wall_time)
 	var changed=run_id!=str(data.run_id)
 	if changed:
-		run_id=str(data.run_id);births.clear();samples.clear();history.clear();frames.clear();displayed.clear();clock_offset=INF
+		run_id=str(data.run_id);births.clear();samples.clear();history.clear();frames.clear();displayed.clear();clock_offset=INF;animation_events.clear();animation_sequence=int(data.get("animation_sequence",0))
 	if not changed and int(data.ticks)<ticks:return false
+	if not changed:
+		if int(data.get("animation_floor",animation_sequence+1))>animation_sequence+1:animation_gaps+=1
+		for event in data.get("animation_events",[]):
+			if int(event.seq)>animation_sequence:
+				var receipt=event.duplicate(true);receipt.received_wall=float(data.wall_time);animation_events.append(receipt)
+		animation_sequence=maxi(animation_sequence,int(data.get("animation_sequence",0)))
 	last_received=received_at;clock_offset=minf(clock_offset,received_at-float(data.wall_time));connected=true
 	config=data.config;seed_text=str(data.seed_text);generation=int(data.generation);ticks=int(data.ticks)
 	width=float(data.width);height=float(data.height);paused=data.paused;speed=int(data.speed);automatic=data.automatic
@@ -63,7 +74,9 @@ func accept(data: Dictionary,received_at: float=-1.0) -> bool:
 	for source in data.agents:
 		var actor=source.duplicate();actor.position=point(source.x,source.y);actor.radius=float(source.radius)/UNITS;actor.vision=float(source.vision)/UNITS
 		actor.slot=agents.size();agents.append(actor)
-		if actor.active:poses[str(actor.id)]={"position":actor.position,"heading":float(actor.heading)}
+		if actor.active:
+			poses[str(actor.id)]={"position":actor.position,"heading":float(actor.heading),"age":float(actor.age)}
+			for field in ["toward_seconds","away_seconds","opponent_visible_seconds"]:poses[str(actor.id)][field]=float(actor.get(field,0))
 	food=[]
 	for pellet in data.food:food.append(point(pellet[0],pellet[1]))
 	barriers=[]
@@ -73,8 +86,8 @@ func accept(data: Dictionary,received_at: float=-1.0) -> bool:
 	hazards=[]
 	for hazard in data.hazards:hazards.append({"position":point(hazard[0],hazard[1]),"radius":float(hazard[2])/UNITS})
 	var timestamp=float(data.wall_time)
-	if frames.is_empty() or timestamp>float(frames[-1].time):frames.append({"time":timestamp,"poses":poses,"generation":generation})
-	elif timestamp==float(frames[-1].time):frames[-1]={"time":timestamp,"poses":poses,"generation":generation}
+	if frames.is_empty() or timestamp>float(frames[-1].time):frames.append({"time":timestamp,"poses":poses,"generation":generation,"sim_time":float(data.get("time",ticks/60.0))})
+	elif timestamp==float(frames[-1].time):frames[-1]={"time":timestamp,"poses":poses,"generation":generation,"sim_time":float(data.get("time",ticks/60.0))}
 	while frames.size()>16:frames.pop_front()
 	received_frames+=1
 	return true
@@ -87,19 +100,31 @@ func sample_display(now: float=-1.0) -> Dictionary:
 	var a=frames[0];var b=frames[1] if frames.size()>1 else frames[0]
 	if target>=float(frames[-1].time):a=frames[-1];b=a
 	var alpha=clampf((target-float(a.time))/maxf(.000001,float(b.time)-float(a.time)),0,1)
+	display_sim_time=lerpf(float(a.get("sim_time",0)),float(b.get("sim_time",0)),alpha)
+	display_wall_time=target
 	displayed={}
 	for actor in agents:
 		if not actor.active:continue
 		var id=str(actor.id)
-		var latest={"position":actor.position,"heading":float(actor.heading)}
+		var latest={"position":actor.position,"heading":float(actor.heading),"age":float(actor.age)}
 		# A new birth/cohort snaps to its authoritative position. Never interpolate
 		# a different lifetime into a newborn or extrapolate through a barrier.
 		if a.generation==b.generation and a.poses.has(id) and b.poses.has(id):
 			displayed[id]={"position":a.poses[id].position.lerp(b.poses[id].position,alpha),"heading":lerp_angle(a.poses[id].heading,b.poses[id].heading,alpha)}
 		else:displayed[id]=latest
+		for field in ["age","toward_seconds","away_seconds","opponent_visible_seconds"]:
+			displayed[id][field]=lerpf(float(a.poses.get(id,{}).get(field,actor.get(field,0))),float(b.poses.get(id,{}).get(field,actor.get(field,0))),alpha)
 	return displayed
 
 func actor(id: String):
 	for entry in agents:
 		if str(entry.id)==id:return entry
 	return null
+
+func take_animation_events() -> Array:
+	var due=[];var pending=[]
+	for event in animation_events:
+		if float(event.received_wall)<=display_wall_time:due.append(event)
+		else:pending.append(event)
+	animation_events=pending
+	return due

@@ -88,17 +88,19 @@ func _run():
 	check(species_match,"New-run animal models retain Python identities and distinguish predators")
 	var first=app.model.agents[0];var animal=app.world_view.bodies[first.id]
 	check(is_equal_approx(animal.basis.x.length(),float(first.radius)/.45),"Python radius still controls body scale")
-	var materials=animal.materials
-	var pose_before=materials[0].get_shader_parameter("pose_frames")
-	animal.present(Vector2.ZERO,.1,5);animal.present(Vector2(1,0),.1,5)
-	var pose_after=materials[0].get_shader_parameter("pose_frames")
-	check(pose_before!=pose_after and animal.current_clip=="Run","Observed displacement advances a GPU gait")
-	animal.present(Vector2(1,0),0,5)
-	check(materials[0].get_shader_parameter("pose_frames")==pose_after,"Paused display does not advance gait")
-	check(animal.skin.find_children("*","Skeleton3D",true,false).is_empty(),"Runtime models avoid CPU skeleton animation")
-	var position_image=load("res://assets/animals/"+animal.model_key+"/positions.exr").get_image()
-	check(position_image.get_format() in [Image.FORMAT_RGBF,Image.FORMAT_RGBAF,Image.FORMAT_RGBH,Image.FORMAT_RGBAH],"GPU pose positions retain floating-point precision")
-	check(position_image.get_mipmap_count()==0,"Data textures have no interpolated mip levels")
+	animal.set_detailed(true);animal._pose("Rest",0);animal.has_position=false
+	var moving=first.duplicate(true);moving.speed=60
+	var pose_before=animal.current_pose.duplicate()
+	animal.present(moving,{"position":Vector2.ZERO,"heading":0.0},0,.1,5)
+	animal.present(moving,{"position":Vector2(3,0),"heading":0.0},1,.1,5)
+	var pose_after=animal.current_pose.duplicate()
+	check(pose_before!=pose_after and animal.current_clip=="Run","Observed displacement advances actual skeletal bones")
+	animal.present(moving,{"position":Vector2(3,0),"heading":0.0},1,0,5)
+	check(animal.current_pose==pose_after,"Paused display does not advance gait")
+	check(animal.skeleton.get_bone_count()>=30,"Runtime models contain an actual Skeleton3D")
+	var position_image=load("res://assets/animals/skeletal/"+animal.model_key+"/bones.exr").get_image()
+	check(position_image.get_format() in [Image.FORMAT_RGBF,Image.FORMAT_RGBAF,Image.FORMAT_RGBH,Image.FORMAT_RGBAH],"GPU bone matrices retain floating-point precision")
+	check(position_image.get_mipmap_count()==0,"Bone data textures have no mip levels")
 	var style=app.world_view.Animal.appearance(first)
 	check(style==app.world_view.Animal.appearance(first),"Coat, size and model choice are deterministic for an identity")
 	var landscape=app.world_view.nature

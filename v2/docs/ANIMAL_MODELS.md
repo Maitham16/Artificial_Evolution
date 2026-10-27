@@ -19,11 +19,9 @@ These animal names, antlers, coats and the small visual size variation are artis
 
 The editable Blender models retain their skeletons. The deer retain the source idle/run poses; the wolf has newly authored in-place idle and quadruped gait cycles. Each model is approximately 4,800–5,400 source triangles.
 
-The runtime uses **vertex animation textures** baked from Blender's evaluated rigs: 32 idle poses and 24 locomotion poses, with positions and normals interpolated on the GPU. This avoids updating 100 separate CPU skeletons. Each animal shares its model and pose textures. The renderer advances the gait phase from observed interpolated XZ displacement, with a stride length scaled to the displayed body. It seeks new pose parameters at up to 30 Hz nearby and 15 Hz farther away. The shadow pass uses the same animated geometry.
+The current runtime uses [event-driven skeletal animation](CREATURE_ANIMATION.md): actual `Skeleton3D` poses nearby and shared GPU bone matrices for the rest of the population. Walking/running phases follow real displacement, with smooth pose blends and observed feeding/lifecycle events. The earlier two-clip vertex-animation assets remain as historical authoring outputs; they are no longer the active animal renderer.
 
-Animation never translates the authoritative root, changes heading, executes brain decisions, or creates a physics tick. Pausing Python freezes gait advancement. Head, neck and tail motions within an idle/run cycle are cosmetic. Foot placement follows the baked poses and the whole body's terrain slope; there is no terrain foot IK, turn-in-place system or animation-driven attack/damage mechanic. At accelerated simulation speeds, the same displacement-driven cycle runs faster.
-
-The floating-point pose textures are linear and lossless, with nearest sampling and no mipmaps. Ordinary coat textures have mipmaps and GPU compression. Automatic mesh LOD generation and optimized shadow meshes are disabled for these assets because topology/UV changes would invalidate vertex lookup IDs. Original Blender rigs are absent from the runtime skinning path. Current native frame timings and packaged export/replay checks are in [animal-validation](animal-validation/README.md); older [landscape timings](nature-validation/README.md) describe the previous placeholder models.
+The Blender rigs are retained in `v2/art_source/animation/`. Current package tests and timings are in [animation-validation](animation-validation/README.md). The older [animal-validation](animal-validation/README.md) records describe the previous two-clip renderer.
 
 ## Run and inspect
 

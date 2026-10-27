@@ -24,6 +24,7 @@ var catalog={}
 var authenticated=false
 var saw_connection=false
 var seen_births=-1
+var seen_animation=-1
 var seen_run=""
 var auto_save=true
 
@@ -113,10 +114,11 @@ func _deliver(value) -> void:
 	elif value.get("type","")=="frame":
 		if int(value.get("protocol",0))!=PROTOCOL:_fail("Incompatible Python snapshot protocol.");return
 		frame_received.emit(value)
-		if seen_run!=str(value.run_id):seen_run=str(value.run_id);seen_births=-1
+		if seen_run!=str(value.run_id):seen_run=str(value.run_id);seen_births=-1;seen_animation=-1
 		var count=int(value.get("birth_count",0))
-		if count!=seen_births:
-			seen_births=count;request("seen",{"count":count,"run_id":str(value.run_id)})
+		var sequence=int(value.get("animation_sequence",0))
+		if count!=seen_births or sequence!=seen_animation:
+			seen_births=count;seen_animation=sequence;request("seen",{"count":count,"animation_sequence":sequence,"run_id":str(value.run_id)})
 	else:_fail("Python sent an unknown message type.")
 
 func _process(_delta: float) -> void:

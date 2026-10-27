@@ -434,6 +434,8 @@ func _refresh() -> void:
 		energy_label.text="Energy %.1f / %.1f · %s" % [actor.energy,actor.capacity,"living" if actor.active else "cohort ended" if actor.alive else str(actor.cause)]
 		specimen_details.text="Age %.1fs · Meals %d\nFitness %.1f\nParent %s\nRoot %s · depth %d\nSpeed %.1f px/s · radius %.1f px\nEnergy drain %.2f/s" % [actor.age,actor.meals,actor.fitness,str(actor.parent) if actor.parent!=null else "founder",actor.root,actor.depth,actor.speed,actor.radius*State.UNITS,actor.energy_cost]
 		if actor.in_hazard or float(actor.hazard_loss)>0:specimen_details.text+="\nHAZARD LOSS %.1f / %.1fs" % [actor.hazard_loss,actor.hazard_seconds]
+		var visual=world_view.bodies.get(selected_id,world_view.remnants.get(selected_id))
+		if visual and is_instance_valid(visual):specimen_details.text+="\nActivity: "+visual.animation_state
 		if actor.species!=null:specimen_details.text+="\n%s · captures %d" % [str(actor.species).capitalize(),actor.captures]
 		if model.config.mode=="continuous":specimen_details.text+="\nChildren %d" % actor.children
 		if model.config.mode=="social":specimen_details.text+="\nGroup %d · shared %.1f → %.1f" % [actor.group,actor.shared_out,actor.shared_in]
@@ -515,7 +517,7 @@ func _finish_cli() -> void:
 		frame_samples.sort()
 		var total=0.0
 		for value in frame_samples:total+=value
-		var profile={"frames":frame_samples.size(),"mean_ms":total/frame_samples.size(),"median_ms":frame_samples[frame_samples.size()/2],"p95_ms":frame_samples[mini(frame_samples.size()-1,int(frame_samples.size()*.95))],"quality":quality_index,"immersive":immersive,"scenery":world_view.nature.statistics,"renderer":RenderingServer.get_current_rendering_method(),"device":RenderingServer.get_video_adapter_name()}
+		var profile={"frames":frame_samples.size(),"mean_ms":total/frame_samples.size(),"median_ms":frame_samples[frame_samples.size()/2],"p95_ms":frame_samples[mini(frame_samples.size()-1,int(frame_samples.size()*.95))],"quality":quality_index,"immersive":immersive,"scenery":world_view.nature.statistics,"animation":world_view.animation_summary(),"renderer":RenderingServer.get_current_rendering_method(),"device":RenderingServer.get_video_adapter_name()}
 		var file=FileAccess.open(profile_path,FileAccess.WRITE)
 		if file:file.store_string(JSON.stringify(profile,"\t")+"\n");file.close()
 	print("AE2_PYTHON_VIEW ",JSON.stringify({"ticks":model.ticks,"frames":model.received_frames,"mode":model.config.mode,"engine":"Python ResearchSession"}))

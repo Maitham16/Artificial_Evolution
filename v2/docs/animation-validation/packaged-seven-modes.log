@@ -1,0 +1,112 @@
+x86_64 arm64
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_PYTHON_EXPORT /Users/maith/Desktop/Artificial_Evolution/v2/build/bridge-validation/foraging-1793098539670334000/run-838f02b94c58-659398
+AE2_PYTHON_VIEW {"engine":"Python ResearchSession","frames":168,"mode":"foraging","ticks":379}
+Bundle verified: 838f02b94c58, 100 lifetimes.
+Replay verified: 379 ticks, 100 lifetimes.
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_PYTHON_EXPORT /Users/maith/Desktop/Artificial_Evolution/v2/build/bridge-validation/seasons-1793098554136761000/run-b6b6a3b3ea8f-0d56c7
+AE2_PYTHON_VIEW {"engine":"Python ResearchSession","frames":146,"mode":"seasons","ticks":336}
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_PYTHON_EXPORT /Users/maith/Desktop/Artificial_Evolution/v2/build/bridge-validation/obstacles-1793098563080244000/run-b195951edbf7-13fc74
+AE2_PYTHON_VIEW {"engine":"Python ResearchSession","frames":158,"mode":"obstacles","ticks":368}
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_PYTHON_EXPORT /Users/maith/Desktop/Artificial_Evolution/v2/build/bridge-validation/traits-1793098573284579000/run-06e12cf32290-b94d42
+AE2_PYTHON_VIEW {"engine":"Python ResearchSession","frames":154,"mode":"traits","ticks":354}
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_PYTHON_EXPORT /Users/maith/Desktop/Artificial_Evolution/v2/build/bridge-validation/predator_prey-1793098582743070000/run-eb647a3b23ae-738d54
+AE2_PYTHON_VIEW {"engine":"Python ResearchSession","frames":149,"mode":"predator_prey","ticks":342}
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_PYTHON_EXPORT /Users/maith/Desktop/Artificial_Evolution/v2/build/bridge-validation/social-1793098591628885000/run-ee93c5aea1e8-5c016f
+AE2_PYTHON_VIEW {"engine":"Python ResearchSession","frames":164,"mode":"social","ticks":366}
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M3
+
+AE2_PYTHON_EXPORT /Users/maith/Desktop/Artificial_Evolution/v2/build/bridge-validation/continuous-1793098600870490000/run-de0cad0cf57c-cb0d35
+AE2_PYTHON_VIEW {"engine":"Python ResearchSession","frames":159,"mode":"continuous","ticks":358}
+{
+  "ok": true,
+  "archive": "build/Artificial Evolution 2.zip",
+  "archive_sha256": "8b9e4036706662940fc09dc61c62a36d75226d5a6b24061f620d8ae5fba9346e",
+  "signature": "ad-hoc; fresh extraction passed codesign --verify --deep --strict",
+  "architectures": "x86_64 arm64",
+  "executed_architecture": "arm64",
+  "native_runs": [
+    {
+      "mode": "foraging",
+      "screenshot": "../screenshots/world.png",
+      "bundle": "build/bridge-validation/foraging-1793098539670334000/run-838f02b94c58-659398",
+      "ticks": 379,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "seasons",
+      "screenshot": "../screenshots/seasons.png",
+      "bundle": "build/bridge-validation/seasons-1793098554136761000/run-b6b6a3b3ea8f-0d56c7",
+      "ticks": 336,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "obstacles",
+      "screenshot": "../screenshots/hazards.png",
+      "bundle": "build/bridge-validation/obstacles-1793098563080244000/run-b195951edbf7-13fc74",
+      "ticks": 368,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "traits",
+      "screenshot": "../screenshots/traits.png",
+      "bundle": "build/bridge-validation/traits-1793098573284579000/run-06e12cf32290-b94d42",
+      "ticks": 354,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "predator_prey",
+      "screenshot": "../screenshots/predator_prey.png",
+      "bundle": "build/bridge-validation/predator_prey-1793098582743070000/run-eb647a3b23ae-738d54",
+      "ticks": 342,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "social",
+      "screenshot": "../screenshots/social.png",
+      "bundle": "build/bridge-validation/social-1793098591628885000/run-ee93c5aea1e8-5c016f",
+      "ticks": 366,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    },
+    {
+      "mode": "continuous",
+      "screenshot": "../screenshots/continuous.png",
+      "bundle": "build/bridge-validation/continuous-1793098600870490000/run-de0cad0cf57c-cb0d35",
+      "ticks": 358,
+      "births": 100,
+      "replayed_exactly_with_original_engine": true,
+      "python_engine_version": "1.0.1"
+    }
+  ],
+  "limitations": "Local packaged-app validation; no manual mouse/keyboard QA. x86_64 and Apple notarization were not tested."
+}

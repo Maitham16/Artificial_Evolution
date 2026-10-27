@@ -1,0 +1,11 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+CONTACT_STRIDES doe { "Walk": 0.9659481048584, "Run": 0.94421005249023 }
+BONE_PALETTE doe binds=31 dims=(128, 296)
+SKELETAL_POSES doe bones=31 clips=["Die", "Eat", "Escape", "Grow", "Hunt", "Reproduce", "Rest", "Run", "TurnLeft", "TurnRight", "Walk"]
+CONTACT_STRIDES stag { "Walk": 1.03168678283691, "Run": 0.93156814575195 }
+BONE_PALETTE stag binds=31 dims=(128, 296)
+SKELETAL_POSES stag bones=31 clips=["Die", "Eat", "Escape", "Grow", "Hunt", "Reproduce", "Rest", "Run", "TurnLeft", "TurnRight", "Walk"]
+CONTACT_STRIDES wolf { "Walk": 0.77399444580078, "Run": 0.88062858581543 }
+BONE_PALETTE wolf binds=36 dims=(128, 296)
+SKELETAL_POSES wolf bones=36 clips=["Die", "Eat", "Escape", "Grow", "Hunt", "Reproduce", "Rest", "Run", "TurnLeft", "TurnRight", "Walk"]
