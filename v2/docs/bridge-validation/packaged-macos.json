@@ -1,7 +1,7 @@
 {
   "ok": true,
   "archive": "build/Artificial Evolution 2.zip",
-  "archive_sha256": "8d56a00353717ac1986d47d605dbdc35ce0ff1fffbc1263d8cb91eb8d698a76a",
+  "archive_sha256": "f4803696f600ad769a237a4c11c7db2833031ea8861e3792fe90f071c7b90176",
   "signature": "ad-hoc; fresh extraction passed codesign --verify --deep --strict",
   "architectures": "x86_64 arm64",
   "executed_architecture": "arm64",
@@ -9,8 +9,8 @@
     {
       "mode": "foraging",
       "screenshot": "../screenshots/world.png",
-      "bundle": "build/bridge-validation/foraging-1793082315571505000/run-002f88ea55d3-874377",
-      "ticks": 125,
+      "bundle": "build/bridge-validation/foraging-1793088343286997000/run-a94e5c8b4798-40c248",
+      "ticks": 315,
       "births": 100,
       "replayed_exactly_with_original_engine": true,
       "python_engine_version": "1.0.1"
@@ -18,8 +18,8 @@
     {
       "mode": "seasons",
       "screenshot": "../screenshots/seasons.png",
-      "bundle": "build/bridge-validation/seasons-1793082321397867000/run-4827a1242d25-e879b2",
-      "ticks": 125,
+      "bundle": "build/bridge-validation/seasons-1793088353820305000/run-115741762642-42e94f",
+      "ticks": 301,
       "births": 100,
       "replayed_exactly_with_original_engine": true,
       "python_engine_version": "1.0.1"
@@ -27,8 +27,8 @@
     {
       "mode": "obstacles",
       "screenshot": "../screenshots/hazards.png",
-      "bundle": "build/bridge-validation/obstacles-1793082325402664000/run-8623e20529f7-7178b1",
-      "ticks": 136,
+      "bundle": "build/bridge-validation/obstacles-1793088361976925000/run-be424b007fe8-0e9741",
+      "ticks": 324,
       "births": 100,
       "replayed_exactly_with_original_engine": true,
       "python_engine_version": "1.0.1"
@@ -36,8 +36,8 @@
     {
       "mode": "traits",
       "screenshot": "../screenshots/traits.png",
-      "bundle": "build/bridge-validation/traits-1793082329890950000/run-d2116df163f7-043114",
-      "ticks": 125,
+      "bundle": "build/bridge-validation/traits-1793088371086154000/run-ff51bd182242-1af0d5",
+      "ticks": 304,
       "births": 100,
       "replayed_exactly_with_original_engine": true,
       "python_engine_version": "1.0.1"
@@ -45,8 +45,8 @@
     {
       "mode": "predator_prey",
       "screenshot": "../screenshots/predator_prey.png",
-      "bundle": "build/bridge-validation/predator_prey-1793082333975554000/run-0444a7b9acbb-970141",
-      "ticks": 125,
+      "bundle": "build/bridge-validation/predator_prey-1793088379421345000/run-e2270b0064d2-02a319",
+      "ticks": 301,
       "births": 100,
       "replayed_exactly_with_original_engine": true,
       "python_engine_version": "1.0.1"
@@ -54,8 +54,8 @@
     {
       "mode": "social",
       "screenshot": "../screenshots/social.png",
-      "bundle": "build/bridge-validation/social-1793082338063188000/run-8e7d40b49daf-3dac92",
-      "ticks": 127,
+      "bundle": "build/bridge-validation/social-1793088387435775000/run-60e646af0d64-35d74c",
+      "ticks": 318,
       "births": 100,
       "replayed_exactly_with_original_engine": true,
       "python_engine_version": "1.0.1"
@@ -63,8 +63,8 @@
     {
       "mode": "continuous",
       "screenshot": "../screenshots/continuous.png",
-      "bundle": "build/bridge-validation/continuous-1793082342004864000/run-820e1a446d2d-8eaab5",
-      "ticks": 124,
+      "bundle": "build/bridge-validation/continuous-1793088395618856000/run-cad09aa8a1a7-0cd1b9",
+      "ticks": 306,
       "births": 100,
       "replayed_exactly_with_original_engine": true,
       "python_engine_version": "1.0.1"

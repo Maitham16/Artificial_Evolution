@@ -1,0 +1,16 @@
+{
+  "fir_sapling": {
+    "height": 1.4047969579696655,
+    "width": 1.0535977184772491,
+    "source": "https://polyhaven.com/a/fir_sapling",
+    "license": "CC0-1.0",
+    "base_offset": 0.05202949047088623
+  },
+  "jacaranda_tree": {
+    "height": 35.160552978515625,
+    "width": 26.37041473388672,
+    "source": "https://polyhaven.com/a/jacaranda_tree",
+    "license": "CC0-1.0",
+    "base_offset": 7.84583854675293
+  }
+}

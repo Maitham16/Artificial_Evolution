@@ -1,0 +1,534 @@
+{
+  "description": "CC0 Poly Haven scans and textures; derived Godot meshes and Blender-baked forest images. No runtime downloads.",
+  "assets": [
+    {
+      "id": "fir_sapling",
+      "name": "Fir Sapling",
+      "authors": {
+        "Rob Tuytel": "photography",
+        "Rico Cilliers": "modeling"
+      },
+      "source": "https://polyhaven.com/a/fir_sapling",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license"
+    },
+    {
+      "id": "jacaranda_tree",
+      "name": "Jacaranda Tree",
+      "authors": {
+        "Rob Tuytel": "guidance",
+        "Rico Cilliers": "All"
+      },
+      "source": "https://polyhaven.com/a/jacaranda_tree",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license"
+    },
+    {
+      "id": "fern_02",
+      "name": "Fern 02",
+      "authors": {
+        "Rob Tuytel": "scanning",
+        "Rico Cilliers": "modeling"
+      },
+      "source": "https://polyhaven.com/a/fern_02",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license"
+    },
+    {
+      "id": "flower_empodium",
+      "name": "Flower Empodium",
+      "authors": {
+        "Jenelle van Heerden": "Photography",
+        "Rico Cilliers": "modeling"
+      },
+      "source": "https://polyhaven.com/a/flower_empodium",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license"
+    },
+    {
+      "id": "rock_07",
+      "name": "Rock 07",
+      "authors": {
+        "Jenelle van Heerden": "All"
+      },
+      "source": "https://polyhaven.com/a/rock_07",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license"
+    },
+    {
+      "id": "grass_ground",
+      "name": "Grass Ground",
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "source": "https://polyhaven.com/a/grass_ground",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license"
+    },
+    {
+      "id": "forest_ground_04",
+      "name": "Forest Ground 04",
+      "authors": {
+        "Rob Tuytel": "Photography, Processing",
+        "Rico Cilliers": "Minor adjustment"
+      },
+      "source": "https://polyhaven.com/a/forest_ground_04",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license"
+    },
+    {
+      "id": "rock_face",
+      "name": "Rock Face",
+      "authors": {
+        "Greg Zaal": "Photography",
+        "Dario Barresi": "Processing"
+      },
+      "source": "https://polyhaven.com/a/rock_face",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license"
+    }
+  ],
+  "source_downloads": [
+    {
+      "path": ".cache/nature/source/fir_sapling/fir_sapling.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/fir_sapling/fir_sapling_1k.gltf",
+      "bytes": 10979,
+      "sha256": "a9466ca9d8c5b9b2eeeeafd3ce426f8912dcbd98a7281bad8c734833eb35b186"
+    },
+    {
+      "path": ".cache/nature/source/fir_sapling/textures/fir_sapling_twigs_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fir_sapling/fir_sapling_twigs_nor_gl_1k.jpg",
+      "bytes": 474717,
+      "sha256": "34928b2a9d1f722d2f64a7da468c790ecaca9b89c00ac0878a9e0bad26748368"
+    },
+    {
+      "path": ".cache/nature/source/fir_sapling/textures/fir_sapling_branches_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fir_sapling/fir_sapling_branches_diff_1k.jpg",
+      "bytes": 776633,
+      "sha256": "46d216526b6203dbd5dc3cfce5e49d7a4cc1770da2420faab45adf33671c7de4"
+    },
+    {
+      "path": ".cache/nature/source/fir_sapling/textures/fir_sapling_twigs_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fir_sapling/fir_sapling_twigs_diff_1k.jpg",
+      "bytes": 252678,
+      "sha256": "a9900fafad850deeb5f79b928fd7590bca9e8ec8734d2368d4c64bba8b0c5b22"
+    },
+    {
+      "path": ".cache/nature/source/fir_sapling/textures/fir_sapling_branches_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fir_sapling/fir_sapling_branches_nor_gl_1k.jpg",
+      "bytes": 1137599,
+      "sha256": "dbe474f6cd593d51a19fb92a627ad900b9ab47dabd1bf60117a2cf9d110f79ea"
+    },
+    {
+      "path": ".cache/nature/source/fir_sapling/textures/fir_sapling_twigs_arm_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fir_sapling/fir_sapling_twigs_arm_1k.jpg",
+      "bytes": 300249,
+      "sha256": "d1ec27a55bb67bfe5fa2c8a41a545dc71769934b142db56ad7c703d4146e1770"
+    },
+    {
+      "path": ".cache/nature/source/fir_sapling/textures/fir_sapling_branches_arm_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fir_sapling/fir_sapling_branches_arm_1k.jpg",
+      "bytes": 793567,
+      "sha256": "44c32b056b78c1046aeeb44c973a1d1352ea12d0d7ef2425527555f1256a0964"
+    },
+    {
+      "path": ".cache/nature/source/fir_sapling/fir_sapling.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/fir_sapling/fir_sapling.bin",
+      "bytes": 21677180,
+      "sha256": "efdebfae6ee4b3ea20c7a85eb9f798ff4953259a3616bcff0b7e580b00f34f40"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/jacaranda_tree.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/jacaranda_tree/jacaranda_tree_1k.gltf",
+      "bytes": 9526,
+      "sha256": "ba4aa8ab4c3e3741ce3699604d6ec1607cd6b126ae2d32abbcc0d98e8edb3be4"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/textures/jacaranda_tree_branches_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jacaranda_tree/jacaranda_tree_branches_nor_gl_1k.jpg",
+      "bytes": 819101,
+      "sha256": "2d67393ba76a0f49cf965fa0c99d8c16268e71e87b1203d35539bfdb971a514e"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/textures/jacaranda_tree_branches_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jacaranda_tree/jacaranda_tree_branches_diff_1k.jpg",
+      "bytes": 531544,
+      "sha256": "5a4fe735f0c346cec83b6b444a0169fc14d2b31bbb7b26e26b1b6c726b6e06f6"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/textures/jacaranda_tree_branches_arm_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jacaranda_tree/jacaranda_tree_branches_arm_1k.jpg",
+      "bytes": 484806,
+      "sha256": "9e3f82263247ce4f619692cea4c4f6fe9936ff465a86623481849062642c7d05"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/textures/jacaranda_tree_trunk_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jacaranda_tree/jacaranda_tree_trunk_nor_gl_1k.jpg",
+      "bytes": 1096100,
+      "sha256": "b2ad4e5daf8ec3fb87ba6c5f38e6a6924c9a6adebec20389f503e42da5d04587"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/textures/jacaranda_tree_trunk_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jacaranda_tree/jacaranda_tree_trunk_diff_1k.jpg",
+      "bytes": 896938,
+      "sha256": "e5582fba664a9255252d1ee8088f75ad557f07360aa7f4513f2b2f1577e90be9"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/textures/jacaranda_tree_trunk_arm_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jacaranda_tree/jacaranda_tree_trunk_arm_1k.jpg",
+      "bytes": 895975,
+      "sha256": "4a12e238cf3b8ba860626e99bf128e56ab41642fa4c2502a77df41a338689b78"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/textures/jacaranda_tree_leaves_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jacaranda_tree/jacaranda_tree_leaves_nor_gl_1k.jpg",
+      "bytes": 700843,
+      "sha256": "61520be2529ffe8e3d93d4361892134833bb4657117e121749089769067914c1"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/textures/jacaranda_tree_leaves_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jacaranda_tree/jacaranda_tree_leaves_diff_1k.jpg",
+      "bytes": 533896,
+      "sha256": "6fe80c1f514ef690cccefb90b7e559fbd1aa9c8935fdc02523cc8ab83c22f7c2"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/textures/jacaranda_tree_leaves_arm_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jacaranda_tree/jacaranda_tree_leaves_arm_1k.jpg",
+      "bytes": 332762,
+      "sha256": "577eab0a07279fb4afd24522e85e0f188058c88db4b35eb0b330005b0d745b7a"
+    },
+    {
+      "path": ".cache/nature/source/jacaranda_tree/jacaranda_tree.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/jacaranda_tree/jacaranda_tree.bin",
+      "bytes": 208307808,
+      "sha256": "4310d1e25db8ac63d6d345afc8154a1df7e85b301dfad228be66d85d6c52bbfc"
+    },
+    {
+      "path": ".cache/nature/source/fern_02/fern_02.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/fern_02/fern_02_1k.gltf",
+      "bytes": 6899,
+      "sha256": "33974295ee19670af4877705fc7d91f33f42d6302f0d44a625e072271223031f"
+    },
+    {
+      "path": ".cache/nature/source/fern_02/textures/fern_02_arm_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fern_02/fern_02_arm_1k.jpg",
+      "bytes": 280359,
+      "sha256": "ebfb5d76ce9cbdaec20bcd22dce9b755f0b1b8650ef29ca13555e3e6961025d7"
+    },
+    {
+      "path": ".cache/nature/source/fern_02/textures/fern_02_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fern_02/fern_02_diff_1k.jpg",
+      "bytes": 315705,
+      "sha256": "a828a6e7b4c01c826911e2eac4b3afc7457dab7b3b392a31c681ed88b7d50029"
+    },
+    {
+      "path": ".cache/nature/source/fern_02/textures/fern_02_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fern_02/fern_02_nor_gl_1k.jpg",
+      "bytes": 367222,
+      "sha256": "45bce132c6e96a0864bc89ab5da51361ab3f4afa83a6669ae499ab5ca811f621"
+    },
+    {
+      "path": ".cache/nature/source/fern_02/fern_02.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/fern_02/fern_02.bin",
+      "bytes": 176176,
+      "sha256": "fe1abb762bcbbc7ad9e86925c8080437a62add257d9280e9142fdc85c226e64c"
+    },
+    {
+      "path": ".cache/nature/source/flower_empodium/flower_empodium.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/flower_empodium/flower_empodium_1k.gltf",
+      "bytes": 8859,
+      "sha256": "3f39d6b7dba6de81014f5ce41e43ac1204a45bfe146cbb425515103c4c5e9798"
+    },
+    {
+      "path": ".cache/nature/source/flower_empodium/textures/flower_empodium_arm_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/flower_empodium/flower_empodium_arm_1k.jpg",
+      "bytes": 267088,
+      "sha256": "5b49a907dbd98d4d421992ce38ab17db35ed79451af062104efe5bc3e437a852"
+    },
+    {
+      "path": ".cache/nature/source/flower_empodium/textures/flower_empodium_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/flower_empodium/flower_empodium_diff_1k.jpg",
+      "bytes": 173921,
+      "sha256": "eca8de7f24d5612d918ddd02339698f9c44b00ad5a9d2fb61d6acda267786129"
+    },
+    {
+      "path": ".cache/nature/source/flower_empodium/flower_empodium.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/flower_empodium/flower_empodium.bin",
+      "bytes": 101936,
+      "sha256": "32256fa72adcf06602f5d80d1b98d2042c546bb3c65aa81a871ffbe22c834a5c"
+    },
+    {
+      "path": ".cache/nature/source/flower_empodium/textures/flower_empodium_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/flower_empodium/flower_empodium_nor_gl_1k.jpg",
+      "bytes": 346423,
+      "sha256": "c752bc6905810e552816189c7e157d111bb9b64402eab9625271a5b4fad4c1ab"
+    },
+    {
+      "path": ".cache/nature/source/rock_07/rock_07.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_07/rock_07_1k.gltf",
+      "bytes": 2979,
+      "sha256": "efcc2dcaa133ff8ad5c865dc2135772e8f5dbc83fa38db2ee2cf25382436b6e6"
+    },
+    {
+      "path": ".cache/nature/source/rock_07/rock_07.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_07/rock_07.bin",
+      "bytes": 468936,
+      "sha256": "e4a532a6d6cf4a08c288f501b790f32cba0528136a29959ce774c3cd39369e7e"
+    },
+    {
+      "path": ".cache/nature/source/rock_07/textures/rock_07_arm_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_07/rock_07_arm_1k.jpg",
+      "bytes": 309735,
+      "sha256": "1ed76e9a8542c76bdc6b7b018720ae1f52cd75d9f5ae719f613de3f5032cf4da"
+    },
+    {
+      "path": ".cache/nature/source/rock_07/textures/rock_07_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_07/rock_07_diff_1k.jpg",
+      "bytes": 635452,
+      "sha256": "8ff1965aa1664cc4abcc0131c44ee2b97ab14d6e131d7a51429ff261eeb101c8"
+    },
+    {
+      "path": ".cache/nature/source/rock_07/textures/rock_07_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_07/rock_07_nor_gl_1k.jpg",
+      "bytes": 766986,
+      "sha256": "57cb2210951aeb376164fce5f7c65f03e5599def04873b56cad0f173c275d78d"
+    },
+    {
+      "path": "v2/assets/nature/textures/forest_ground_04_diff.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_ground_04/forest_ground_04_diff_2k.jpg",
+      "bytes": 4529321,
+      "sha256": "24b8aaf4c8547305d80b0e029ec365219ab1b90748d4ca5651bdc9e75bfde5e6"
+    },
+    {
+      "path": "v2/assets/nature/textures/rock_face_diff.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_face/rock_face_diff_2k.jpg",
+      "bytes": 2971109,
+      "sha256": "b989c832327538a9e546cca359417acb9a657d041f300407e8398daaf743f5bc"
+    },
+    {
+      "path": "v2/assets/nature/textures/rock_face_normal.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face/rock_face_nor_gl_1k.jpg",
+      "bytes": 1139857,
+      "sha256": "e2682e1286c8b6aca7e01ba7b8fe1726cb6606042b9ee70d097aa67470d410ef"
+    },
+    {
+      "path": "v2/assets/nature/textures/grass_ground_diff.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grass_ground/grass_ground_diff_2k.jpg",
+      "bytes": 3787330,
+      "sha256": "4272bddc71a7fa659d1deeb13a9df8c42e68a5ac8cde7523187e4a081e028258"
+    },
+    {
+      "path": "v2/assets/nature/textures/grass_ground_normal.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_nor_gl_1k.jpg",
+      "bytes": 1310516,
+      "sha256": "7000e2ccd479bb7b66dcdf4faef7b47554324566886314ca620cbf03e274e826"
+    }
+  ],
+  "runtime_files": [
+    {
+      "path": "v2/assets/nature/impostors/fir_sapling.png",
+      "bytes": 730213,
+      "sha256": "293d1c09502ad32f20b710fcae21cc390101cc6195692b430c4f6017f6e3f865"
+    },
+    {
+      "path": "v2/assets/nature/impostors/jacaranda_tree.png",
+      "bytes": 657219,
+      "sha256": "ebc605f25d9db6f5844578f8be4b5ae4b21d1c77fed5852e05af0b35009f98a7"
+    },
+    {
+      "path": "v2/assets/nature/models/fern_02/fern_02.bin",
+      "bytes": 43664,
+      "sha256": "fbb52f2e18c5434b6aa684cfd9e2ca9a0a8b41a3e210253dfc84472b96bd507a"
+    },
+    {
+      "path": "v2/assets/nature/models/fern_02/fern_02.gltf",
+      "bytes": 2214,
+      "sha256": "4c581bb3dee7d9135ade3539e84df59f2c5621fa2535ee93befe3fe47a14c926"
+    },
+    {
+      "path": "v2/assets/nature/models/fern_02/fern_02_arm_1k.jpg",
+      "bytes": 280359,
+      "sha256": "ebfb5d76ce9cbdaec20bcd22dce9b755f0b1b8650ef29ca13555e3e6961025d7"
+    },
+    {
+      "path": "v2/assets/nature/models/fern_02/fern_02_diff_1k.png",
+      "bytes": 930802,
+      "sha256": "6e61e248a33752ac8ab08e1267b53c6be2f9e27233d1002fca5c5d38b9d9a58c"
+    },
+    {
+      "path": "v2/assets/nature/models/fern_02/fern_02_nor_gl_1k.jpg",
+      "bytes": 367222,
+      "sha256": "45bce132c6e96a0864bc89ab5da51361ab3f4afa83a6669ae499ab5ca811f621"
+    },
+    {
+      "path": "v2/assets/nature/models/fir_sapling/fir_sapling.bin",
+      "bytes": 7655752,
+      "sha256": "2e92ef6459a5d725790f77f9e19dd1f219483d3a353035b93381cd3c2f2e67f0"
+    },
+    {
+      "path": "v2/assets/nature/models/fir_sapling/fir_sapling.gltf",
+      "bytes": 4350,
+      "sha256": "35691151bd2a7ed3cb94eadac74aff89abbe77ce32eb41230596f075ec720b6e"
+    },
+    {
+      "path": "v2/assets/nature/models/fir_sapling/fir_sapling_branches_arm_1k.jpg",
+      "bytes": 793567,
+      "sha256": "44c32b056b78c1046aeeb44c973a1d1352ea12d0d7ef2425527555f1256a0964"
+    },
+    {
+      "path": "v2/assets/nature/models/fir_sapling/fir_sapling_branches_diff_1k.jpg",
+      "bytes": 776633,
+      "sha256": "46d216526b6203dbd5dc3cfce5e49d7a4cc1770da2420faab45adf33671c7de4"
+    },
+    {
+      "path": "v2/assets/nature/models/fir_sapling/fir_sapling_branches_nor_gl_1k.jpg",
+      "bytes": 1137599,
+      "sha256": "dbe474f6cd593d51a19fb92a627ad900b9ab47dabd1bf60117a2cf9d110f79ea"
+    },
+    {
+      "path": "v2/assets/nature/models/fir_sapling/fir_sapling_twigs_arm_1k.jpg",
+      "bytes": 300249,
+      "sha256": "d1ec27a55bb67bfe5fa2c8a41a545dc71769934b142db56ad7c703d4146e1770"
+    },
+    {
+      "path": "v2/assets/nature/models/fir_sapling/fir_sapling_twigs_diff_1k.jpg",
+      "bytes": 252678,
+      "sha256": "a9900fafad850deeb5f79b928fd7590bca9e8ec8734d2368d4c64bba8b0c5b22"
+    },
+    {
+      "path": "v2/assets/nature/models/fir_sapling/fir_sapling_twigs_nor_gl_1k.jpg",
+      "bytes": 474717,
+      "sha256": "34928b2a9d1f722d2f64a7da468c790ecaca9b89c00ac0878a9e0bad26748368"
+    },
+    {
+      "path": "v2/assets/nature/models/flower_empodium/flower_empodium.bin",
+      "bytes": 30584,
+      "sha256": "16c58d759b12eafe8a84096c413d6d5f6a8769030d7be026ef7579b415c5a449"
+    },
+    {
+      "path": "v2/assets/nature/models/flower_empodium/flower_empodium.gltf",
+      "bytes": 2263,
+      "sha256": "448948373280467d74b5f93adc9a62c7050fe9fb8cc7c85ed6ad62f8873e5595"
+    },
+    {
+      "path": "v2/assets/nature/models/flower_empodium/flower_empodium_arm_1k.jpg",
+      "bytes": 267088,
+      "sha256": "5b49a907dbd98d4d421992ce38ab17db35ed79451af062104efe5bc3e437a852"
+    },
+    {
+      "path": "v2/assets/nature/models/flower_empodium/flower_empodium_diff_1k.png",
+      "bytes": 383844,
+      "sha256": "1817efd2b819b82e0dff434fec1c56ece4a1de676e76c8b65b75d772df53470a"
+    },
+    {
+      "path": "v2/assets/nature/models/flower_empodium/flower_empodium_nor_gl_1k.jpg",
+      "bytes": 346423,
+      "sha256": "c752bc6905810e552816189c7e157d111bb9b64402eab9625271a5b4fad4c1ab"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree.bin",
+      "bytes": 38845624,
+      "sha256": "2a6cbed7769a26e6d79a4a2441b92c5dd6cef2d3d3dda48e89893af5ab5c2cb4"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree.gltf",
+      "bytes": 7601,
+      "sha256": "c3920db751d08a31698e2b99f57dd3e2855fdffa975c966f33887c20d61e6669"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree_branches_arm_1k.jpg",
+      "bytes": 484806,
+      "sha256": "9e3f82263247ce4f619692cea4c4f6fe9936ff465a86623481849062642c7d05"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree_branches_diff_1k.jpg",
+      "bytes": 531544,
+      "sha256": "5a4fe735f0c346cec83b6b444a0169fc14d2b31bbb7b26e26b1b6c726b6e06f6"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree_branches_nor_gl_1k.jpg",
+      "bytes": 819101,
+      "sha256": "2d67393ba76a0f49cf965fa0c99d8c16268e71e87b1203d35539bfdb971a514e"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree_leaves_arm_1k.jpg",
+      "bytes": 332762,
+      "sha256": "577eab0a07279fb4afd24522e85e0f188058c88db4b35eb0b330005b0d745b7a"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree_leaves_diff_1k.png",
+      "bytes": 964578,
+      "sha256": "b3095bcad74c7774fdc8070ec0c9ccc9816e62f130c6ea522409024371798856"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree_leaves_nor_gl_1k.jpg",
+      "bytes": 700843,
+      "sha256": "61520be2529ffe8e3d93d4361892134833bb4657117e121749089769067914c1"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree_trunk_arm_1k.jpg",
+      "bytes": 895975,
+      "sha256": "4a12e238cf3b8ba860626e99bf128e56ab41642fa4c2502a77df41a338689b78"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree_trunk_diff_1k.jpg",
+      "bytes": 896938,
+      "sha256": "e5582fba664a9255252d1ee8088f75ad557f07360aa7f4513f2b2f1577e90be9"
+    },
+    {
+      "path": "v2/assets/nature/models/jacaranda_tree/jacaranda_tree_trunk_nor_gl_1k.jpg",
+      "bytes": 1096100,
+      "sha256": "b2ad4e5daf8ec3fb87ba6c5f38e6a6924c9a6adebec20389f503e42da5d04587"
+    },
+    {
+      "path": "v2/assets/nature/models/rock_07/rock_07.bin",
+      "bytes": 115376,
+      "sha256": "195b226c90348ac236756316c81e3ab2e17c768ebda0a9adc7580929f615e281"
+    },
+    {
+      "path": "v2/assets/nature/models/rock_07/rock_07.gltf",
+      "bytes": 2400,
+      "sha256": "d340e7539b220eaa5747e8c81445faa3988d0029c54a96d2c3e7eaf56f34b721"
+    },
+    {
+      "path": "v2/assets/nature/models/rock_07/rock_07_arm_1k.jpg",
+      "bytes": 309735,
+      "sha256": "1ed76e9a8542c76bdc6b7b018720ae1f52cd75d9f5ae719f613de3f5032cf4da"
+    },
+    {
+      "path": "v2/assets/nature/models/rock_07/rock_07_diff_1k.jpg",
+      "bytes": 635452,
+      "sha256": "8ff1965aa1664cc4abcc0131c44ee2b97ab14d6e131d7a51429ff261eeb101c8"
+    },
+    {
+      "path": "v2/assets/nature/models/rock_07/rock_07_nor_gl_1k.jpg",
+      "bytes": 766986,
+      "sha256": "57cb2210951aeb376164fce5f7c65f03e5599def04873b56cad0f173c275d78d"
+    },
+    {
+      "path": "v2/assets/nature/textures/forest_ground_04_diff.jpg",
+      "bytes": 4529321,
+      "sha256": "24b8aaf4c8547305d80b0e029ec365219ab1b90748d4ca5651bdc9e75bfde5e6"
+    },
+    {
+      "path": "v2/assets/nature/textures/grass_ground_diff.jpg",
+      "bytes": 3787330,
+      "sha256": "4272bddc71a7fa659d1deeb13a9df8c42e68a5ac8cde7523187e4a081e028258"
+    },
+    {
+      "path": "v2/assets/nature/textures/grass_ground_normal.jpg",
+      "bytes": 1310516,
+      "sha256": "7000e2ccd479bb7b66dcdf4faef7b47554324566886314ca620cbf03e274e826"
+    },
+    {
+      "path": "v2/assets/nature/textures/rock_face_diff.jpg",
+      "bytes": 2971109,
+      "sha256": "b989c832327538a9e546cca359417acb9a657d041f300407e8398daaf743f5bc"
+    },
+    {
+      "path": "v2/assets/nature/textures/rock_face_normal.jpg",
+      "bytes": 1139857,
+      "sha256": "e2682e1286c8b6aca7e01ba7b8fe1726cb6606042b9ee70d097aa67470d410ef"
+    }
+  ]
+}

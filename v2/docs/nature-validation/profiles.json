@@ -1,0 +1,140 @@
+{
+  "archive": "build/Artificial Evolution 2.zip",
+  "archive_sha256": "f4803696f600ad769a237a4c11c7db2833031ea8861e3792fe90f071c7b90176",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "window_pixels": [
+    1520,
+    960
+  ],
+  "method": "Six sequential native app runs, 480 displayed frames each, first 90 excluded; live 100-creature Python foraging session; no auto-save. No concurrent benchmark processes.",
+  "limitations": "Local Apple M3 measurements; timings include IPC and UI. No x86_64, manual GUI input or cross-hardware validation.",
+  "profiles": [
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 17.0139638111393,
+      "median_ms": 16.6666666666667,
+      "p95_ms": 20.0,
+      "quality": 0,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 976.332,
+        "draw_batches": 165,
+        "ferns": 24,
+        "flowers": 98,
+        "grass_clumps": 12079,
+        "rocks": 52,
+        "trees": 222
+      },
+      "view": "valley",
+      "mean_fps": 58.77525138176707
+    },
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 16.9321195928753,
+      "median_ms": 16.6666666666667,
+      "p95_ms": 18.75,
+      "quality": 0,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 965.038,
+        "draw_batches": 165,
+        "ferns": 24,
+        "flowers": 98,
+        "grass_clumps": 12079,
+        "rocks": 52,
+        "trees": 222
+      },
+      "view": "ground",
+      "mean_fps": 59.059351341977305
+    },
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 17.7181306191688,
+      "median_ms": 16.6666666666667,
+      "p95_ms": 21.2136666666667,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1027.147,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "view": "valley",
+      "mean_fps": 56.43936267848286
+    },
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 16.6092502120441,
+      "median_ms": 16.6666666666667,
+      "p95_ms": 18.29,
+      "quality": 1,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1021.042,
+        "draw_batches": 187,
+        "ferns": 62,
+        "flowers": 306,
+        "grass_clumps": 25817,
+        "rocks": 89,
+        "trees": 398
+      },
+      "view": "ground",
+      "mean_fps": 60.20741377445539
+    },
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 19.6142553011027,
+      "median_ms": 19.607,
+      "p95_ms": 21.4285714285714,
+      "quality": 2,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1101.502,
+        "draw_batches": 200,
+        "ferns": 103,
+        "flowers": 486,
+        "grass_clumps": 44949,
+        "rocks": 133,
+        "trees": 615
+      },
+      "view": "valley",
+      "mean_fps": 50.98332741410686
+    },
+    {
+      "device": "Apple M3",
+      "frames": 393,
+      "immersive": true,
+      "mean_ms": 17.6748680443108,
+      "median_ms": 16.6666666666667,
+      "p95_ms": 21.094,
+      "quality": 2,
+      "renderer": "gl_compatibility",
+      "scenery": {
+        "build_ms": 1100.39,
+        "draw_batches": 200,
+        "ferns": 103,
+        "flowers": 486,
+        "grass_clumps": 44949,
+        "rocks": 133,
+        "trees": 615
+      },
+      "view": "ground",
+      "mean_fps": 56.57750866897594
+    }
+  ]
+}

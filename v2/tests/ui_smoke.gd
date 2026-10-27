@@ -38,7 +38,7 @@ func _run():
 	var id=app.model.agents[0].id
 	var actor=app.model.agents[0]
 	var position=app.model.sample_display().get(id,{"position":actor.position}).position
-	var point=app.world_view.camera.unproject_position(Vector3(position.x,.3,position.y))
+	var point=app.world_view.camera.unproject_position(Vector3(position.x,app.world_view.surface_height(position)+.3,position.y))
 	check(app.world_view.pick(point)==id,"Picking selects the displayed Python creature")
 	var selected=await app._call("select",{"key":id})
 	check(selected.get("ok",false) and app.model.selected==id,"Python supplies the selected specimen preview")
@@ -73,7 +73,7 @@ func _run():
 	var fits=true;var size=app.viewport.get_visible_rect().size
 	for x in [-app.model.width/40,app.model.width/40]:
 		for z in [-app.model.height/40,app.model.height/40]:
-			if not Rect2(Vector2.ZERO,size).has_point(app.world_view.camera.unproject_position(Vector3(x,0,z))):fits=false
+			if not Rect2(Vector2.ZERO,size).has_point(app.world_view.camera.unproject_position(Vector3(x,app.world_view.surface_height(Vector2(x,z)),z))):fits=false
 	check(fits,"Reset camera fits every world corner in the viewport")
 	var predator_config=app._read_config();predator_config.mode="predator_prey";predator_config.algorithm="coevolution";predator_config.predators=3
 	var predator_reply=await app._call("configure",{"config":predator_config,"seed_text":"42","paused":true})
@@ -85,5 +85,26 @@ func _run():
 			for mesh in app.world_view.bodies[specimen.id].find_children("*","MeshInstance3D",true,false):
 				if str(mesh.name).begins_with("Body") and mesh.material_override.albedo_color!=Color("c96f60"):red=false
 	check(red,"New-run body identities rebuild species styling")
+	var landscape=app.world_view.nature
+	var built=landscape.generation_count
+	landscape.configure(landscape.dimensions.x,landscape.dimensions.y)
+	check(landscape.generation_count==built,"Scenery is cached across snapshots and generations")
+	check(landscape.find_children("*","CollisionObject3D",true,false).is_empty(),"Decorative scenery adds no simulation collisions")
+	var fir=landscape._asset("fir_sapling").get_aabb()
+	check(fir.size.y>fir.size.x,"Tree import preserves upright scan transforms")
+	var ecology_before=await app._call("state")
+	app._toggle_immersive()
+	check(app.immersive and app.viewport_container.get_parent()==app.immersive_layer,"Landscape view fills the window")
+	check(not app.world_view.research_guides,"Landscape view hides research rings")
+	app.world_view.ground_view()
+	var initial=app.world_view.camera.position
+	app.world_view._process(.1)
+	check(app.world_view.camera.position!=initial,"Camera moves smoothly while Python is paused")
+	app._toggle_immersive()
+	check(not app.immersive and app.viewport_container.get_parent()==app.view_home,"Workbench restores the same viewport")
+	landscape.set_quality(0)
+	check(landscape.generation_count==built+1 and landscape.statistics.trees>100,"Quality rebuilds instanced scenery")
+	var ecology_after=await app._call("state")
+	check(ecology_before.report==ecology_after.report,"Camera, quality and landscape controls cannot change Python state")
 	print("AE2_UI_TEST_RESULT ",JSON.stringify({"checks":checks,"failures":failures,"engine_ticks":app.model.ticks}))
 	await app._shutdown(0 if failures==0 else 1)

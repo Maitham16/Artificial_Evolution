@@ -13,6 +13,17 @@ const MODES=["foraging","seasons","obstacles","traits","predator_prey","social",
 const MODE_LABELS=["Food seeking","Changing seasons","Obstacles & hazards","Brains & bodies","Predator & prey","Social behavior","Continuous ecosystem"]
 const ENV_LABELS={"uniform":"Meadow","clustered":"Food clusters","sparse":"Scarcity","wide_clustered":"Wide clusters","barren":"Barren","seasonal":"Seasonal food"}
 const POLICY_LABELS={"selection":"Selected neural","neutral":"Neutral neural","random":"Random movement","greedy":"Greedy forager","founder":"Frozen founders","coevolution":"Co-evolution","group":"Group survival","individual":"Individual survival","funded":"Funded reproduction","clonal":"Clonal reproduction"}
+var immersive=false
+var immersive_layer: Control
+var workbench_root: Control
+var view_home: Control
+var cinematic_start=false
+var valley_start=false
+var immersive_start=false
+var quality_index=1
+var profile_path=""
+var frame_samples: Array=[]
+var landscape_label: Label
 var model=State.new()
 var bridge
 var world_view
@@ -83,10 +94,18 @@ func _ready() -> void:
 		elif arg.begins_with("--environment="):cli_environment=arg.trim_prefix("--environment=")
 		elif arg.begins_with("--mode="):cli_mode=arg.trim_prefix("--mode=")
 		elif arg.begins_with("--config="):cli_config=arg.trim_prefix("--config=")
+		elif arg=="--immersive":immersive_start=true
+		elif arg=="--ground-view":cinematic_start=true
+		elif arg=="--valley-view":valley_start=true
+		elif arg.begins_with("--quality="):quality_index=clampi(int(arg.trim_prefix("--quality=")),0,2)
+		elif arg.begins_with("--profile="):profile_path=arg.trim_prefix("--profile=")
 	var settings=bridge.discover()
 	repository_edit.text=str(settings.get("repository",""));python_edit.text=str(settings.get("python",""))
 	bridge.launch(repository_edit.text,python_edit.text)
-	startup_deadline=_now()+30
+	startup_deadline=_now()+60
+	world_view.nature.quality=quality_index
+	_sync_quality_menus()
+	if immersive_start:_toggle_immersive()
 	get_tree().root.close_requested.connect(_on_close);get_tree().auto_accept_quit=false
 
 func _now() -> float:return Time.get_ticks_usec()/1000000.0
@@ -137,7 +156,7 @@ func _build_ui() -> void:
 	var background=ColorRect.new();background.color=BG;background.set_anchors_and_offsets_preset(PRESET_FULL_RECT);background.mouse_filter=MOUSE_FILTER_IGNORE;add_child(background)
 	var margin=MarginContainer.new();margin.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	for side in ["left","right","top","bottom"]:margin.add_theme_constant_override("margin_"+side,16)
-	add_child(margin)
+	add_child(margin);workbench_root=margin
 	var root=VBoxContainer.new();root.add_theme_constant_override("separation",12);margin.add_child(root)
 	var header=HBoxContainer.new();root.add_child(header)
 	var brand=VBoxContainer.new();brand.add_theme_constant_override("separation",0);brand.size_flags_horizontal=SIZE_EXPAND_FILL;header.add_child(brand)
@@ -149,6 +168,7 @@ func _build_ui() -> void:
 	for value in ["1× speed","5× speed","20× speed"]:speed_select.add_item(value)
 	speed_select.item_selected.connect(func(index):_control("speed",[1,5,20][index]));header.add_child(speed_select)
 	export_button=_button("Export run",header,_export,true)
+	_button("Landscape view",header,_toggle_immersive)
 	_button("Controls",header,_help)
 	var body=HBoxContainer.new();body.size_flags_vertical=SIZE_EXPAND_FILL;body.add_theme_constant_override("separation",12);root.add_child(body)
 	_build_sidebar(body)
@@ -157,7 +177,7 @@ func _build_ui() -> void:
 	for title in ["3D world","Lineages","Run settings","Connection"]:tabs.add_tab(title)
 	tabs.tab_changed.connect(_tab_changed);center.add_child(tabs)
 	world_panel=PanelContainer.new();world_panel.size_flags_vertical=SIZE_EXPAND_FILL;center.add_child(world_panel)
-	var stack=Control.new();stack.custom_minimum_size=Vector2(320,300);stack.size_flags_vertical=SIZE_EXPAND_FILL;world_panel.add_child(stack)
+	var stack=Control.new();stack.custom_minimum_size=Vector2(320,300);stack.size_flags_vertical=SIZE_EXPAND_FILL;world_panel.add_child(stack);view_home=stack
 	viewport_container=SubViewportContainer.new();viewport_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT);viewport_container.stretch=true;viewport_container.mouse_filter=MOUSE_FILTER_STOP;stack.add_child(viewport_container)
 	viewport=SubViewport.new();viewport.size=Vector2i(1000,650);viewport.render_target_update_mode=SubViewport.UPDATE_ALWAYS;viewport.own_world_3d=true;viewport_container.add_child(viewport)
 	world_view=WorldView.new();viewport.add_child(world_view);world_view.set_model(model)
@@ -166,8 +186,10 @@ func _build_ui() -> void:
 	biome_label=_label("WAITING FOR PYTHON",overlay,12,INK);biome_label.mouse_filter=MOUSE_FILTER_IGNORE
 	var instruction=_label("Inspect: left click   ·   Orbit: right drag   ·   Zoom: scroll   ·   Pan: middle drag",center,11,MUTED);instruction.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	var camera_row=HBoxContainer.new();center.add_child(camera_row)
-	_button("Reset camera",camera_row,func():world_view.reset_camera();following=false)
-	_button("Follow specimen",camera_row,func():following=not following)
+	_button("Overview",camera_row,func():world_view.reset_camera();following=false)
+	_button("Follow",camera_row,func():following=not following)
+	_button("Ground view",camera_row,func():world_view.ground_view();following=false)
+	_quality_menu(camera_row)
 	rate_label=_label("CONNECTING",camera_row,12,MUTED);rate_label.size_flags_horizontal=SIZE_EXPAND_FILL;rate_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT
 	lineage_panel=PanelContainer.new();lineage_panel.size_flags_vertical=SIZE_EXPAND_FILL;lineage_panel.visible=false;center.add_child(lineage_panel)
 	lineage_view=Visuals.new();lineage_view.mode="lineages";lineage_view.title="PYTHON ANCESTRY / FOUNDER FAMILIES";lineage_view.model=model;lineage_view.custom_minimum_size=Vector2(300,360);lineage_panel.add_child(lineage_view)
@@ -341,6 +363,10 @@ func _on_frame(data: Dictionary) -> void:
 	if not model.accept(data):return
 	if changed:
 		selected_id=model.selected;world_view.set_model(model);last_rate_ticks=model.ticks;last_rate_at=_now()
+		if cinematic_start:
+			world_view.update_view(0);world_view.ground_view();cinematic_start=false
+		if valley_start:
+			world_view.update_view(0);world_view.valley_view();valley_start=false
 		_set_draft(model.config,model.seed_text)
 	if not model.actor(selected_id):selected_id=model.selected
 	_refresh()
@@ -380,12 +406,14 @@ func _process(delta: float) -> void:
 		world_view.update_view(delta if model.connected and not model.paused else 0.0)
 		if following and model.displayed.has(selected_id):
 			var pos=model.displayed[selected_id].position
-			world_view.target=world_view.target.lerp(Vector3(pos.x,0,pos.y),1-exp(-6*delta));world_view._update_camera()
+			world_view.target=world_view.target.lerp(Vector3(pos.x,world_view.surface_height(pos)+.4,pos.y),1-exp(-6*delta));world_view._update_camera()
 		ui_clock+=delta
 		if ui_clock>.15:ui_clock=0;_refresh()
 		if _now()-last_rate_at>=1:
 			measured=float(model.ticks-last_rate_ticks)/60/(_now()-last_rate_at);last_rate_at=_now();last_rate_ticks=model.ticks
 		frame_count+=1
+		if not profile_path.is_empty() and cli_quit_frames>0 and frame_count>90:frame_samples.append(delta*1000)
+		if landscape_label:landscape_label.text="LIVING MEADOW   /   %d CREATURES   /   G%02d" % [int(model.metrics.population),model.generation]
 		if cli_quit_frames>0 and frame_count>=cli_quit_frames and not cli_done:_finish_cli()
 	elif cli_quit_frames>0 and _now()>startup_deadline and not cli_done:
 		cli_done=true;printerr("Python startup failed: ",bridge.detail);await _shutdown(1)
@@ -442,6 +470,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		elif event.keycode==KEY_R:world_view.reset_camera();following=false
 		elif event.keycode==KEY_F:following=not following
 		elif event.keycode==KEY_E:_export()
+		elif event.keycode==KEY_V:_toggle_immersive()
+		elif event.keycode==KEY_C:world_view.ground_view();following=false
+		elif event.keycode==KEY_ESCAPE and immersive:_toggle_immersive()
 
 func _export(root: String="") -> Dictionary:
 	export_button.disabled=true
@@ -480,6 +511,13 @@ func _finish_cli() -> void:
 		var result=await _export(cli_export)
 		if not result.get("ok",false):await _shutdown(1);return
 		print("AE2_PYTHON_EXPORT ",last_export)
+	if not profile_path.is_empty() and not frame_samples.is_empty():
+		frame_samples.sort()
+		var total=0.0
+		for value in frame_samples:total+=value
+		var profile={"frames":frame_samples.size(),"mean_ms":total/frame_samples.size(),"median_ms":frame_samples[frame_samples.size()/2],"p95_ms":frame_samples[mini(frame_samples.size()-1,int(frame_samples.size()*.95))],"quality":quality_index,"immersive":immersive,"scenery":world_view.nature.statistics,"renderer":RenderingServer.get_current_rendering_method(),"device":RenderingServer.get_video_adapter_name()}
+		var file=FileAccess.open(profile_path,FileAccess.WRITE)
+		if file:file.store_string(JSON.stringify(profile,"\t")+"\n");file.close()
 	print("AE2_PYTHON_VIEW ",JSON.stringify({"ticks":model.ticks,"frames":model.received_frames,"mode":model.config.mode,"engine":"Python ResearchSession"}))
 	await _shutdown(0)
 
@@ -500,3 +538,36 @@ func _shutdown(code: int=0) -> void:
 	bridge.cancel_uninitialized_process()
 	bridge.detach()
 	get_tree().quit(code)
+
+func _quality_menu(parent: Node) -> void:
+	var options=OptionButton.new();options.add_to_group("landscape_quality")
+	for title in ["Performance","Balanced","Lush"]:options.add_item(title)
+	options.select(quality_index)
+	options.item_selected.connect(func(index):quality_index=index;world_view.set_quality(index);_sync_quality_menus())
+	parent.add_child(options)
+
+func _sync_quality_menus() -> void:
+	for menu in get_tree().get_nodes_in_group("landscape_quality"):menu.select(quality_index)
+
+func _toggle_immersive() -> void:
+	immersive=not immersive
+	world_view.research_guides=not immersive
+	if immersive:
+		if immersive_layer==null:
+			immersive_layer=Control.new();immersive_layer.set_anchors_and_offsets_preset(PRESET_FULL_RECT);immersive_layer.z_index=50;add_child(immersive_layer)
+		viewport_container.reparent(immersive_layer);viewport_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+		workbench_root.hide();immersive_layer.show()
+		var bar=HBoxContainer.new();bar.name="LandscapeControls";bar.set_anchors_and_offsets_preset(PRESET_TOP_WIDE);bar.offset_left=24;bar.offset_top=20;bar.offset_right=-24;bar.mouse_filter=MOUSE_FILTER_IGNORE;immersive_layer.add_child(bar)
+		landscape_label=_label("LIVING MEADOW / PYTHON SIMULATION",bar,14,Color("f0f0dc"));landscape_label.size_flags_horizontal=SIZE_EXPAND_FILL
+		_button("Workbench",bar,_toggle_immersive)
+		_button("Overview",bar,func():world_view.reset_camera();following=false)
+		_button("Valley",bar,func():world_view.valley_view();following=false)
+		_button("Ground view",bar,func():world_view.ground_view();following=false)
+		_quality_menu(bar)
+		var hint=_label("Right drag: orbit    Scroll: zoom    Middle drag: pan    C: ground view    F: follow    Space: pause    Esc: workbench",immersive_layer,13,Color("e8e8d0"))
+		hint.name="LandscapeHint";hint.set_anchors_and_offsets_preset(PRESET_BOTTOM_WIDE);hint.offset_left=24;hint.offset_top=-40;hint.offset_bottom=-16;hint.mouse_filter=MOUSE_FILTER_IGNORE
+	else:
+		viewport_container.reparent(view_home);viewport_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+		workbench_root.show()
+		for node in immersive_layer.get_children():node.queue_free()
+		immersive_layer.hide();landscape_label=null
