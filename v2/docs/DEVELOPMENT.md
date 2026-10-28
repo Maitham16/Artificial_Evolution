@@ -143,7 +143,7 @@ These fixtures pose art without Python behavior and must not be reported as obse
 python3 v2/tools/install_macos.py
 ```
 
-The builder imports resources, exports the arm64 macOS preset, stages outside Desktop/iCloud, assembles a fresh CPython 3.13.18 runtime, installs exactly the locked dependency wheels, includes license texts, copies unchanged original root Python/presets and V2 helpers, signs nested Mach-O files, then signs/verifies/zips the application. It emits the archive SHA in `desktop-manifest.json`.
+The builder imports resources, exports the official universal macOS template and thins the fresh Godot executable to arm64. It stages outside Desktop/iCloud, assembles a fresh CPython 3.13.18 runtime, installs exactly the locked dependency wheels, includes license texts, copies unchanged original root Python/presets and V2 helpers, signs nested Mach-O files, then signs/verifies/zips the application. It checks the actual executable architecture, minimum OS and category and emits the archive SHA in `desktop-manifest.json`.
 
 `runtime.lock.json` pins archive/wheel/license hashes and the unchanged requirements hash. `engine-manifest.json` inside the app identifies copied source files and base commit; exact file hashes matter when a working-tree build precedes its eventual commit. The original `.venv` is never copied or upgraded.
 
