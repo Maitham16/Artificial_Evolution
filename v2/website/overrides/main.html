@@ -1,26 +1,38 @@
 {% extends "base.html" %}
+{% block htmltitle %}
+  {% set title = page.meta.title if page and page.meta.title else (page.title if page else config.site_name) %}
+  <title>{{ title }}{% if config.site_name not in title %} — {{ config.site_name }}{% endif %}</title>
+{% endblock %}
 {% block extrahead %}
   {{ super() }}
   {% set description = page.meta.description if page and page.meta.description else config.site_description %}
   {% set title = page.meta.title if page and page.meta.title else (page.title if page else config.site_name) %}
-  {% set image = config.site_url ~ 'assets/gallery/living-world.jpg' %}
+  {% set image = config.site_url ~ 'assets/social/social-preview.jpg' %}
+  {% set share_title = title if config.site_name in title else title ~ ' · ' ~ config.site_name %}
   {% if page and page.canonical_url %}
   <meta property="og:url" content="{{ page.canonical_url }}">
   {% endif %}
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="{{ config.site_name }}">
-  <meta property="og:title" content="{{ title }} · {{ config.site_name }}">
+  <meta property="og:title" content="{{ share_title }}">
   <meta property="og:description" content="{{ description }}">
   <meta property="og:image" content="{{ image }}">
-  <meta property="og:image:alt" content="Actual Artificial Evolution 2.0 application: a Python-controlled deer population in a green Godot landscape">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="Artificial Evolution branding beside an actual 3D application screenshot of Python-controlled creatures in a Godot meadow">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ title }} · {{ config.site_name }}">
+  <meta name="twitter:title" content="{{ share_title }}">
   <meta name="twitter:description" content="{{ description }}">
   <meta name="twitter:image" content="{{ image }}">
+  <meta name="twitter:image:alt" content="Artificial Evolution: Python artificial life and a Godot 3D Living World, shown using an actual application screenshot">
   <meta name="theme-color" content="#123f36">
   {% if not page %}<meta name="robots" content="noindex, follow">{% endif %}
   {% if page and page.is_homepage %}
   <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "WebSite", "name": config.site_name, "url": config.site_url, "description": description, "inLanguage": "en"} | tojson }}</script>
+  <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": config.site_name, "url": config.site_url, "codeRepository": config.repo_url, "description": config.site_description, "programmingLanguage": ["Python", "GDScript"], "runtimePlatform": ["Python 3.13", "Godot 4"], "license": config.repo_url ~ '/blob/master/LICENSE', "image": image} | tojson }}</script>
+  {% if config.extra.search_verification.google %}<meta name="google-site-verification" content="{{ config.extra.search_verification.google }}">{% endif %}
+  {% if config.extra.search_verification.bing %}<meta name="msvalidate.01" content="{{ config.extra.search_verification.bing }}">{% endif %}
   {% endif %}
 {% endblock %}
 {% block content %}

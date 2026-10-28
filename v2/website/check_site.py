@@ -8,6 +8,7 @@ from urllib.parse import unquote, urljoin, urlsplit
 import xml.etree.ElementTree as ET
 
 from bs4 import BeautifulSoup
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE = 'https://maitham16.github.io/Artificial_Evolution/'
@@ -29,6 +30,8 @@ def verify(site):
             canonical = soup.find('link', rel='canonical')
             if title is None or len(title.get_text(strip=True)) < 15:
                 problems.append(f'{relative}: missing descriptive title')
+            elif title.get_text().count('Artificial Evolution') > 1:
+                problems.append(f'{relative}: repeated project branding in page title')
             if description is None or len(description.get('content', '')) < 50:
                 problems.append(f'{relative}: missing descriptive metadata')
             if canonical is None or canonical.get('href') != url:
@@ -40,8 +43,12 @@ def verify(site):
                 if not tag or not tag.get('content'):
                     problems.append(f'{relative}: missing {property}')
             image = soup.find('meta', attrs={'property': 'og:image'})
-            if image and image.get('content') != BASE + 'assets/gallery/living-world.jpg':
+            if image and image.get('content') != BASE + 'assets/social/social-preview.jpg':
                 problems.append(f'{relative}: wrong social image URL')
+            for property, expected in (('og:image:width', '1280'), ('og:image:height', '640')):
+                tag = soup.find('meta', attrs={'property': property})
+                if not tag or tag.get('content') != expected:
+                    problems.append(f'{relative}: wrong {property}')
         for tag in soup.find_all(['a', 'img', 'script', 'link', 'source', 'video']):
             raw = tag.get('href') if tag.name in ('a', 'link') else tag.get('src')
             values = [raw]
@@ -86,6 +93,18 @@ def verify(site):
             problems.append(f'{uri}: original documentation source changed during build')
     if not (site / '.nojekyll').is_file():
         problems.append('Missing .nojekyll for GitHub Pages artifact')
+    social = site / 'assets/social/social-preview.jpg'
+    with Image.open(social) as image:
+        if image.size != (1280, 640) or social.stat().st_size >= 1_000_000:
+            problems.append('Social preview must be 1280x640 and under 1 MB')
+    schemas = [json.loads(tag.string) for tag in documents['index.html'].find_all('script', type='application/ld+json')]
+    if not any(schema.get('@type') == 'SoftwareSourceCode'
+               and schema.get('codeRepository') == 'https://github.com/Maitham16/Artificial_Evolution' for schema in schemas):
+        problems.append('Homepage is missing accurate source-repository structured data')
+    # Verification fields are opt-in: a fresh build must not claim fictitious ownership.
+    for tag in documents['index.html'].find_all('meta', attrs={'name': ['google-site-verification', 'msvalidate.01']}):
+        if not tag.get('content') or tag['content'] in ('YOUR_TOKEN', 'TODO', 'placeholder'):
+            problems.append('Invalid placeholder search-engine verification token')
     return dict(ok=not problems, html_pages=len(documents), canonical_pages=len(canonical_urls),
                 internal_links_checked=links, imported_sources=len(sources),
                 search_entries=len(index['docs']), sitemap_urls=len(urls), problems=problems)

@@ -7,9 +7,12 @@ from pathlib import Path
 import subprocess
 import sys
 
-# Explicitly requested website deployment infrastructure. This is a new file,
-# never an exemption from the hash checks on any original application or guide.
-AUTHORIZED_INFRASTRUCTURE = frozenset({'.github/workflows/pages.yml'})
+# Explicitly requested publishing and repository-classification metadata.
+# These new files never exempt an original application or guide from hash checks.
+AUTHORIZED_INFRASTRUCTURE = frozenset({
+    '.github/workflows/pages.yml',
+    'results/.gitattributes',
+})
 
 
 def archived_readme(data):

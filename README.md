@@ -2,13 +2,15 @@
 
 # Artificial Evolution
 
-### From simple neural brains to a 3D Living World
+<a id="from-simple-neural-brains-to-a-3d-living-world"></a>
 
-Explore how behavior changes through evolution—with a reproducible 2D research simulator and an immersive 3D observatory powered by the same Python engine.
+### Artificial life, neural networks and a 3D Living World
+
+Artificial Evolution is an open-source artificial-life simulator for studying neural networks, natural selection and adaptive behavior. It combines a reproducible Python 2D research simulator with a Godot 4 3D ecosystem; Blender supports animal rigging and animation authoring.
 
 [![Python CI](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml) [![V2 Living World](https://img.shields.io/badge/V2-3D_Living_World-3d7053?style=flat-square)](v2/README.md) [![V1 release](https://img.shields.io/badge/V1_release-1.0.1-526b86?style=flat-square)](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1) [![MIT License](https://img.shields.io/badge/License-MIT-64766a?style=flat-square)](LICENSE)
 
-**[Explore V2](v2/README.md)** · **[Visual gallery](v2/docs/GALLERY.md)** · **[Quick start](#quick-start)** · **[Documentation](#documentation)** · **[V1 research archive](#v1-research-archive)**
+**[Documentation website](https://maitham16.github.io/Artificial_Evolution/)** · **[Explore V2](v2/README.md)** · **[Visual gallery](v2/docs/GALLERY.md)** · **[Quick start](#quick-start)** · **[Documentation](#documentation)** · **[V1 research archive](#v1-research-archive)**
 
 </div>
 
@@ -18,7 +20,9 @@ Explore how behavior changes through evolution—with a reproducible 2D research
 
 **[Explore 14 real screenshots →](v2/docs/GALLERY.md)** · [Animals in motion · MP4](v2/docs/media/gallery/animal-follow.mp4) · [Births and growth · MP4](v2/docs/media/gallery/continuous.mp4)
 
-## One project, two experiences
+<a id="one-project-two-experiences"></a>
+
+## V1 2D Simulator and V2 3D Living World
 
 Begin with randomly initialized neural controllers. Let creatures move, find food, spend energy and reproduce. Observe which behaviors survive—and compare them with random, greedy and neutral-evolution controls under matched conditions.
 
@@ -31,7 +35,9 @@ Begin with randomly initialized neural controllers. Let creatures move, find foo
 
 V2 makes the ecosystem visible in 3D. Python continues to own the creatures, decisions and evolution. The original 2D application remains independently accessible.
 
-## What you can explore
+<a id="what-you-can-explore"></a>
+
+## Artificial life and evolutionary simulation features
 
 | Simulation and exploration | Evidence and analysis |
 | --- | --- |
@@ -41,7 +47,9 @@ V2 makes the ecosystem visible in 3D. Python continues to own the creatures, dec
 
 The project investigates adaptive behavior under specific conditions. A successful animation, live plot or lineage is not evidence of general intelligence. [Methods, findings and limits](v2/docs/RESEARCH_AND_VALIDATION.md) remain explicit.
 
-## The two views
+<a id="the-two-views"></a>
+
+## 2D and 3D ecosystem screenshots
 
 | V2 · Animals and environmental interactions | V1 · Research workbench |
 | --- | --- |
@@ -50,7 +58,9 @@ The project investigates adaptive behavior under specific conditions. A successf
 
 [Compare the interfaces, explore all seven modes and watch real demonstrations →](v2/docs/GALLERY.md)
 
-## Architecture
+<a id="architecture"></a>
+
+## Python simulation engine and Godot architecture
 
 ```mermaid
 flowchart LR
@@ -68,7 +78,9 @@ flowchart LR
 
 Godot interpolates received positions and drives visuals from actual Python observations. It does not replace the numerical engine. The optional physical habitat is a separately recorded 2.5D extension, with its own replay and [documented limits](v2/docs/PHYSICAL_HABITAT.md#combined-model-limitations). [Architecture guide →](v2/docs/ARCHITECTURE.md)
 
-## Quick start
+<a id="quick-start"></a>
+
+## Installation and quick start
 
 ### Open the installed 3D application
 
@@ -117,6 +129,8 @@ For real terrain/wading/climate effects, select **Research → Physical habitat 
 
 ## Documentation
 
+Read the searchable **[documentation website](https://maitham16.github.io/Artificial_Evolution/)**, starting with the [installation tutorial](https://maitham16.github.io/Artificial_Evolution/getting-started/), [V2 Living World guide](https://maitham16.github.io/Artificial_Evolution/v2/), [V1 research simulator](https://maitham16.github.io/Artificial_Evolution/v1/), [real application gallery](https://maitham16.github.io/Artificial_Evolution/gallery/) or [downloads](https://maitham16.github.io/Artificial_Evolution/downloads/). The Markdown guides below remain available directly in the repository.
+
 | Start with V2 | Keep exploring V1 |
 | --- | --- |
 | [Visual gallery and recordings](v2/docs/GALLERY.md) | [V1 / V2 visual comparison](v2/docs/GALLERY.md#one-engine-two-views) |
@@ -144,6 +158,8 @@ python3 v2/tools/verify_original.py
 ```
 
 Recorded local audits include **431 original tests**, **284 V2 tests/checks**, native export/replay and input checks, and repeated Metal trials around **60 FPS** on an Apple M3. Counts and timings belong to their recorded builds, not every machine. [Validation records and limitations →](v2/docs/RESEARCH_AND_VALIDATION.md#engineering-evidence)
+
+For repository metadata, the screenshot-based social card and owner-only search-engine setup, see the [discoverability and indexing guide](v2/website/pages/development/discoverability.md).
 
 ## License and credits
 

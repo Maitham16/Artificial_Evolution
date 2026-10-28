@@ -118,6 +118,22 @@ class OriginalPreservationTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn({'path': 'engine.py', 'error': 'changed'}, report['problems'])
 
+    def test_generated_report_attributes_are_scoped_to_results(self):
+        for name in ('results/.gitattributes',):
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('*.html linguist-generated=true\n')
+            subprocess.run(['git', 'add', name], cwd=self.root, check=True)
+        code, report = self.verify()
+        self.assertEqual(code, 0)
+        self.assertEqual(report['authorized_new_infrastructure'],
+                         ['results/.gitattributes'])
+        (self.root / 'docs/.gitattributes').write_text('* linguist-generated=true\n')
+        subprocess.run(['git', 'add', 'docs/.gitattributes'], cwd=self.root, check=True)
+        code, report = self.verify()
+        self.assertEqual(code, 1)
+        self.assertEqual(report['new_tracked_files_outside_v2'], ['docs/.gitattributes'])
+
 
 if __name__ == '__main__':
     unittest.main()

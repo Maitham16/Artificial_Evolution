@@ -135,6 +135,8 @@ def on_files(files, config):
             title = 'V1 · ' + title
         if uri == 'v1/research-record.md':
             title = 'V1 · Complete research record, Steps 1–28'
+        elif uri == 'v2/index.md':
+            title = 'Godot 3D ecosystem simulator · V2'
         description = DESCRIPTIONS.get(source.stem,
             f'{title}. Read the original project guide, implementation details and recorded evidence for Artificial Evolution.')
         if source == ROOT / 'docs/USER_GUIDE.md':

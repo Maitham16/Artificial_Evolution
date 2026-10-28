@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "purpose": "Branded project social card; the screenshot is an actual application capture, not generated scenery.",
+  "screenshot": {
+    "path": "v2/docs/media/gallery/living-world.jpg",
+    "sha256": "b3029ee995b3940f3aecc21a8f9d10a0ab1ab104ce54b441ad2fa80ca30f9df3",
+    "capture_manifest": "v2/docs/media/gallery/captures.json",
+    "case": "living-world",
+    "processing": "Complete viewport fitted proportionally, without cropping, retouching, overlays within the screenshot or generated scene content."
+  },
+  "composition": {
+    "editable_source": "social-preview.svg",
+    "photo_box": [
+      438,
+      72,
+      786,
+      496.5
+    ],
+    "branding": "Original app icon and vector text outside the screenshot",
+    "renderer": "@resvg/resvg-js 2.6.2; JPEG encoded with macOS sips, quality 92"
+  },
+  "output": {
+    "file": "social-preview.jpg",
+    "width": 1280,
+    "height": 640,
+    "bytes": 255508,
+    "sha256": "6ecdaca8151be1e487a22bf13db30fea79bfe01db12d98043de5cc289791e4ba"
+  },
+  "svg_sha256": "fe3ec4b80eda29abe5a7eb0a3fb77aa4bcbc62215a99b0c3bc8221277d8e7f05"
+}

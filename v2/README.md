@@ -2,14 +2,16 @@
 
 # Artificial Evolution 2.0
 
-### 3D Living World
+<a id="3d-living-world"></a>
+
+### Godot 3D ecosystem simulation, powered by Python
 
 Watch evolving populations inhabit a natural landscape.<br>
 Inspect the animals. Follow their lives. Keep the science reproducible.
 
 [![Python engine CI](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml) [![Godot](https://img.shields.io/badge/Godot-4.7.2-478cbf?style=flat-square&logo=godotengine&logoColor=white)](project.godot) [![Python](https://img.shields.io/badge/Python-powered-527d60?style=flat-square&logo=python&logoColor=white)](backend/engine_bridge.py) [![MIT License](https://img.shields.io/badge/License-MIT-64766a?style=flat-square)](LICENSE)
 
-**[Get started](#start-the-application)** · **[Visual gallery](docs/GALLERY.md)** · **[All guides](docs/README.md)** · **[Controls](#controls-at-a-glance)** · **[Original 2D simulator](../docs/USER_GUIDE.md)**
+**[Documentation website](https://maitham16.github.io/Artificial_Evolution/v2/)** · **[Get started](#start-the-application)** · **[Visual gallery](docs/GALLERY.md)** · **[All guides](docs/README.md)** · **[Controls](#controls-at-a-glance)** · **[Original 2D simulator](../docs/USER_GUIDE.md)**
 
 </div>
 
@@ -21,7 +23,7 @@ Inspect the animals. Follow their lives. Keep the science reproducible.
 
 ## A new view of artificial life
 
-Artificial Evolution 2.0 brings the project's original Python simulation into a standalone 3D desktop application. Deer and wolves move through a forested landscape while the engine controls food, energy, brains, survival, reproduction and evolution.
+Artificial Evolution 2.0 is a Godot 4 desktop application for artificial life and evolutionary simulation, powered by the project's original Python neural-network engine. Deer and wolves move through a forested landscape while the engine controls food, energy, brains, survival, reproduction and evolution.
 
 Explore the world with smooth cameras, follow an individual, inspect its state and neural preview, or return to the research workbench for settings, plots and ancestry. Original simulation rules are the default. An optional physical habitat adds explicitly separate Python terrain, river and climate effects.
 
@@ -196,6 +198,8 @@ Runtime art is committed; launching does not require asset regeneration. Blender
 | [Settings](docs/CONFIGURATION.md) · [Export/replay](docs/EXPORTS_AND_REPLAY.md) | [Development](docs/DEVELOPMENT.md) · [Repository review](docs/REPOSITORY_REVIEW.md) |
 | [Troubleshooting](docs/TROUBLESHOOTING.md) | [Original V1 documentation](../docs/USER_GUIDE.md) |
 
-**[Browse the complete documentation →](docs/README.md)**
+**[Read the documentation website →](https://maitham16.github.io/Artificial_Evolution/v2/)** · [Browse the Markdown guides](docs/README.md)
+
+[Installation tutorial](https://maitham16.github.io/Artificial_Evolution/getting-started/) · [Feature gallery](https://maitham16.github.io/Artificial_Evolution/gallery/) · [Architecture](https://maitham16.github.io/Artificial_Evolution/architecture/) · [Downloads](https://maitham16.github.io/Artificial_Evolution/downloads/)
 
 Project code is [MIT licensed](LICENSE). Animal/landscape sources have recorded CC0 licenses; Godot and Python dependency notices accompany the app. [Art credits](docs/ANIMALS_AND_ANIMATION.md#licenses-and-provenance) · [Godot notices](THIRD_PARTY_NOTICES.txt) · [Bundled runtime provenance](docs/BUNDLED_RUNTIME.md)

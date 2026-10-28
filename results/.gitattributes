@@ -1,0 +1,2 @@
+# Generated experiment reports; retain their bytes and all datasets.
+*.html linguist-generated=true

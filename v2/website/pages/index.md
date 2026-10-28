@@ -1,6 +1,6 @@
 ---
-title: Artificial Evolution — 2D research and a 3D Living World
-description: Explore an artificial-life research simulator with tiny neural brains, evolving populations and a beautiful Godot 3D world powered by the original Python engine.
+title: Artificial life and 3D ecosystem simulation
+description: Explore artificial life and evolutionary simulation with Python neural networks and a Godot 3D ecosystem. Install V1 or V2 and reproduce the research.
 home: true
 hide:
   - navigation
@@ -11,9 +11,9 @@ hide:
 <div markdown="1">
 <p class="ae-eyebrow">Artificial life · Open research</p>
 
-# One engine.<br>A living world.
+# Artificial life.<br>A living world.
 
-<p class="ae-lead">Tiny neural brains. Evolving populations. A landscape you can explore. Discover Artificial Evolution through an immersive 3D Living World and the original 2D research simulator.</p>
+<p class="ae-lead">Artificial Evolution combines Python neural networks and a Godot 3D ecosystem to explore artificial life. Follow evolving populations or investigate them in the original 2D research simulator.</p>
 
 <div class="ae-actions" markdown="1">
 [Get started](getting-started/index.md){ .md-button .md-button--primary }
@@ -109,6 +109,8 @@ Compare food layouts and seasonal rules, or explicitly enable the separate terra
 ## Built to observe. Designed to investigate.
 
 Python owns brains, movement, food, energy, survival and evolution. Godot displays the same agents through snapshots and smooth interpolation. V1 remains available as its original interface; the optional physical habitat declares its different rules in exported records.
+
+Blender supports animal rigging and animation authoring; the desktop simulation runs through Python and Godot. The original [architecture guide](architecture/index.md) explains how these responsibilities fit together.
 
 [Understand the architecture](architecture/index.md){ .md-button }
 [Browse real screenshots and videos](gallery/index.md){ .md-button }
