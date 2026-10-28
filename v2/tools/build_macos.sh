@@ -18,9 +18,17 @@ if [[ -z "$AE_APP" ]]; then echo "Export produced no .app"; exit 1; fi
 /usr/bin/xattr -dr com.apple.ResourceFork "$AE_APP" 2>/dev/null || true
 python3 - "$AE_APP" <<'PYPLIST'
 from pathlib import Path
-import plistlib,sys
+import plistlib,subprocess,sys
 path=Path(sys.argv[1])/'Contents/Info.plist'
 info=plistlib.loads(path.read_bytes())
+minimum=info.get('LSMinimumSystemVersionByArchitecture',{}).get('arm64','0')
+if tuple(int(part) for part in minimum.split('.')) < (14,0):
+    raise RuntimeError('Exported arm64 minimum must match the macOS 14 dependency floor')
+binary=path.parent/'MacOS'/info['CFBundleExecutable']
+if subprocess.check_output(['/usr/bin/lipo','-archs',str(binary)],text=True).strip()!='arm64':
+    raise RuntimeError('The desktop executable must match the arm64-only Python runtime')
+if info.get('LSApplicationCategoryType')!='public.app-category.education':
+    raise RuntimeError('Unexpected exported application category')
 info['NSDesktopFolderUsageDescription']='Optional: connect to a development Python checkout or import/export files on Desktop. The bundled engine runs without Desktop access.'
 path.write_bytes(plistlib.dumps(info))
 PYPLIST
