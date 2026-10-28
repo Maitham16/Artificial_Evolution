@@ -45,7 +45,7 @@ Download [Artificial Evolution 2.0.0 for Apple Silicon](https://github.com/Maith
 shasum -a 256 -c SHA256SUMS.txt
 ```
 
-The app is ad-hoc signed rather than notarized. If macOS blocks the downloaded app, attempt opening it once, then use **System Settings → Privacy & Security → Open Anyway** for this app. Do not disable Gatekeeper globally. The local source builder still creates `v2/build/Artificial Evolution 2.zip`.
+The app is ad-hoc signed rather than notarized. If macOS blocks the downloaded app, attempt opening it once, then use **System Settings → Privacy & Security → Open Anyway** for this app. Follow [Apple's app-opening guidance](https://support.apple.com/en-us/102445); do not disable Gatekeeper globally. The local source builder still creates `v2/build/Artificial Evolution 2.zip`.
 
 From a prepared checkout, use the checked installer:
 
