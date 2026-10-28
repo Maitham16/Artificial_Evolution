@@ -84,6 +84,8 @@ Godot interpolates received positions and drives visuals from actual Python obse
 
 ### Open the installed 3D application
 
+[Download Artificial Evolution 2.0.0 for macOS →](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v2.0.0) · Apple Silicon · macOS 14+
+
 On the prepared Mac, open **Finder → Go → Home → Applications → Artificial Evolution 2.0.app**, or:
 
 ```bash
@@ -116,7 +118,7 @@ python3.13 -m venv .venv
 ./.venv/bin/python simulator.py
 ```
 
-The V2 setup uses Homebrew when Godot or Blender is missing. Current standalone builds target Apple Silicon; see [installation and compatibility](v2/docs/INSTALLATION.md) before building on another Mac. V1 release downloads remain at [v1.0.1](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1). V2 is available in source and as a local desktop build; a V2 GitHub release asset is not yet published.
+The V2 setup uses Homebrew when Godot or Blender is missing. Current standalone builds target Apple Silicon; see [installation and compatibility](v2/docs/INSTALLATION.md) before building on another Mac. V1 release downloads remain at [v1.0.1](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1). Download the [V2.0.0 Apple Silicon app](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v2.0.0), including its bundled Python engine, or build it from source.
 
 ### Your first Living World session
 
@@ -157,7 +159,7 @@ The live GitHub Actions badge covers the **original Python suite and seven-world
 python3 v2/tools/verify_original.py
 ```
 
-Recorded local audits include **431 original tests**, **284 V2 tests/checks**, native export/replay and input checks, and repeated Metal trials around **60 FPS** on an Apple M3. Counts and timings belong to their recorded builds, not every machine. [Validation records and limitations →](v2/docs/RESEARCH_AND_VALIDATION.md#engineering-evidence)
+Recorded local audits include **431 original tests**, **293 V2 tests/checks**, native export/replay and input checks, and repeated Metal trials around **60 FPS** on an Apple M3. Counts and timings belong to their recorded builds, not every machine. [Validation records and limitations →](v2/docs/RESEARCH_AND_VALIDATION.md#engineering-evidence)
 
 ## License and credits
 

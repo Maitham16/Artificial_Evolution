@@ -7,6 +7,10 @@ description: A practical installation tutorial for the original Python 2D simula
 
 Choose **V2** for the immersive 3D application or **V1** for the original scientific workbench. Both use the existing Python models. The website itself runs neither simulator in your browser.
 
+## Download the Mac app
+
+Download the [V2.0.0 Apple Silicon desktop ZIP](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v2.0.0), verify its checksums, extract it and move the app to your home **Applications** folder. It requires macOS 14 or later; see [installation and macOS opening instructions](../v2/installation.md#install-a-desktop-zip).
+
 ## If the Mac app is already installed
 
 On the prepared Mac, open **Finder → Go → Home → Applications → Artificial Evolution 2.0.app**, or run:
@@ -67,7 +71,7 @@ open "$HOME/Applications/Artificial Evolution 2.0.app"
 The current pipeline builds an Apple Silicon application. The package is locally ad-hoc signed, not Apple notarized. Its NumPy wheel requires macOS 14 or later, with complete recorded native validation on the project's macOS 27 / M3 machine. Read [compatibility details](../v2/installation.md#requirements-and-compatibility) before building elsewhere. Intel, Windows and Linux V2 desktop packages are not provided by this pipeline.
 
 !!! info "Which download should I choose?"
-    Public release ZIPs currently contain **V1**. V2 is available as source and a locally generated desktop package. See [downloads](../downloads.md) for the actual release links and checksums.
+    Choose the **V2.0.0 macOS arm64 ZIP** for the standalone 3D app, or the separate **V1.0.1** source/research archives for the original simulator. See [downloads](../downloads.md) for the actual release links and checksums.
 
 ## Check your first launch
 

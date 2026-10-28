@@ -58,6 +58,8 @@ Screenshots show actual application runs. **[The gallery](docs/GALLERY.md)** inc
 
 ### Installed desktop app
 
+[Download V2.0.0 for Apple Silicon →](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v2.0.0) · [Installation and macOS opening instructions](docs/INSTALLATION.md#install-a-desktop-zip)
+
 Open **Finder → Go → Home → Applications**, then double-click **Artificial Evolution 2.0.app**. Or:
 
 ```bash
@@ -99,9 +101,9 @@ Or select **Research → Connection → Open original 2D** to launch the unchang
 
 ## Installation and distribution
 
-The current desktop package targets **Apple Silicon / arm64**, is locally ad-hoc signed and is not Apple notarized. Native validation used macOS 27.0.1 on an M3. Bundle metadata declares macOS 13, but the locked NumPy wheel is tagged macOS 14; full macOS 13 compatibility is not established. [Compatibility details](docs/INSTALLATION.md#requirements-and-compatibility)
+The current desktop package targets **Apple Silicon / arm64**, is locally ad-hoc signed and is not Apple notarized. Native validation used macOS 27.0.1 on an M3. The release requires macOS 14 or later, matching the locked Python dependencies. [Compatibility details](docs/INSTALLATION.md#requirements-and-compatibility)
 
-V2 is available in source and as a locally generated desktop ZIP. There is no published V2 GitHub release asset yet; a fresh clone does not include ignored `v2/build/`. V1 releases remain [available separately](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1).
+Download the [V2.0.0 Apple Silicon desktop ZIP](https://github.com/Maitham16/Artificial_Evolution/releases/download/v2.0.0/Artificial_Evolution-v2.0.0-macos-arm64.zip), [checksums](https://github.com/Maitham16/Artificial_Evolution/releases/download/v2.0.0/SHA256SUMS.txt) and [release notes](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v2.0.0). Source builds remain available; a fresh clone does not include ignored `v2/build/`. V1 releases remain [available separately](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1).
 
 ## First experiment
 
@@ -175,7 +177,7 @@ The HUD identifies **PHYSICAL HABITAT**. This is an explicit **2.5D extension** 
 
 Native Metal, vegetation budgets, shared distant skeletal draws and selective detailed animation target 60 FPS. Three recorded 100-founder Balanced trials on the local M3 measured about **60 FPS**, with p95 frame times around **17.2 ms**. The OpenGL fallback measured around **40 FPS**. These observations are not guarantees for every machine, population or quality setting.
 
-The latest recorded complete V2 regression suite contains **49 Python tests + 235 Godot checks**. The preceding habitat audit also records **431 passing original tests** and 13 packaged native cases. CI badges above cover the original Python engine workflow, not native V2 graphics tests. [Exact audits and limitations →](docs/RESEARCH_AND_VALIDATION.md#engineering-evidence)
+The latest recorded complete V2 regression suite contains **58 Python tests + 235 Godot checks**. The preceding habitat audit also records **431 passing original tests** and 13 packaged native cases. CI badges above cover the original Python engine workflow, not native V2 graphics tests. [Exact audits and limitations →](docs/RESEARCH_AND_VALIDATION.md#engineering-evidence)
 
 ## Development quick start
 

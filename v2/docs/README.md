@@ -10,6 +10,7 @@ These guides describe the Python-backed Godot application in `v2/`. Commands ass
 | --- | --- |
 | See the running app, compare V1/V2 and watch short demonstrations | [Visual gallery](GALLERY.md) |
 | Install, find the icon and launch either version | [Installation](INSTALLATION.md) |
+| Download the standalone Apple Silicon application | [V2.0.0 release](RELEASE-v2.0.0.md) |
 | Learn cameras, inspection, panels and experiment controls | [User guide](USER_GUIDE.md) |
 | Choose a model, controller or reproduction regime | [Simulation modes](SIMULATION_MODES.md) |
 | Understand senses, neural decisions, selection and mutation | [Evolution and brains](EVOLUTION_AND_BRAINS.md) |

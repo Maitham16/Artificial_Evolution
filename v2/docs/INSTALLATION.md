@@ -17,7 +17,7 @@ Run the standalone V2 desktop app for normal 3D exploration, V2 from source for 
 | Internet | Not needed after installation | Initial tools/runtime/asset downloads |
 | Homebrew | Not needed | Setup uses it for missing Godot/Blender |
 
-The bundle metadata and Godot configuration declare macOS **13.0** as a minimum. The runtime lock includes `numpy-2.5.4-cp313-cp313-macosx_14_0_arm64.whl`, so the full packaged Python stack cannot be promised on macOS 13. Treat **macOS 14 as the dependency-tag floor**, with end-to-end validation limited to the recorded macOS 27 machine. Intel, Windows and Linux desktop packages are not provided or verified by this Mac pipeline.
+The release requires **macOS 14 or later**, matching the minimum tag of its locked NumPy wheel. End-to-end validation is limited to the recorded macOS 27 / M3 machine. Intel, Windows and Linux desktop packages are not provided or verified by this Mac pipeline.
 
 The app is ad-hoc signed locally, not Apple notarized. Signature verification checks bundle integrity; it is not Apple distribution approval. See [runtime provenance](BUNDLED_RUNTIME.md) and [package evidence](panel-input-validation/packaged-panel-input.json).
 
@@ -39,7 +39,13 @@ The app opens in the landscape. **Research** exposes settings, plots, lineages a
 
 ### Install a desktop ZIP
 
-The local build creates `v2/build/Artificial Evolution 2.zip`. If you receive that artifact, double-click the ZIP and move the extracted app to `~/Applications`. Manual extraction requires no Python installation.
+Download [Artificial Evolution 2.0.0 for Apple Silicon](https://github.com/Maitham16/Artificial_Evolution/releases/download/v2.0.0/Artificial_Evolution-v2.0.0-macos-arm64.zip) and the [SHA-256 checksums](https://github.com/Maitham16/Artificial_Evolution/releases/download/v2.0.0/SHA256SUMS.txt). Verify the ZIP, double-click it and move the extracted app to `~/Applications`. Manual installation requires no Python, Godot or Blender.
+
+```bash
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+The app is ad-hoc signed rather than notarized. If macOS blocks the downloaded app, attempt opening it once, then use **System Settings → Privacy & Security → Open Anyway** for this app. Do not disable Gatekeeper globally. The local source builder still creates `v2/build/Artificial Evolution 2.zip`.
 
 From a prepared checkout, use the checked installer:
 
@@ -49,7 +55,7 @@ python3 v2/tools/install_macos.py
 
 Or double-click `v2/Install Desktop App.command`. It verifies the archive checksum when its sidecar is available, the app signature and embedded engine hashes. It restores the old app if final validation fails, and does not modify the original `.venv`.
 
-A fresh clone does not contain ignored `v2/build/`; build the package first. Existing V1 release ZIPs do not supply the standalone V2 build. No V2 GitHub release was published as part of this documentation work.
+A fresh clone does not contain ignored `v2/build/`; build the package first. V1 release ZIPs remain separate from the [V2 desktop release](https://github.com/Maitham16/Artificial_Evolution/releases/tag/v2.0.0).
 
 ### Installed launcher arguments
 

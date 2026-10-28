@@ -60,7 +60,7 @@ python3 v2/tools/verify_original.py
 python3 v2/tools/verify_original.py --all-existing
 ```
 
-The latest complete V2 record is 49 Python tests plus Godot suites of 18, 40, 28, 8, 33, 37, 17, 38 and 16 checks: **284 total**, separately from 431 original tests. Counts describe that recorded revision; inspect current output after adding tests.
+The latest complete V2 record is 58 Python tests plus Godot suites of 18, 40, 28, 8, 33, 37, 17, 38 and 16 checks: **293 total**, separately from 431 original tests. Counts describe that recorded revision; inspect current output after adding tests.
 
 | Suite | Main coverage |
 | --- | --- |
