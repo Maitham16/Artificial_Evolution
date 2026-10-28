@@ -21,6 +21,8 @@ def verify(site):
         relative = path.relative_to(site).as_posix()
         documents[relative] = BeautifulSoup(path.read_text(), 'html.parser')
     canonical_urls = set()
+    titles = set()
+    graph = {name: set() for name in documents}
     links = 0
     for relative, soup in documents.items():
         url = BASE + (relative[:-10] if relative.endswith('index.html') else relative)
@@ -32,6 +34,11 @@ def verify(site):
                 problems.append(f'{relative}: missing descriptive title')
             elif title.get_text().count('Artificial Evolution') > 1:
                 problems.append(f'{relative}: repeated project branding in page title')
+            if title:
+                value = title.get_text(strip=True)
+                if value in titles:
+                    problems.append(f'{relative}: duplicate page title')
+                titles.add(value)
             if description is None or len(description.get('content', '')) < 50:
                 problems.append(f'{relative}: missing descriptive metadata')
             if canonical is None or canonical.get('href') != url:
@@ -50,6 +57,8 @@ def verify(site):
                 if not tag or tag.get('content') != expected:
                     problems.append(f'{relative}: wrong {property}')
         for tag in soup.find_all(['a', 'img', 'script', 'link', 'source', 'video']):
+            if tag.name == 'img' and not tag.has_attr('alt'):
+                problems.append(f'{relative}: image has no alt attribute')
             raw = tag.get('href') if tag.name in ('a', 'link') else tag.get('src')
             values = [raw]
             if tag.name == 'video':
@@ -74,10 +83,34 @@ def verify(site):
                 if not destination.is_file():
                     problems.append(f'{relative}: missing {raw}')
                     continue
+                if tag.name == 'a' and local in documents:
+                    graph[relative].add(local)
                 if target.fragment and local in documents:
                     fragment = unquote(target.fragment)
                     if not documents[local].find(id=fragment) and not documents[local].find(attrs={'name': fragment}):
                         problems.append(f'{relative}: missing anchor {raw}')
+    reached, pending = set(), ['index.html']
+    while pending:
+        current = pending.pop()
+        if current not in reached:
+            reached.add(current)
+            pending.extend(graph[current] - reached)
+    for name in documents.keys() - reached - {'404.html'}:
+        problems.append(f'{name}: unreachable through links from homepage')
+    # Check all manifest outputs, including previews not embedded in Markdown.
+    gallery = json.loads((ROOT / 'v2/docs/media/gallery/captures.json').read_text())
+    gallery_outputs = 0
+    for case in gallery['cases']:
+        for kind in ('still', 'thumbnail', 'gif', 'video'):
+            if kind not in case:
+                continue
+            item = case[kind]
+            output = site / 'assets/gallery' / item['file']
+            gallery_outputs += 1
+            if not output.is_file():
+                problems.append(f'Gallery manifest output missing: {item["file"]}')
+            elif hashlib.sha256(output.read_bytes()).hexdigest() != item['sha256']:
+                problems.append(f'Gallery output differs from capture: {item["file"]}')
     sitemap = site / 'sitemap.xml'
     urls = {e.text for e in ET.parse(sitemap).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')}
     if urls != canonical_urls:
@@ -107,6 +140,7 @@ def verify(site):
             problems.append('Invalid placeholder search-engine verification token')
     return dict(ok=not problems, html_pages=len(documents), canonical_pages=len(canonical_urls),
                 internal_links_checked=links, imported_sources=len(sources),
+                reachable_content_pages=len(reached - {'404.html'}), gallery_outputs=gallery_outputs,
                 search_entries=len(index['docs']), sitemap_urls=len(urls), problems=problems)
 
 

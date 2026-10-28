@@ -1,0 +1,551 @@
+{
+  "date": "2026-10-28",
+  "application_source_commit": "358a2409855ac5882beb88ebc956834ec1de979c",
+  "v1_tests": {
+    "tests": 431,
+    "ok": true,
+    "seconds": 114.877
+  },
+  "v2_tests": {
+    "python_tests": 58,
+    "godot_checks": 235,
+    "ok": true
+  },
+  "documentation": {
+    "ok": true,
+    "publication_pages_checked_by": "mkdocs build --strict and v2/website/check_site.py",
+    "virtual_source_pages": 11,
+    "checks": {
+      "markdown_files": 46,
+      "relative_links": 706,
+      "anchors": 70,
+      "bash_blocks": 145,
+      "python_blocks": 1,
+      "json_blocks": 1,
+      "example_configs": 3
+    },
+    "RunConfig_fields": 33,
+    "HabitatConfig_fields": 10,
+    "problems": []
+  },
+  "original_preservation": {
+    "ok": true,
+    "baseline_commit": "f890b4f481a6659714dfae70e11f5b34f19a86f3",
+    "scope": "all pre-existing local files",
+    "files_checked": 1241,
+    "original_tracked_files": 591,
+    "preserved_documentation_archives": [
+      {
+        "path": "README.md",
+        "original_sha256": "d10768713ab30fe988b101a7686ab60fe39174d82eb82cc093507b9d615ccef2",
+        "status": "verbatim V1 README retained in archive block"
+      }
+    ],
+    "problems": [],
+    "new_tracked_files_outside_v2": [],
+    "authorized_new_infrastructure": [
+      ".github/workflows/pages.yml",
+      "results/.gitattributes"
+    ]
+  },
+  "capture_replays": {
+    "ok": true,
+    "cases": [
+      {
+        "case": "animal-follow",
+        "ticks": 464,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "continuous",
+        "ticks": 765,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "controls",
+        "ticks": 464,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "living-world",
+        "ticks": 225,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "obstacles",
+        "ticks": 400,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "physical-habitat",
+        "ticks": 194,
+        "model": "physical-habitat",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "predator-prey",
+        "ticks": 541,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "seasons",
+        "ticks": 6463,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "social",
+        "ticks": 344,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "traits",
+        "ticks": 7212,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "v1-original",
+        "ticks": 359,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "valley",
+        "ticks": 165,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "winter-weather",
+        "ticks": 159,
+        "model": "original",
+        "verified_and_replayed": true
+      },
+      {
+        "case": "workbench",
+        "ticks": 224,
+        "model": "original",
+        "verified_and_replayed": true
+      }
+    ]
+  },
+  "external_links": {
+    "unique_urls": 244,
+    "repository_paths_verified": 188,
+    "missing_repository_paths": [],
+    "http_results": [
+      {
+        "url": "https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl",
+        "status": 200,
+        "final_url": "https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt",
+        "status": 200,
+        "final_url": "https://developers.google.com/crawling/docs/robots-txt/robots-txt-spec",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.astral.sh/python-build-standalone/",
+        "status": 200,
+        "final_url": "https://docs.astral.sh/python-build-standalone/",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages",
+        "status": 206,
+        "final_url": "https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/customizing-your-repositorys-social-media-preview",
+        "status": 206,
+        "final_url": "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/customizing-your-repositorys-social-media-preview",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.godotengine.org/en/stable/about/system_requirements.html",
+        "status": 200,
+        "final_url": "https://docs.godotengine.org/en/stable/about/system_requirements.html",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.godotengine.org/en/stable/classes/class_canvasitem.html",
+        "status": 200,
+        "final_url": "https://docs.godotengine.org/en/stable/classes/class_canvasitem.html",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.godotengine.org/en/stable/classes/class_os.html",
+        "status": 200,
+        "final_url": "https://docs.godotengine.org/en/stable/classes/class_os.html",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.godotengine.org/en/stable/classes/class_streampeertcp.html",
+        "status": 200,
+        "final_url": "https://docs.godotengine.org/en/stable/classes/class_streampeertcp.html",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.godotengine.org/en/stable/tutorials/rendering/renderers.html",
+        "status": 200,
+        "final_url": "https://docs.godotengine.org/en/stable/tutorials/rendering/renderers.html",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.python.org/3/library/selectors.html",
+        "status": 206,
+        "final_url": "https://docs.python.org/3/library/selectors.html",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html",
+        "status": 206,
+        "final_url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/actions/runs/40608048323",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution/actions/runs/40608048323",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/actions/runs/40608048333",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution/actions/runs/40608048333",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/actions/workflows/pages.yml",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution/actions/workflows/pages.yml",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg?branch=master",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution/actions/workflows/tests.yml/badge.svg",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/archive/refs/heads/master.zip",
+        "status": 200,
+        "final_url": "https://codeload.github.com/Maitham16/Artificial_Evolution/zip/refs/heads/master",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/commit/e0760bfb91da63960350fb33142b5bcaad5314f3",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution/commit/e0760bfb91da63960350fb33142b5bcaad5314f3",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/issues",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution/issues",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/releases/download/v1.0.1/Artificial_Evolution-v1.0.1-research.zip",
+        "status": 206,
+        "final_url": "https://release-assets.githubusercontent.com/github-production-release-asset/1432790520/b7ec4659-7629-4071-99a7-9ac9acf45dbe",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/releases/download/v1.0.1/Artificial_Evolution-v1.0.1-source.zip",
+        "status": 206,
+        "final_url": "https://release-assets.githubusercontent.com/github-production-release-asset/1432790520/b3b6895f-baa2-483f-ac1e-ba8d422a055d",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/releases/download/v1.0.1/BUILD-INFO.json",
+        "status": 206,
+        "final_url": "https://release-assets.githubusercontent.com/github-production-release-asset/1432790520/ec3e3093-a220-4450-baa2-122faea122f5",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/releases/download/v1.0.1/RELEASE-VERIFICATION.json",
+        "status": 206,
+        "final_url": "https://release-assets.githubusercontent.com/github-production-release-asset/1432790520/1f5cb261-95e3-4075-870f-0e1198561fa0",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/releases/download/v1.0.1/SHA256SUMS.txt",
+        "status": 206,
+        "final_url": "https://release-assets.githubusercontent.com/github-production-release-asset/1432790520/b065387a-01e8-42c9-be84-6f3019494c30",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.0",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.0",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1",
+        "status": 206,
+        "final_url": "https://github.com/Maitham16/Artificial_Evolution/releases/tag/v1.0.1",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/tag/20261026",
+        "status": 206,
+        "final_url": "https://github.com/astral-sh/python-build-standalone/releases/tag/20261026",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://github.com/github-linguist/linguist/blob/main/docs/overrides.md",
+        "status": 206,
+        "final_url": "https://github.com/github-linguist/linguist/blob/main/docs/overrides.md",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://img.shields.io/badge/Godot-4.7.2-478cbf?style=flat-square&logo=godotengine&logoColor=white",
+        "status": 200,
+        "final_url": "https://img.shields.io/badge/Godot-4.7.2-478cbf",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://img.shields.io/badge/License-MIT-64766a?style=flat-square",
+        "status": 200,
+        "final_url": "https://img.shields.io/badge/License-MIT-64766a",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://img.shields.io/badge/Python-powered-527d60?style=flat-square&logo=python&logoColor=white",
+        "status": 200,
+        "final_url": "https://img.shields.io/badge/Python-powered-527d60",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://matplotlib.org/stable/install/",
+        "status": 206,
+        "final_url": "https://matplotlib.org/stable/install/",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://numpy.org/install/",
+        "status": 206,
+        "final_url": "https://numpy.org/install/",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://opengameart.org/content/3d-wolf",
+        "status": 200,
+        "final_url": "https://opengameart.org/content/3d-wolf",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://opengameart.org/content/deer-female",
+        "status": 200,
+        "final_url": "https://opengameart.org/content/deer-female",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://opengameart.org/content/old-deer-male",
+        "status": 200,
+        "final_url": "https://opengameart.org/content/old-deer-male",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://papers.nips.cc/paper/2019/file/fe4b8556000d0f0cae99daa5c5c5a410-Paper.pdf",
+        "status": 200,
+        "final_url": "https://papers.nips.cc/paper/2019/file/fe4b8556000d0f0cae99daa5c5c5a410-Paper.pdf",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://polyhaven.com/license",
+        "status": 200,
+        "final_url": "https://polyhaven.com/license",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://proceedings.mlr.press/v97/cobbe19a/cobbe19a.pdf",
+        "status": 206,
+        "final_url": "https://proceedings.mlr.press/v97/cobbe19a/cobbe19a.pdf",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://search.google.com/search-console/",
+        "status": 200,
+        "final_url": "https://search.google.com/search-console/about",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://squidfunk.github.io/mkdocs-material/",
+        "status": 206,
+        "final_url": "https://squidfunk.github.io/mkdocs-material/",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/",
+        "status": 206,
+        "final_url": "https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html",
+        "status": 206,
+        "final_url": "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://support.apple.com/en-gb/102445",
+        "status": 206,
+        "final_url": "https://support.apple.com/en-gb/102445",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://support.google.com/webmasters/answer/7451001",
+        "status": 200,
+        "final_url": "https://support.google.com/webmasters/answer/7451001",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://support.google.com/webmasters/answer/9008080",
+        "status": 200,
+        "final_url": "https://support.google.com/webmasters/answer/9008080",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://www.bing.com/webmasters/",
+        "status": 206,
+        "final_url": "https://www.bing.com/webmasters/about",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://www.itl.nist.gov/div898/handbook/pri/section2/pri212.htm",
+        "status": 206,
+        "final_url": "https://www.itl.nist.gov/div898/handbook/pri/section2/pri212.htm",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/signtest.htm",
+        "status": 206,
+        "final_url": "https://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/signtest.htm",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://www.mkdocs.org/user-guide/configuration/",
+        "status": 206,
+        "final_url": "https://www.mkdocs.org/user-guide/configuration/",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://www.pygame.org/docs/ref/display.html",
+        "status": 206,
+        "final_url": "https://www.pygame.org/docs/ref/display.html",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://www.pygame.org/wiki/GettingStarted",
+        "status": 502,
+        "final_url": "https://www.pygame.org/wiki/GettingStarted",
+        "classification": "unverified"
+      },
+      {
+        "url": "https://www2.bing.com/webmasters/help/add-and-verify-site-12184f8b",
+        "status": 200,
+        "final_url": "https://www2.bing.com/webmasters/help/add-and-verify-site-12184f8b",
+        "classification": "reachable"
+      },
+      {
+        "url": "https://www2.bing.com/webmasters/help/sitemaps-3b5cf6ed",
+        "status": 200,
+        "final_url": "https://www2.bing.com/webmasters/help/sitemaps-3b5cf6ed",
+        "classification": "reachable"
+      }
+    ],
+    "note": "Master blob/tree paths checked against tracked files; rate-limited or blocked endpoints are not asserted broken or indexed"
+  },
+  "browser": {
+    "screenshots": [
+      {
+        "file": "mobile-home.png",
+        "sha256": "ab434f0cfc0bf7d793b9f0d0c24d601c007e95f43cf90c6bc8b8ba01c1b4cea4",
+        "css_viewport": [
+          320,
+          480
+        ],
+        "device_pixel_ratio": 2,
+        "source": "Firefox Responsive Design Mode screenshot camera; public live website"
+      },
+      {
+        "file": "mobile-navigation.png",
+        "sha256": "fc074f09a2ac70277a06bfda9aaa5cbff0373a8d6f1405ed807177de5fd2ad28",
+        "css_viewport": [
+          320,
+          480
+        ],
+        "device_pixel_ratio": 2,
+        "source": "Firefox Responsive Design Mode screenshot camera; public live website"
+      },
+      {
+        "file": "mobile-search.png",
+        "sha256": "cde1b1504b5dee2c43cb10d55a3690a62b08019327d48ccea69fd6cccc4b01d1",
+        "css_viewport": [
+          320,
+          480
+        ],
+        "device_pixel_ratio": 2,
+        "source": "Firefox Responsive Design Mode screenshot camera; public live website"
+      }
+    ],
+    "observations": [
+      "Home text fits the narrow viewport",
+      "Navigation drawer opened and V2 destination loaded",
+      "Search for physical habitat returned 37 documents",
+      "Search result opened the physical-habitat guide"
+    ],
+    "scope": "Firefox responsive emulation and standard desktop browser inspection; not physical-device certification"
+  },
+  "search_indexing": "Unverified; no authenticated Google or Bing console inspected",
+  "built_site": {
+    "ok": true,
+    "html_pages": 55,
+    "canonical_pages": 54,
+    "internal_links_checked": 5958,
+    "imported_sources": 42,
+    "reachable_content_pages": 54,
+    "gallery_outputs": 38,
+    "search_entries": 461,
+    "sitemap_urls": 54,
+    "problems": []
+  },
+  "gallery_regression": "Passed: removing unembedded v1-original.gif fails validation; restored output passes",
+  "audit_start_preservation": {
+    "tracked_files_compared": 1252,
+    "changed_existing_files": [
+      "v2/website/check_site.py",
+      "v2/website/hooks.py",
+      "v2/website/mkdocs.yml",
+      "v2/website/pages/development/discoverability.md",
+      "v2/website/pages/development/website.md"
+    ],
+    "application_files_changed": 0,
+    "preexisting_import_edits_preserved": 10
+  }
+}

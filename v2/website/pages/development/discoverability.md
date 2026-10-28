@@ -48,13 +48,14 @@ The production root is **https://maitham16.github.io/Artificial_Evolution/**, in
 GitHub repository administration does not automatically verify a Search Console property. This step requires your Google account and its actual verification token.
 
 1. Open [Google Search Console](https://search.google.com/search-console/).
-2. Add a **URL prefix** property for `https://maitham16.github.io/Artificial_Evolution/`.
+2. Select an existing property if it already covers this site; otherwise add a **URL prefix** property for `https://maitham16.github.io/Artificial_Evolution/`.
 3. Select **HTML tag** verification. Copy only the token in its `content` attribute.
 4. In `v2/website/mkdocs.yml`, put that token in `extra.search_verification.google`. The empty setting currently publishes no verification claim.
 5. Commit/push the change and wait for **Documentation website** deployment to succeed. Confirm the live homepage contains the supplied meta tag, then choose **Verify** in Search Console.
-6. Under **Sitemaps**, submit `https://maitham16.github.io/Artificial_Evolution/sitemap.xml`. Use **URL inspection** for the homepage and request indexing if needed.
+6. Under **Sitemaps**, submit `https://maitham16.github.io/Artificial_Evolution/sitemap.xml`. If the form already supplies the complete property prefix, enter only `sitemap.xml`. Review the submitted row: **Success** confirms the sitemap was fetched and read, not that its pages were indexed.
+7. Use **URL inspection** for the homepage and representative V1/V2 URLs. Review the indexed status separately from the live fetch test; request indexing if appropriate. Keep the verification token in place after verification.
 
-For this project path, URL-prefix verification is appropriate; domain verification requires control of the host's DNS. Google's [recrawl instructions](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl) explain sitemap submission and owner-only URL inspection. Crawling and inclusion are not immediate or guaranteed.
+For this project path, URL-prefix verification is appropriate; domain verification requires control of the host's DNS. Do not overwrite another owner's verification tokens. A verified parent property can also establish ownership; the absence of these meta tags alone does not establish account status. See Google's [ownership verification](https://support.google.com/webmasters/answer/9008080) and [Sitemaps report](https://support.google.com/webmasters/answer/7451001). Google's [recrawl instructions](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl) explain sitemap submission and owner-only URL inspection. Crawling and inclusion are not immediate or guaranteed.
 
 ## Owner action: Bing Webmaster Tools
 
@@ -62,7 +63,9 @@ For this project path, URL-prefix verification is appropriate; domain verificati
 2. Import the verified Search Console property, or add the same complete Pages URL.
 3. For **Meta tag** verification, copy the `msvalidate.01` content token into `extra.search_verification.bing` in the same configuration file.
 4. Commit/push, wait for deployment, confirm the live token and finish **Verify** in Bing.
-5. Submit the same full XML sitemap URL through **Sitemaps → Submit sitemap**. Use URL inspection to review discovery or indexing problems.
+5. Submit the same full XML sitemap URL through **Sitemaps → Submit sitemap**. Review processing status and errors, then use **URL inspection** for representative pages. A successful submission is distinct from indexing; keep any verification token in place.
+
+Reuse an existing verified Bing property when available. If importing Search Console succeeds, a second meta-tag verification may not be necessary.
 
 These are account-specific actions; neither a repository token nor a made-up verification string replaces them. [Bing verification methods](https://www2.bing.com/webmasters/help/add-and-verify-site-12184f8b) · [Bing sitemap submission](https://www2.bing.com/webmasters/help/sitemaps-3b5cf6ed)
 
@@ -70,7 +73,7 @@ These are account-specific actions; neither a repository token nor a made-up ver
 
 The project's `robots.txt` contains its sitemap reference, but standard robots handling uses the **host root**, not an arbitrary project subdirectory. Do not assume `/Artificial_Evolution/robots.txt` controls `maitham16.github.io`; use verified sitemap submission for this project site. Existing canonical URLs, ordinary HTML links and the public sitemap also provide discovery signals to other crawlers. [Google robots guidance](https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt)
 
-No analytics account, advertising, paid placement or search-engine indexing status is created by these repository changes.
+No authenticated Google or Bing console was reviewed in the documentation audit. Ownership, sitemap submission and indexed-page status therefore remain unverified. Record the property, submission date, processing result and URL-inspection evidence after completing the account-specific steps; do not infer indexing from public HTTP availability.
 
 ## Check changes before publishing
 

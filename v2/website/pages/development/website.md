@@ -35,7 +35,9 @@ Open **http://127.0.0.1:8000/Artificial_Evolution/**. The project prefix matches
 python3 v2/tools/verify_original.py
 ```
 
-Output goes to ignored `.cache/website/site/`. The checker verifies internal HTML/media links and anchors, descriptive metadata, canonical URLs, Open Graph data, XML sitemap coverage and source hashes. The original-preservation tool still checks every original application/documentation hash. Its explicit non-V2 additions are the Pages workflow and scoped `results/.gitattributes` report-classification metadata; these never exempt original files from hash checks.
+Output goes to ignored `.cache/website/site/`. The checker verifies internal HTML/media links and anchors, descriptive metadata, canonical URLs, Open Graph data, XML sitemap coverage and source hashes. It also checks homepage reachability, title uniqueness, image alt attributes and every gallery-manifest output, including unembedded previews. The original-preservation tool still checks every original application/documentation hash. Its explicit non-V2 additions are the Pages workflow and scoped `results/.gitattributes` report-classification metadata; these never exempt original files from hash checks.
+
+For repository Markdown/example checks and optional published HTTP/media checks, follow the [documentation audit](audit.md). Those network checks classify temporary failures separately and do not submit URLs to search engines.
 
 ## Edit content in the right place
 

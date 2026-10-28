@@ -133,6 +133,7 @@ nav:
   - Development:
       - Application development: development/application.md
       - This documentation website: development/website.md
+      - Documentation audit: development/audit.md
       - Discoverability and indexing: development/discoverability.md
       - Implementation references:
           - Python bridge: v2/python-bridge.md

@@ -150,6 +150,21 @@ def on_files(files, config):
             body = '!!! note "Preserved V1 scientific record"\n    This is the complete original README. Step-specific counts, results and release statements describe their recorded revisions.\n\n' + body
         files.append(File.generated(config, uri, content='---\n' + yaml.safe_dump(metadata, sort_keys=False, allow_unicode=True) + '---\n\n' + body))
         PUBLISHED_SOURCES[uri] = dict(source=source.relative_to(ROOT).as_posix(), sha256=hashlib.sha256(source.read_bytes()).hexdigest())
+    # The public capture manifest describes every output, including previews not
+    # embedded in a page. Publish that complete set so its filenames resolve.
+    gallery = ROOT / 'v2/docs/media/gallery'
+    captures = json.loads((gallery / 'captures.json').read_text())
+    for case in captures['cases']:
+        for kind in ('still', 'thumbnail', 'gif', 'video'):
+            if kind not in case:
+                continue
+            name = case[kind]['file']
+            if Path(name).name != name or not (gallery / name).is_file():
+                raise ValueError('Invalid or missing gallery output: ' + name)
+            uri = 'assets/gallery/' + name
+            if uri not in ASSET_SOURCES:
+                ASSET_SOURCES[uri] = gallery / name
+                files.append(File.generated(config, uri, abs_src_path=str(gallery / name)))
     links = ['# Engineering records\n\nRecorded audits describe the build, machine and conditions they measured. They do not retroactively validate every later revision.\n']
     for source, uri in sorted(mapping.items()):
         if source.name == 'README.md' and '/records/' in uri:
