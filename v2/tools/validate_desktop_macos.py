@@ -31,11 +31,11 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive',type=Path,default=ARCHIVE)
     parser.add_argument('--output',type=Path,help='Write fresh evidence here instead of replacing historical documentation records.')
-    args=parser.parse_args()
-    ARCHIVE=args.archive.resolve()
-    if args.output:
-        OUTPUT=args.output.resolve()
-    screenshots=OUTPUT/'screenshots' if args.output else V2/'docs/screenshots'
+    cli=parser.parse_args()
+    ARCHIVE=cli.archive.resolve()
+    if cli.output:
+        OUTPUT=cli.output.resolve()
+    screenshots=OUTPUT/'screenshots' if cli.output else V2/'docs/screenshots'
     screenshots.mkdir(parents=True,exist_ok=True)
     OUTPUT.mkdir(parents=True,exist_ok=True);records=[]
     registry=Path.home()/'Library/Application Support/ArtificialEvolution2/engine.json'
@@ -70,7 +70,7 @@ def main():
             report=verify_bundle(bundles[0]);assert replay_run(report).ticks==report['execution']['ticks']
             target=OUTPUT/(label+'-run.json');shutil.copyfile(bundles[0]/'run.json',target)
             screenshot=screenshots/('desktop-'+label+'.png');shutil.copyfile(image,screenshot)
-            data.update(case=label,mode=mode,mean_fps=1000/data['mean_ms'],render_pixels=list(struct.unpack('>II',image.read_bytes()[16:24])),python_ticks=report['execution']['ticks'],verified_and_replayed_exactly=True,checkout_and_homebrew_reads_denied=True,screenshot=('screenshots/' if args.output else '../screenshots/')+screenshot.name)
+            data.update(case=label,mode=mode,mean_fps=1000/data['mean_ms'],render_pixels=list(struct.unpack('>II',image.read_bytes()[16:24])),python_ticks=report['execution']['ticks'],verified_and_replayed_exactly=True,checkout_and_homebrew_reads_denied=True,screenshot=('screenshots/' if cli.output else '../screenshots/')+screenshot.name)
             if mode=='continuous':assert data['animation']['events'].get('birth',0)>0
             records.append(data);print(label,round(data['mean_fps'],1),'FPS',flush=True)
         # The same unchanged 2D entry point works as an independent process using bundled Python.

@@ -32,11 +32,11 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive',type=Path,default=ZIP)
     parser.add_argument('--output',type=Path,help='Write fresh evidence here instead of replacing historical documentation records.')
-    args=parser.parse_args()
-    ZIP=args.archive.resolve()
-    if args.output:
-        OUT=args.output.resolve()
-    screenshots=OUT/'screenshots' if args.output else V2/'docs/screenshots'
+    cli=parser.parse_args()
+    ZIP=cli.archive.resolve()
+    if cli.output:
+        OUT=cli.output.resolve()
+    screenshots=OUT/'screenshots' if cli.output else V2/'docs/screenshots'
     screenshots.mkdir(parents=True,exist_ok=True)
     OUT.mkdir(parents=True,exist_ok=True);records=[]
     registry=Path.home()/'Library/Application Support/ArtificialEvolution2/engine.json'
@@ -91,7 +91,7 @@ def main():
             shutil.copyfile(bundle/'run.json',OUT/(label+'-run.json'))
             screenshot=screenshots/('habitat-'+label+'.png');shutil.copyfile(image,screenshot)
             late=sum(t>25 for t in result['frame_ms'])/len(result['frame_ms'])
-            result.update(case=label,mode=mode,seed=seed,physical_habitat=physical,mean_fps=1000/result['mean_ms'],late_frame_fraction_over_25ms=late,python_ticks=report['execution']['ticks'],replayed_exactly=True,render_pixels=list(struct.unpack('>II',image.read_bytes()[16:24])),screenshot=('screenshots/' if args.output else '../screenshots/')+screenshot.name)
+            result.update(case=label,mode=mode,seed=seed,physical_habitat=physical,mean_fps=1000/result['mean_ms'],late_frame_fraction_over_25ms=late,python_ticks=report['execution']['ticks'],replayed_exactly=True,render_pixels=list(struct.unpack('>II',image.read_bytes()[16:24])),screenshot=('screenshots/' if cli.output else '../screenshots/')+screenshot.name)
             result['target_60fps_met']=result['mean_fps']>=59 and result['p95_ms']<=19 and late<.01
             records.append(result);print(label,round(result['mean_fps'],2),'FPS; p95',round(result['p95_ms'],2),'ms;',round(late*100,2),'% late',flush=True)
         run(['/usr/bin/codesign','--verify','--deep','--strict',app])
