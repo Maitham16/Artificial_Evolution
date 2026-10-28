@@ -159,8 +159,6 @@ python3 v2/tools/verify_original.py
 
 Recorded local audits include **431 original tests**, **284 V2 tests/checks**, native export/replay and input checks, and repeated Metal trials around **60 FPS** on an Apple M3. Counts and timings belong to their recorded builds, not every machine. [Validation records and limitations →](v2/docs/RESEARCH_AND_VALIDATION.md#engineering-evidence)
 
-For repository metadata, the screenshot-based social card and owner-only search-engine setup, see the [discoverability and indexing guide](v2/website/pages/development/discoverability.md).
-
 ## License and credits
 
 Project code is [MIT licensed](LICENSE). Animal and landscape assets carry recorded CC0 licenses; Godot and runtime dependency notices are included with the desktop package. Blender is an external authoring tool. [Asset credits](v2/docs/ANIMALS_AND_ANIMATION.md#licenses-and-provenance) · [Runtime provenance](v2/docs/BUNDLED_RUNTIME.md)

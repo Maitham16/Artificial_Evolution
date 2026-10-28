@@ -83,7 +83,7 @@ extra_css:
   - assets/stylesheets/extra.css
 extra:
   search_verification:
-    google: ''
+    google: 'Asu5e6i1IWDwnDKAaaGmlyGm5oIGLIIPP2ZEFfKlZb4'
     bing: ''
   social:
     - icon: fontawesome/brands/github
@@ -134,7 +134,6 @@ nav:
       - Application development: development/application.md
       - This documentation website: development/website.md
       - Documentation audit: development/audit.md
-      - Discoverability and indexing: development/discoverability.md
       - Implementation references:
           - Python bridge: v2/python-bridge.md
           - Desktop application: v2/desktop-app.md

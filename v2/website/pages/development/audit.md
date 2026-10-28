@@ -55,10 +55,6 @@ The repository description, topics and website link match the two implemented ap
 
 The project-path robots file includes the sitemap, but crawlers consult robots rules at the **host root**. Do not treat `/Artificial_Evolution/robots.txt` as authority for the whole GitHub Pages host. Google and Bing ownership could exist through another method or parent property even without the optional verification tags.
 
-### Remaining owner actions
-
-Follow [Discoverability and indexing](discoverability.md) to select or register the exact URL-prefix property, use your real account verification token if needed, wait for deployment, verify ownership, and submit the sitemap in both consoles. Inspect submission processing and individual URL indexing separately. Keep verification tokens after successful verification. No account-specific submission or search-indexing result is claimed by this audit.
-
 ## Reproduce the audit
 
 From the repository root, install the [isolated website dependencies](website.md), then run:
